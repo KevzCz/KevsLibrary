@@ -9,9 +9,9 @@
 		"Pixel Dream Studios"
 	],
 	"contact": {
-		"homepage": "https://www.curseforge.com/minecraft/mc-mods/kevs-tierify-modifiers",
-		"sources": "https://github.com/KevzCz/KevsTierifyModifiers",
-		"issues": "https://github.com/KevzCz/KevsTierifyModifiers/issues"
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/kevs-library",
+		"sources": "https://github.com/KevzCz/KevsLibrary",
+		"issues": "https://github.com/KevzCz/KevsLibrary/issues"
 	},
 	"license": "GNU GPLv3",
 	"icon": "assets/kevslibrary/icon.png",
