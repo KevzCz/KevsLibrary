@@ -1,0 +1,26 @@
+{
+  "miracle": {
+    "sounds": [
+      {
+        "name": "obscure_api:miracle_1",
+        "stream": false
+      },
+      {
+        "name": "obscure_api:miracle_2",
+        "stream": false
+      },
+      {
+        "name": "obscure_api:miracle_3",
+        "stream": false
+      },
+      {
+        "name": "obscure_api:miracle_4",
+        "stream": false
+      },
+      {
+        "name": "obscure_api:miracle_5",
+        "stream": false
+      }
+    ]
+  }
+}

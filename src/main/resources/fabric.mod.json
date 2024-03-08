@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "kevslibrary",
+	"version": "1.0.0",
+	"name": "Kev's Library",
+	"description": "A library for Kev's mod",
+	"authors": [
+		"KevzCz",
+		"Pixel Dream Studios"
+	],
+	"contact": {
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/kevs-tierify-modifiers",
+		"sources": "https://github.com/KevzCz/KevsTierifyModifiers",
+		"issues": "https://github.com/KevzCz/KevsTierifyModifiers/issues"
+	},
+	"license": "GNU GPLv3",
+	"icon": "assets/kevslibrary/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.kevslibrary.KevsLibrary"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.15.6",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+
+	}
+}

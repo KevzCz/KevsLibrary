@@ -1,0 +1,52 @@
+{
+    "providers": [
+        {
+            "type": "reference",
+            "id": "minecraft:include/space"
+        },
+        {
+            "type": "reference",
+            "id": "minecraft:include/default"
+        },
+        {
+            "type": "reference",
+            "id": "minecraft:include/unifont"
+        },
+        {
+            "type": "bitmap",
+            "file": "obscure_api:icons/generic.png",
+            "ascent": 9,
+            "height": 11,
+            "chars": [
+               "\uEA01\uEA02\uEA03\uEA04\uEA05\uEA06\uEA07\uEA08\uEA09\uEA10",
+               "\uEA11\uEA12\uEA13\uEA14\uEA15\uEA16\uEA17\uEA18\uEA19\uEA20",
+               "\uEA21\uEA22\uEA23\uEA24\uEA25\uEA26\uEA27\uEA28\uEA29\uEA30"
+            ]
+        },
+        {
+            "type": "bitmap",
+            "file": "obscure_api:icons/attributes.png",
+            "ascent": 9,
+            "height": 11,
+            "chars": [
+                "\uEA76\uEA77\uEA78\uEA79\uEA80\uEA81\uEA82\uEA83",
+                "\uEA84\uEA85\uEA86\uEA87\uEA88\uEA89\uEA90\uEA91",
+                "\uEA92\uEA93\uEA94\uEA95\uEA96\uEA97\uEA98\uEA99"
+            ]
+        },
+        {
+            "type": "bitmap",
+            "file": "obscure_api:icons/stick.png",
+            "ascent": 14,
+            "height": 14,
+            "chars": [ "\uEA0A" ]
+        },
+        {
+            "type": "bitmap",
+            "file": "obscure_api:icons/durability.png",
+            "ascent": 10,
+            "height": 13,
+            "chars": [ "\uEA0B" ]
+        }
+    ]
+}
