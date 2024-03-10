@@ -17,16 +17,16 @@ public class KevsLibrary implements ModInitializer {
         LOGGER.info("Hello from " + MOD_ID + "!");
         LOGGER.info("Loading Resourcepack for " + MOD_ID);
         FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent((modContainer -> ResourceManagerHelper.registerBuiltinResourcePack(
-                new ResourceLocation(MOD_ID, "ModifierNames"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
+                new ResourceLocation(MOD_ID, "modifiernames"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
         )));
         if(FabricLoader.getInstance().isModLoaded("kevstierifymodifiers")) {
             FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent((modContainer -> ResourceManagerHelper.registerBuiltinResourcePack(
-                    new ResourceLocation(MOD_ID, "TierifyM"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
+                    new ResourceLocation(MOD_ID, "tierifym"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
             )));
         }
         else if(FabricLoader.getInstance().isModLoaded("kevstieredzmodifiers")) {
             FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent((modContainer -> ResourceManagerHelper.registerBuiltinResourcePack(
-                    new ResourceLocation(MOD_ID, "TieredM"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
+                    new ResourceLocation(MOD_ID, "tieredm"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
             )));
         }
 
