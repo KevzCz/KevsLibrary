@@ -24,7 +24,7 @@ public class KevsLibrary implements ModInitializer {
                     new ResourceLocation(MOD_ID, "TierifyM"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
             )));
         }
-        if(FabricLoader.getInstance().isModLoaded("kevstieredzmodifiers")) {
+        else if(FabricLoader.getInstance().isModLoaded("kevstieredzmodifiers")) {
             FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent((modContainer -> ResourceManagerHelper.registerBuiltinResourcePack(
                     new ResourceLocation(MOD_ID, "TieredM"), modContainer, ResourcePackActivationType.ALWAYS_ENABLED
             )));
