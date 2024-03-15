@@ -443,10 +443,10 @@
   "tiered:mythic_guardian_1.label": "Mythic",
   "tiered:rare_miner_armor.label": "Rare",
 
-  "tiered:epic_lightning": "Epic",
-  "tiered:epic_soul": "Epic",
-  "tiered:legendary_lightning": "Legendary",
-  "tiered:legendary_soul": "Legendary",
-  "tiered:mythic_lightning": "Mythic",
-  "tiered:mythic_soul": "Mythic"
+  "tiered:epic_lightning.label": "Epic",
+  "tiered:epic_soul.label": "Epic",
+  "tiered:legendary_lightning.label": "Legendary",
+  "tiered:legendary_soul.label": "Legendary",
+  "tiered:mythic_lightning.label": "Mythic",
+  "tiered:mythic_soul.label": "Mythic"
 }
