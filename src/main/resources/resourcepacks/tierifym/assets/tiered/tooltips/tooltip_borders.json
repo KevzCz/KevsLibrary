@@ -212,7 +212,9 @@
 				"tiered:epic_artic",
 				"tiered:epic_arcanum",
 				"tiered:epic_archer_1",
-                "tiered:epic_archer_2"
+                "tiered:epic_archer_2",
+                "tiered:epic_lightning",
+                "tiered:epic_soul"
             ]
         },
         {
@@ -266,7 +268,9 @@
                 "tiered:legendary_mystic",
                 "tiered:legendary_incandescent",
 				"tiered:legendary_archer_1",
-                "tiered:legendary_archer_2"
+                "tiered:legendary_archer_2",
+                "tiered:legendary_lightning",
+                "tiered:legendary_soul"
             ]
         },
         {
@@ -320,7 +324,9 @@
 				"tiered:mythic_phoenix",
 				"tiered:mythic_absolute_zero",
 				"tiered:mythic_archer_1",
-                "tiered:mythic_archer_2"
+                "tiered:mythic_archer_2",
+                "tiered:mythic_lightning",
+                "tiered:mythic_soul"
             ]
         },
 		{

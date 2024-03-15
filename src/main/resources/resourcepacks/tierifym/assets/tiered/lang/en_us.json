@@ -441,5 +441,12 @@
   "tiered:mythic_aquatic_1.label": "Mythic",
   "tiered:mythic_anti-gravity_1.label": "Mythic",
   "tiered:mythic_guardian_1.label": "Mythic",
-  "tiered:rare_miner_armor.label": "Rare"
+  "tiered:rare_miner_armor.label": "Rare",
+
+  "tiered:epic_lightning": "Epic",
+  "tiered:epic_soul": "Epic",
+  "tiered:legendary_lightning": "Legendary",
+  "tiered:legendary_soul": "Legendary",
+  "tiered:mythic_lightning": "Mythic",
+  "tiered:mythic_soul": "Mythic"
 }
