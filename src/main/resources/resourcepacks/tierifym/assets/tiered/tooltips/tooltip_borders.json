@@ -173,6 +173,7 @@
                 "tiered:epic_armor_4",
 				"tiered:epic_armor_5",
                 "tiered:epic_armor_6",
+				"tiered:epic_pap_1",
 				"tiered:epic_papmelee_1",
                 "tiered:epic_papmelee_2",
 				"tiered:epic_papsw_1",
@@ -229,6 +230,7 @@
                 "tiered:legendary_armor_4",
 				"tiered:legendary_armor_5",
                 "tiered:legendary_armor_6",
+				"tiered:legendary_pap_1",
 				"tiered:legendary_papmelee_1",
                 "tiered:legendary_papmelee_2",
 				"tiered:legendary_papsw_1",
@@ -275,8 +277,8 @@
         },
         {
             "index": 5,
-            "start_border_gradient": "FF77276E",
-            "end_border_gradient": "FF77276E",
+            "start_border_gradient": "FFA81616",
+            "end_border_gradient": "FFA81616",
             "texture": "tiered_borders",
             "decider": [
                 "tiered:mythic_armor_1",
@@ -285,6 +287,7 @@
                 "tiered:mythic_armor_4",
 				"tiered:mythic_armor_5",
                 "tiered:mythic_armor_6",
+				"tiered:mythic_pap_1",
 				"tiered:mythic_papmelee_1",
                 "tiered:mythic_papmelee_2",
 				"tiered:mythic_papsw_1",
@@ -336,22 +339,14 @@
 				"tiered:mythic_archer_1",
                 "tiered:mythic_archer_2",
                 "tiered:mythic_lightning",
-                "tiered:mythic_soul"
-            ]
-        },
-		{
-            "index": 6,
-            "start_border_gradient": "FF77276E",
-            "end_border_gradient": "FF77276E",
-            "texture": "tiered_borders",
-            "decider": [
+                "tiered:mythic_soul",
                 "tiered:mythic_all_rounder",
-				"tiered:mythic_spellbound",
-				"tiered:mythic_shadowguard_1",
-				"tiered:mythic_swift_1",
-				"tiered:mythic_aquatic_1",
-				"tiered:mythic_anti-gravity_1",
-				"tiered:mythic_guardian_1"
+                "tiered:mythic_spellbound",
+                "tiered:mythic_shadowguard_1",
+                "tiered:mythic_swift_1",
+                "tiered:mythic_aquatic_1",
+                "tiered:mythic_anti-gravity_1",
+                "tiered:mythic_guardian_1"
             ]
         }
     ]
