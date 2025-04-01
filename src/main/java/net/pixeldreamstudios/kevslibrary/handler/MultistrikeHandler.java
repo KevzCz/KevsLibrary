@@ -3,19 +3,14 @@ package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -34,7 +29,6 @@ public class MultistrikeHandler {
     }
     private static final Map<String, MultistrikeBomb> bombs = new HashMap<>();
     private static final Map<UUID, List<HoveringArrow>> hoveringArrows = new HashMap<>();
-    private static final Set<UUID> activeArrowLaunches = new HashSet<>();
     private static final Map<UUID, LaunchTiming> launchDelays = new HashMap<>();
 
     public static void triggerMultistrike(LivingEntity attacker, LivingEntity target, float damage, ItemStack weaponUsed) {
@@ -92,7 +86,6 @@ public class MultistrikeHandler {
             MultistrikeBomb bomb = entry.getValue();
             boolean done = bomb.tick(world);
             if (done) {
-                System.out.println("MSB: Bomb finished for key=" + entry.getKey());
                 bombIt.remove();
             }
         }
@@ -206,7 +199,7 @@ public class MultistrikeHandler {
             this.totalDamage = damage;
             this.totalStrikes = getStrikeCountFromAttributes(source);
             this.triggerCount = 1;
-            System.out.println("MSB: Bomb initialized with " + totalStrikes + " strikes. Total damage: " + totalDamage);
+
         }
 
         public void addStack(float damage) {
@@ -217,12 +210,12 @@ public class MultistrikeHandler {
             ticksUntilDetonate += (int) (20 * Math.max(diminishingTimerAdd, 0));
             diminishingTimerAdd -= 0.1f;
 
-            System.out.println("MSB: Added stack - strikes: +" + addedStrikes + ", total now: " + totalStrikes + ", detonate in: " + ticksUntilDetonate + " ticks");
+
         }
 
         public boolean tick(ServerWorld world) {
             if (!target.isAlive()) {
-                System.out.println("MSB: Target is dead. Bomb discarded.");
+
                 return true;
             }
 
@@ -230,7 +223,7 @@ public class MultistrikeHandler {
                 ticksUntilDetonate--;
 
                 if (ticksUntilDetonate == 20) {
-                    System.out.println("MSB: Detonation imminent (1s)");
+
                     world.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1.0, target.getZ(), 2, 0.5, 0.3, 0.5, 0.05);
                 }
 
@@ -239,19 +232,19 @@ public class MultistrikeHandler {
                 detonating = true;
                 ticksUntilNextHit = 2;
 
-                System.out.println("MSB: Bomb detonating now!");
+
                 world.spawnParticles(ParticleTypes.NOTE, target.getX(), target.getY() + target.getHeight() + 0.6, target.getZ(), 1, 0, 0, 0, 0);
                 return false;
             }
 
             if (--ticksUntilNextHit > 0) return false;
             if (!target.isAlive()) {
-                System.out.println("MSB: Target died mid-det. " + target.getName().getString());
+
                 return true;
             }
 
             if (totalStrikes <= 0) {
-                System.out.println("MSB: No more strikes remaining.");
+
                 return true;
             }
 
@@ -265,7 +258,7 @@ public class MultistrikeHandler {
             target.timeUntilRegen = 0;
 
             boolean hit = target.damage(source, damage);
-            System.out.println("MSB: Dealing damage " + damage + " (" + totalStrikes + " strikes remaining)");
+
 
             if (hit) {
                 OnHitEffectHandler.withMultistrikeContext(() -> {
@@ -276,7 +269,7 @@ public class MultistrikeHandler {
                     EnchantmentHelper.onTargetDamaged(world, target, source);
                     ItemEnchantmentsComponent component = weaponUsed.get(DataComponentTypes.ENCHANTMENTS);
                     if (component != null && !component.getEnchantments().isEmpty()) {
-                        System.out.println("MSB: Found enchantments on weapon.");
+
                     }
                 }
             }
@@ -292,7 +285,7 @@ public class MultistrikeHandler {
         private int getStrikeCountFromAttributes(LivingEntity source) {
             EntityAttributeInstance countAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
             int val = countAttr != null ? (int) countAttr.getValue() : 1;
-            System.out.println("MSB: MULTISTRIKE_COUNT = " + val);
+
             return Math.max(val, 1);
         }
     }

@@ -1,27 +1,14 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
-import net.minecraft.registry.*;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
-import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
-import net.minecraft.registry.RegistryKeys;
-
 import net.pixeldreamstudios.kevslibrary.handler.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,8 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
     private static final ThreadLocal<Float> CRIT_DAMAGE_TRACKER = new ThreadLocal<>();
-    private static final TagKey<DamageType> NO_PROC_DAMAGE_TYPES = TagKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("kevslibrary", "no_proc"));
-
     @Inject(method = "isInvulnerableTo", at = @At("HEAD"), cancellable = true)
     private void bypassMultistrike(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
@@ -81,10 +66,11 @@ public abstract class LivingEntityMixin {
             float critMultiplier = attacker.getAttributeInstance(KevsLibrary.CRIT_DAMAGE) != null
                     ? (float) attacker.getAttributeValue(KevsLibrary.CRIT_DAMAGE)
                     : 1.0f;
+
             finalDamage *= critMultiplier;
 
-            if (attacker instanceof PlayerEntity player2) {
-                player2.sendMessage(Text.literal("§6CRIT!§r " + amount + " × " + critMultiplier + " = " + finalDamage), true);
+            // Only play sound/message if critMultiplier > 1.0
+            if (critMultiplier > 1.0f && attacker instanceof PlayerEntity player2) {
                 player2.getWorld().playSound(null, player2.getX(), player2.getY(), player2.getZ(),
                         SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.0f, 1.0f);
             }
