@@ -98,10 +98,14 @@ public class KevsLibrary implements ModInitializer {
 	public void onInitialize() {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerWorld world : server.getWorlds()) {
-				MultistrikeHandler.tick(world);
+				try {
+					MultistrikeHandler.tick(world);
+				} catch (Exception e) {
+					System.err.println("[KevsLibrary] MultistrikeHandler failed: " + e.getMessage());
+					e.printStackTrace();
+				}
 			}
 		});
-
 		DelayedExecutor.init();
 	}
 

@@ -53,14 +53,22 @@ public class FrostNovaHandler {
             int waveIndex = i;
             boolean overloaded = (waveIndex == overloadedWave);
 
+            List<LivingEntity> targetsSnapshot = world.getEntitiesByClass(
+                    LivingEntity.class,
+                    attacker.getBoundingBox().expand(RADIUS + novaCount * 2),
+                    e -> isValidTarget(e, attacker)
+            );
+
             DelayedExecutor.runLater(() -> {
-                doFrostNova(attacker, waveIndex, overloaded);
+                doFrostNova(attacker, waveIndex, overloaded, targetsSnapshot);
             }, delay);
         }
+
     }
 
 
-    private static void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded)
+    private static void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded, List<LivingEntity> targets)
+
     {
         if (!(attacker.getWorld() instanceof ServerWorld world)) return;
 
@@ -105,7 +113,7 @@ public class FrostNovaHandler {
         world.spawnParticles(ParticleTypes.ITEM_SNOWBALL, attacker.getX(), attacker.getY() + 1, attacker.getZ(),
                 6, 0.2, 0.3, 0.2, 0.02);
 
-        List<LivingEntity> targets = world.getEntitiesByClass(
+        targets = world.getEntitiesByClass(
                 LivingEntity.class,
                 attacker.getBoundingBox().expand(radius),
                 e -> isValidTarget(e, attacker)
