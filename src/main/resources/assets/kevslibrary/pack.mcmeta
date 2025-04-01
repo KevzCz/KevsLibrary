@@ -1,0 +1,6 @@
+{
+  "pack": {
+    "pack_format": 46, // Adjust based on 1.21.1 (likely ~46–47)
+    "description": "Kev's Library Resources"
+  }
+}

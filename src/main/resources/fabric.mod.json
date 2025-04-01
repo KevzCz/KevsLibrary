@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "kevslibrary",
+	"version": "${version}",
+	"name": "Kev's Library",
+	"description": "A library for Kev's mods",
+	"authors": [
+		"KevzCz",
+		"Pixel Dream Studios"
+	],
+	"contact": {
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/kevs-library",
+		"sources": "https://github.com/KevzCz/KevsLibrary",
+		"issues": "https://github.com/KevzCz/KevsLibrary/issues"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/kevslibrary/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["net.pixeldreamstudios.kevslibrary.KevsLibrary"],
+		"client": ["net.pixeldreamstudios.kevslibrary.client.KevsLibraryClient"]
+	},
+	"mixins": [
+		"kevslibrary.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+		"spell_power": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

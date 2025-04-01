@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "net.pixeldreamstudios.kevslibrary.mixin",
+	"compatibilityLevel": "JAVA_21",
+
+	"mixins": [
+		"LivingEntityMixin",
+		"PlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
