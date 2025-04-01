@@ -1,0 +1,20 @@
+{
+  "attribute.name.generic.crit_chance": "Critical Hit Chance",
+  "attribute.name.generic.crit_damage": "Critical Damage Multiplier",
+  "attribute.name.generic.damage": "Damage Multiplier",
+
+  "attribute.name.generic.multistrike_chance": "Chance to trigger Multistrike",
+  "attribute.name.generic.multistrike_count": "Number of Multistrikes",
+  "attribute.name.generic.multistrike_damage": "Multistrike Damage",
+
+  "attribute.name.generic.chain_lightning_chance": "Chance to trigger Chain Lightning",
+  "attribute.name.generic.chain_lightning_count": "Number of Chain Lightning bounces",
+  "attribute.name.generic.chain_lightning_overload_chance": "Chance to trigger Chain Lightning Overload",
+
+  "attribute.name.generic.frost_nova_chance": "Chance to trigger Frost Nova",
+  "attribute.name.generic.frost_nova_count": "Number of Frost Novas",
+  "attribute.name.generic.frost_nova_overload_chance": "Chance to trigger Frost Nova Overload",
+
+  "attribute.name.generic.fire_tornado_chance": "Chance to trigger Fire Tornado",
+  "attribute.name.generic.fire_tornado_overload_chance": "Chance to trigger Fire Tornado Overload"
+}
