@@ -66,12 +66,12 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
             BlockPos pos = hit.getBlockPos();
             BlockState block = world.getBlockState(pos);
 
-            // 💥 Puff on block impact
+
             world.spawnParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 6, 0.1, 0.1, 0.1, 0.01);
             world.playSound(null, pos, SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.PLAYERS, 0.6f, 1.2f);
         }
 
-        discard(); // 💀 Remove on contact with block
+        discard();
     }
 
     @Override
