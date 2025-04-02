@@ -13,7 +13,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import net.pixeldreamstudios.kevslibrary.client.KeyBindings;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
@@ -108,7 +107,6 @@ public class KevsLibrary implements ModInitializer {
 			}
 		});
 		DelayedExecutor.init();
-		KeyBindings.register();
 	}
 
 }

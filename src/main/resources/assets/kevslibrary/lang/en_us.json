@@ -3,61 +3,18 @@
   "attribute.name.generic.crit_damage": "Critical Damage Multiplier",
   "attribute.name.generic.damage": "Damage Multiplier",
 
-  "attribute.name.generic.multistrike_chance": "Chance to trigger Multistrike",
-  "attribute.name.generic.multistrike_count": "Number of Multistrikes",
+  "attribute.name.generic.multistrike_chance": "Multistrike Chance",
+  "attribute.name.generic.multistrike_count": "Multistrike Count",
   "attribute.name.generic.multistrike_damage": "Multistrike Damage",
 
-  "attribute.name.generic.chain_lightning_chance": "Chance to trigger Chain Lightning",
-  "attribute.name.generic.chain_lightning_count": "Number of Chain Lightning bounces",
-  "attribute.name.generic.chain_lightning_overload_chance": "Chance to trigger Chain Lightning Overload",
+  "attribute.name.generic.chain_lightning_chance": "Chain Lightning Chance",
+  "attribute.name.generic.chain_lightning_count": "Chain Lightning Bounce Count",
+  "attribute.name.generic.chain_lightning_overload_chance": "Chain Lightning Overload Chance",
 
-  "attribute.name.generic.frost_nova_chance": "Chance to trigger Frost Nova",
-  "attribute.name.generic.frost_nova_count": "Number of Frost Novas",
-  "attribute.name.generic.frost_nova_overload_chance": "Chance to trigger Frost Nova Overload",
+  "attribute.name.generic.frost_nova_chance": "Frost Nova Chance",
+  "attribute.name.generic.frost_nova_count": "Frost Nova Count",
+  "attribute.name.generic.frost_nova_overload_chance": "Frost Nova Overload Chance",
 
-  "attribute.name.generic.fire_tornado_chance": "Chance to trigger Fire Tornado",
-  "attribute.name.generic.fire_tornado_overload_chance": "Chance to trigger Fire Tornado Overload",
-
-  "attribute.minecraft.generic.max_health": "Max Health",
-  "attribute.minecraft.generic.armor": "Armor",
-  "attribute.minecraft.generic.armor_toughness": "Armor Toughness",
-  "attribute.minecraft.generic.attack_damage": "Attack Damage",
-  "attribute.minecraft.generic.attack_speed": "Attack Speed",
-  "attribute.minecraft.generic.luck": "Luck",
-
-  "attribute.minecraft.max_health": "Max Health",
-  "attribute.minecraft.max_health.desc": "Your total hearts.",
-  "attribute.minecraft.attack_damage": "Attack Damage",
-  "attribute.minecraft.attack_damage.desc": "How much damage you deal.",
-  "attribute.kevslibrary.frost_nova_count": "Frost Nova Count",
-  "attribute.kevslibrary.frost_nova_count.desc": "The number of novas that spawn.",
-
-
-  "attribute.generic.crit_chance.desc": "The chance your attack critically hits.",
-  "attribute.generic.crit_damage.desc": "The damage multiplier applied on a critical hit.",
-  "attribute.generic.damage.desc": "Additional global damage multiplier.",
-
-  "attribute.generic.multistrike_chance.desc": "The chance to trigger additional strikes.",
-  "attribute.generic.multistrike_count.desc": "How many extra strikes are triggered.",
-  "attribute.generic.multistrike_damage.desc": "The damage each multistrike deals.",
-
-  "attribute.generic.chain_lightning_chance.desc": "Chance to summon lightning that jumps between enemies.",
-  "attribute.generic.chain_lightning_count.desc": "Number of jumps the lightning can make.",
-  "attribute.generic.chain_lightning_overload_chance.desc": "Chance to unleash an overloaded lightning hit.",
-
-  "attribute.generic.frost_nova_chance.desc": "Chance to emit a freezing nova on hit.",
-  "attribute.generic.frost_nova_count.desc": "The number of frost novas that will appear.",
-  "attribute.generic.frost_nova_overload_chance.desc": "Chance to trigger an overloaded freezing nova.",
-
-  "attribute.generic.fire_tornado_chance.desc": "Chance to spawn a fiery tornado.",
-  "attribute.generic.fire_tornado_overload_chance.desc": "Chance for a more powerful tornado effect.",
-
-  "attribute.minecraft.armor.desc": "Reduces incoming damage.",
-  "attribute.minecraft.armor_toughness.desc": "Improves armor effectiveness against strong attacks.",
-  "attribute.minecraft.attack_speed.desc": "How fast you can swing your weapon.",
-  "attribute.minecraft.luck.desc": "Increases loot and drop quality.",
-
-
-  "key.kevslibrary.stats": "Open Stats Screen",
-  "key.categories.kevslibrary": "Kev's Library"
+  "attribute.name.generic.fire_tornado_chance": "Fire Tornado Chance",
+  "attribute.name.generic.fire_tornado_overload_chance": "Fire Tornado Overload Chance"
 }
