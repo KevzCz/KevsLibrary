@@ -337,7 +337,7 @@
             private final LivingEntity target;
             private final LivingEntity source;
             private final ItemStack weaponUsed;
-    
+            private int strikeIndex = 0;
             private float totalDamage;
             private int totalStrikes = 0;
             private int triggerCount = 0;
@@ -364,55 +364,65 @@
                 ticksUntilDetonate += (int) (20 * Math.max(diminishingTimerAdd, 0));
                 diminishingTimerAdd -= 0.1f;
             }
-    
+
             public boolean tick(ServerWorld world) {
                 if (!target.isAlive()) return true;
-    
+
                 long time = world.getTime();
-    
+
                 if (!detonating) {
                     ticksUntilDetonate--;
                     if (ticksUntilDetonate == 20) {
                         world.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1, target.getZ(), 2, 0.5, 0.3, 0.5, 0.05);
                     }
                     if (ticksUntilDetonate > 0) return false;
-    
+
                     detonating = true;
                     lastStrikeTime = time;
                     world.spawnParticles(ParticleTypes.NOTE, target.getX(), target.getY() + target.getHeight() + 0.6, target.getZ(), 1, 0, 0, 0, 0);
                     return false;
                 }
-    
-                // ✅ Gated delay between hits
-                if (time - lastStrikeTime < 3) return false;
+
+                // ⚡ Ultra-fast ramping strike speed after 5 strikes
+                int delay;
+                if (strikeIndex < 5) {
+                    delay = 3 - strikeIndex; // 3, 2, 1, 0 ticks
+                } else {
+                    delay = 0; // full anime mode: max speed
+                }
+
+                if (delay > 0 && time - lastStrikeTime < delay) return false;
                 lastStrikeTime = time;
-    
+
                 if (!target.isAlive()) return true;
                 if (totalStrikes <= 0) return true;
-    
+
                 float avgDamage = totalDamage / triggerCount;
                 EntityAttributeInstance dmgAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
                 float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
                 float damage = avgDamage * multiplier;
-    
+
                 DamageSource source = world.getDamageSources().create(KevsDamageTypes.MULTISTRIKE, this.source);
                 target.hurtTime = 0;
                 target.timeUntilRegen = 0;
-    
+
                 boolean hit = target.damage(source, damage);
                 if (hit) {
                     OnHitEffectHandler.withMultistrikeContext(() -> {
                         OnHitEffectHandler.triggerAll(this.source, target, damage);
                     });
                 }
-    
+
                 world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1f, 1f);
                 world.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1, target.getZ(), 2, 0.5, 0.3, 0.5, 0.05);
-    
+
                 totalStrikes--;
+                strikeIndex++; // 🧠 track number of hits to ramp up
+
                 return totalStrikes <= 0;
             }
-    
+
+
             private int getStrikeCountFromAttributes(LivingEntity source) {
                 EntityAttributeInstance countAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
                 return countAttr != null ? (int) countAttr.getValue() : 1;
