@@ -6,7 +6,10 @@
 	"mixins": [
 		"LivingEntityMixin",
 		"PlayerMixin",
-		"InventoryScreenMixin"
+		"InventoryScreenMixin",
+		"TameableEntityMixin",
+		"AbstractHorseEntityMixin",
+		"UniversalTamingDataMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

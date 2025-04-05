@@ -147,6 +147,7 @@ public abstract class LivingEntityMixin {
         if (fireTornadoChance > 0.0 && attacker.getRandom().nextDouble() < fireTornadoChance) {
             FireTornadoHandler.spawnFireTornado(attacker, target);
         }
-
+        EntityAttributeInstance petInRaAttr = attacker.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
+        double petInheritanceRatio = petInRaAttr != null ? petInRaAttr.getValue() : 0.0;
     }
 }

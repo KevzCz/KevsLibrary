@@ -16,5 +16,7 @@
   "attribute.name.generic.frost_nova_overload_chance": "Frost Nova Overload Chance",
 
   "attribute.name.generic.fire_tornado_chance": "Fire Tornado Chance",
-  "attribute.name.generic.fire_tornado_overload_chance": "Fire Tornado Overload Chance"
+  "attribute.name.generic.fire_tornado_overload_chance": "Fire Tornado Overload Chance",
+
+  "attribute.name.generic.pet_inheritance_ratio": "Pet Inheritance Ratio"
 }

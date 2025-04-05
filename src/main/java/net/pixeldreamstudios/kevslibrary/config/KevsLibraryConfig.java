@@ -10,6 +10,7 @@ import java.io.FileWriter;
 public class KevsLibraryConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_FILE = new File("config/kevs_library_config.json");
+    public boolean useBookBackground = true; // true = use book.png, false = NAME_BG + VALUE_BG
 
     public int xOffset = -61;
     public int yOffset = 10;

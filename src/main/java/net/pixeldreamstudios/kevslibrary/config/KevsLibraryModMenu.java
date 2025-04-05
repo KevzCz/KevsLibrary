@@ -20,17 +20,23 @@ public class KevsLibraryModMenu implements ModMenuApi {
             ConfigCategory general = builder.getOrCreateCategory(Text.of("General"));
 
             general.addEntry(entryBuilder
-                    .startIntField(Text.literal("X Offset"), KevsLibraryConfig.INSTANCE.xOffset)
+                    .startIntField(Text.literal("Book icon X Offset"), KevsLibraryConfig.INSTANCE.xOffset)
                     .setDefaultValue(-61)
                     .setTooltip(Text.of("Horizontal position of the attribute panel icon"))
                     .setSaveConsumer(value -> KevsLibraryConfig.INSTANCE.xOffset = value)
                     .build());
 
             general.addEntry(entryBuilder
-                    .startIntField(Text.literal("Y Offset"), KevsLibraryConfig.INSTANCE.yOffset)
+                    .startIntField(Text.literal("Book icon Y Offset"), KevsLibraryConfig.INSTANCE.yOffset)
                     .setDefaultValue(66)
                     .setTooltip(Text.of("Vertical position of the attribute panel icon"))
                     .setSaveConsumer(value -> KevsLibraryConfig.INSTANCE.yOffset = value)
+                    .build());
+            general.addEntry(entryBuilder
+                    .startBooleanToggle(Text.literal("Use Book Background"), KevsLibraryConfig.INSTANCE.useBookBackground)
+                    .setDefaultValue(true)
+                    .setTooltip(Text.of("If enabled, shows stats inside a book UI. Otherwise uses vanilla-styled panels."))
+                    .setSaveConsumer(value -> KevsLibraryConfig.INSTANCE.useBookBackground = value)
                     .build());
 
             builder.setSavingRunnable(() -> {

@@ -1,6 +1,7 @@
 package net.pixeldreamstudios.kevslibrary;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
@@ -71,6 +72,9 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_OVERLOAD_CHANCE =
 			RegistryHelper.registerAttribute("frost_nova_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> PET_INHERITANCE_RATIO =
+			RegistryHelper.registerAttribute("pet_inheritance_ratio",
+					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.25, 0.0, 1.0).setTracked(true));
 
 
 	public static final EntityType<IcicleProjectileEntity> ICICLE_PROJECTILE =
@@ -109,6 +113,7 @@ public class KevsLibrary implements ModInitializer {
 		});
 		DelayedExecutor.init();
 		KevsLibraryConfig.load();
+
 
 	}
 
