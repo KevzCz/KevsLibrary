@@ -8,6 +8,9 @@
 		"KevzCz",
 		"Pixel Dream Studios"
 	],
+	"custom": {
+		"modmenu:api": true
+	},
 	"contact": {
 		"homepage": "https://www.curseforge.com/minecraft/mc-mods/kevs-library",
 		"sources": "https://github.com/KevzCz/KevsLibrary",
@@ -18,7 +21,8 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": ["net.pixeldreamstudios.kevslibrary.KevsLibrary"],
-		"client": ["net.pixeldreamstudios.kevslibrary.client.KevsLibraryClient"]
+		"client": ["net.pixeldreamstudios.kevslibrary.client.KevsLibraryClient"],
+		"modmenu": ["net.pixeldreamstudios.kevslibrary.config.KevsLibraryModMenu"]
 	},
 	"mixins": [
 		"kevslibrary.mixins.json"

@@ -8,6 +8,7 @@ import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.client.AttributePanelDrawable;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,10 +23,8 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
     private AttributePanelDrawable kevslib$attributePanel;
 
     @Unique
-    private static final Identifier IRON_SWORD = Identifier.of("minecraft", "textures/item/iron_sword.png");
+    private static final Identifier ATTRIBUTE_BOOK = Identifier.of("kevslibrary", "textures/gui/attribute_book.png");
 
-    @Unique
-    private static final Identifier DIAMOND_SWORD = Identifier.of("minecraft", "textures/item/diamond_sword.png");
 
     public InventoryScreenMixin(PlayerScreenHandler handler, net.minecraft.entity.player.PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
@@ -44,21 +43,25 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
         if (kevslib$attributePanel != null) {
             kevslib$attributePanel.tick();
 
-            // Icon properties
-            int iconSize = 8;
-            int buttonX = this.x + this.backgroundWidth / 2 - 61;
-            int buttonY = this.y + 67;
+            int iconSize = 9;
+            int buttonX = this.x + this.backgroundWidth / 2 + KevsLibraryConfig.INSTANCE.xOffset;
+            int buttonY = this.y + KevsLibraryConfig.INSTANCE.yOffset;
 
-            Identifier icon = kevslib$attributePanel.isExpanded()
-                    ? DIAMOND_SWORD
-                    : IRON_SWORD;
+            boolean hovered = mouseX >= buttonX && mouseX <= buttonX + iconSize &&
+                    mouseY >= buttonY && mouseY <= buttonY + iconSize;
 
-            // Draw icon
-            context.drawTexture(icon, buttonX, buttonY, 0, 0, iconSize, iconSize, 8, 8);
+            int color = hovered ? 0xFFFFFFFF : 0xFF666666; // full bright vs dimmed
+            context.setShaderColor(
+                    ((color >> 16) & 0xFF) / 255f,
+                    ((color >> 8) & 0xFF) / 255f,
+                    (color & 0xFF) / 255f,
+                    ((color >> 24) & 0xFF) / 255f
+            );
 
-            // Tooltip
-            if (mouseX >= buttonX && mouseX <= buttonX + iconSize &&
-                    mouseY >= buttonY && mouseY <= buttonY + iconSize) {
+            context.drawTexture(ATTRIBUTE_BOOK, buttonX, buttonY, 0, 0, iconSize, iconSize, 9, 9);
+            context.setShaderColor(1f, 1f, 1f, 1f); // reset color
+
+            if (hovered) {
                 context.drawTooltip(this.textRenderer, Text.of("Attributes Panel"), mouseX, mouseY);
             }
         }
@@ -67,9 +70,9 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void kevslib$onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (kevslib$attributePanel != null) {
-            int iconSize = 8;
-            int buttonX = this.x + this.backgroundWidth / 2 - 61;
-            int buttonY = this.y + 66;
+            int iconSize = 9;
+            int buttonX = this.x + this.backgroundWidth / 2 + KevsLibraryConfig.INSTANCE.xOffset;
+            int buttonY = this.y + KevsLibraryConfig.INSTANCE.yOffset;
 
             if (mouseX >= buttonX && mouseX <= buttonX + iconSize &&
                     mouseY >= buttonY && mouseY <= buttonY + iconSize) {

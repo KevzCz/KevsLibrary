@@ -83,7 +83,12 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
             boolean isPercent = attr.getTranslationKey().contains("resistance")
                     || attr.getTranslationKey().contains("movement_speed")
-                    || attr.getTranslationKey().contains("chance");
+                    || attr.getTranslationKey().contains("fire_tornado_chance")
+                    || attr.getTranslationKey().contains("fire_tornado_overload_chance")
+                    || attr.getTranslationKey().contains("chain_lightning_chance")
+                    || attr.getTranslationKey().contains("chain_lightning_overload_chance")
+                    || attr.getTranslationKey().contains("frost_nova_chance")
+                    || attr.getTranslationKey().contains("frost_nova_overload_chance");
 
             double base = instance.getBaseValue();
             double value = instance.getValue();
