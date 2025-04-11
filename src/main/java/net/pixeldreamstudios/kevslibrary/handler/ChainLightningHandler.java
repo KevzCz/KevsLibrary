@@ -97,7 +97,11 @@ public class ChainLightningHandler {
             float nextDamage = nextCritApplied * bonus;
 
             next.damage(attacker.getDamageSources().magic(), nextDamage);
-            if (nextCrit) {
+            if (nextCrit) {SoulLinkTracker.getGroup(next).ifPresent(linkData -> {
+                if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+                SoulLinkHandler.handleLinkedDamage(linkData.attacker(), next, nextDamage, linkData.group(), linkData.soulPower());
+            });
+
                 world.spawnParticles(ParticleTypes.CRIT, next.getX(), next.getY() + 1.0, next.getZ(), 5, 0.2, 0.2, 0.2, 0.01);
             }
 
@@ -172,6 +176,11 @@ public class ChainLightningHandler {
                     target.timeUntilRegen = 0;
                     target.hurtTime = 0;
                     target.damage(attacker.getDamageSources().magic(), tickDamage);
+                    SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                        if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+                        SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, tickDamage, linkData.group(), linkData.soulPower());
+                    });
+
                     world.spawnParticles(ParticleTypes.END_ROD,
                             target.getX(), target.getY() + 1.2, target.getZ(),
                             6, 0.3, 0.4, 0.3, 0.01);

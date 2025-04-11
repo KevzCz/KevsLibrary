@@ -126,7 +126,11 @@ public class FireTornadoHandler {
 
                         target.setOnFireFor(FIRE_DURATION / 20);
                         target.damage(attacker.getDamageSources().inFire(), damage);
-
+                        float finalDamage = damage;
+                        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                            if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+                            SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage, linkData.group(), linkData.soulPower());
+                        });
                         if (isCrit) {
                             world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1, target.getZ(), 6, 0.2, 0.2, 0.2, 0.02);
                             world.spawnParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.2, target.getZ(), 4, 0.2, 0.2, 0.2, 0.01);

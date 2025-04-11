@@ -79,9 +79,9 @@ public class KevsLibrary implements ModInitializer {
 			RegistryHelper.registerAttribute("soul_link_chance",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
 
-	public static final RegistryEntry<EntityAttribute> SOUL_LINK_OVERLOAD_CHANCE =
-			RegistryHelper.registerAttribute("soul_link_overload_chance",
-					new ClampedEntityAttribute("attribute.name.generic.soul_link_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> SOUL_LINK_DAMAGE =
+			RegistryHelper.registerAttribute("soul_link_damage",
+					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 10.0).setTracked(true));
 
 	public static final EntityType<IcicleProjectileEntity> ICICLE_PROJECTILE =
 			Registry.register(

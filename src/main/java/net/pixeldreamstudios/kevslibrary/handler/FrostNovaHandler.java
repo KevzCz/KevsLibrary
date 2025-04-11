@@ -126,6 +126,12 @@ public class FrostNovaHandler {
             if (overloaded) finalDamage *= 1.5f;
 
             target.damage(attacker.getDamageSources().magic(), finalDamage);
+            float finalDamage1 = finalDamage;
+            SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+                SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage1, linkData.group(), linkData.soulPower());
+            });
+
             Vec3d knock = target.getPos().subtract(attacker.getPos()).normalize().multiply(0.4 + 0.1 * waveIndex);
             target.addVelocity(knock.x, 0.2, knock.z);
             target.setFrozenTicks(SLOW_DURATION);

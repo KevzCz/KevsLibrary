@@ -18,5 +18,9 @@
   "attribute.name.generic.fire_tornado_chance": "Fire Tornado Chance",
   "attribute.name.generic.fire_tornado_overload_chance": "Fire Tornado Overload Chance",
 
-  "attribute.name.generic.pet_inheritance_ratio": "Pet Inheritance Ratio"
+  "attribute.name.generic.pet_inheritance_ratio": "Pet Inheritance Ratio",
+
+  "attribute.name.generic.soul_link_chance": "Soul Link Chance",
+
+  "attribute.name.generic.soul_link_damage": "Soul Link Damage"
 }

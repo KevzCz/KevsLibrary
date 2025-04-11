@@ -176,13 +176,5 @@ public abstract class LivingEntityMixin {
         });
 
     }
-    @Inject(method = "onDeath", at = @At("HEAD"))
-    private void onDeathInject(DamageSource source, CallbackInfo ci) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-
-        SoulLinkTracker.getGroup(entity).ifPresent(linkData -> {
-            SoulLinkHandler.handleDeathOverload(linkData.attacker(), entity, entity.getMaxHealth());
-        });
-    }
 
 }
