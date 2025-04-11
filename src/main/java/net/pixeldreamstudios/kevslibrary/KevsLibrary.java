@@ -75,7 +75,13 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> PET_INHERITANCE_RATIO =
 			RegistryHelper.registerAttribute("pet_inheritance_ratio",
 					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.25, 0.0, 1.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> SOUL_LINK_CHANCE =
+			RegistryHelper.registerAttribute("soul_link_chance",
+					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
 
+	public static final RegistryEntry<EntityAttribute> SOUL_LINK_OVERLOAD_CHANCE =
+			RegistryHelper.registerAttribute("soul_link_overload_chance",
+					new ClampedEntityAttribute("attribute.name.generic.soul_link_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final EntityType<IcicleProjectileEntity> ICICLE_PROJECTILE =
 			Registry.register(
@@ -98,7 +104,6 @@ public class KevsLibrary implements ModInitializer {
 							.trackedUpdateRate(10)
 							.build()
 			);
-
 	@Override
 	public void onInitialize() {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {

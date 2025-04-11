@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
@@ -149,5 +150,39 @@ public abstract class LivingEntityMixin {
         }
         EntityAttributeInstance petInRaAttr = attacker.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
         double petInheritanceRatio = petInRaAttr != null ? petInRaAttr.getValue() : 0.0;
+
+        EntityAttributeInstance soulLinkAttr = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_CHANCE);
+        double soulLinkChance = soulLinkAttr != null ? soulLinkAttr.getValue() : 0.0;
+
+        if (soulLinkChance > 0.0 && attacker.getRandom().nextDouble() < soulLinkChance) {
+            SoulLinkHandler.triggerSoulLink(attacker, target);
+        }
+        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+            if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+
+            SoulLinkHandler.handleLinkedDamage(
+                    linkData.attacker(),
+                    target,
+                    finalDamage,
+                    linkData.group(),
+                    linkData.soulPower()
+            );
+        });
+// 💥 Check if target is already part of a link → attempt to expand it
+        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+            if (attacker.getRandom().nextDouble() < soulLinkChance) {
+                SoulLinkHandler.tryExtendLink(attacker, target);
+            }
+        });
+
     }
+    @Inject(method = "onDeath", at = @At("HEAD"))
+    private void onDeathInject(DamageSource source, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+
+        SoulLinkTracker.getGroup(entity).ifPresent(linkData -> {
+            SoulLinkHandler.handleDeathOverload(linkData.attacker(), entity, entity.getMaxHealth());
+        });
+    }
+
 }

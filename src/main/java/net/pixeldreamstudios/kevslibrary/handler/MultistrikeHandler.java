@@ -98,7 +98,7 @@
                     bombIt.remove();
                 }
             }
-    
+
             // 💥 Tick all hovering arrows (your original code)
             Iterator<Map.Entry<UUID, List<HoveringArrow>>> it = hoveringArrows.entrySet().iterator();
             while (it.hasNext()) {
@@ -188,7 +188,15 @@
                     arrow.discard();
                     return true;
                 }
-    
+                if (attacker.isRemoved() || attacker.isDead() || !attacker.isAlive()) {
+                    arrow.discard(); // 💥 clean up the arrow
+                    return true;     // ✅ remove from arrow list
+                }
+                if (!attacker.getWorld().equals(arrow.getWorld())) {
+                    arrow.discard();
+                    return true;
+                }
+
                 ticksSinceSpawn++;
                 if (ticksSinceSpawn > MAX_LIFESPAN) {
                     arrow.discard();
@@ -291,6 +299,35 @@
                     case LAUNCHED -> {
                         Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(arrow.getPos());
                         arrow.setVelocity(toTarget.normalize().multiply(2.8));
+                        if (arrow.getBoundingBox().intersects(target.getBoundingBox())) {
+                            float damage = (float) arrow.getDamage();
+                            DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
+                            boolean hit = target.damage(source, damage);
+
+                            if (hit) {
+                                OnHitEffectHandler.withMultistrikeContext(() -> {
+                                    OnHitEffectHandler.triggerAll(attacker, target, damage);
+                                });
+
+                                // ✅ Manually apply Soul Link damage!
+                                SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                                    SoulLinkHandler.handleLinkedDamage(
+                                            linkData.attacker(),
+                                            target,
+                                            damage,
+                                            linkData.group(),
+                                            linkData.soulPower()
+                                    );
+                                });
+
+                                // Optional: particle feedback
+                                ((ServerWorld) target.getWorld()).spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1, target.getZ(), 5, 0.3, 0.3, 0.3, 0.01);
+                            }
+
+                            arrow.discard(); // 💥 destroy arrow after hit
+                            return true; // signal done
+                        }
+
                         return false;
                     }
                 }
@@ -410,9 +447,17 @@
                 if (hit) {
                     OnHitEffectHandler.withMultistrikeContext(() -> {
                         OnHitEffectHandler.triggerAll(this.source, target, damage);
+                        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                            SoulLinkHandler.handleLinkedDamage(
+                                    linkData.attacker(),
+                                    target,
+                                    damage,
+                                    linkData.group(),
+                                    linkData.soulPower()
+                            );
+                        });
                     });
                 }
-
                 world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1f, 1f);
                 world.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1, target.getZ(), 2, 0.5, 0.3, 0.5, 0.05);
 

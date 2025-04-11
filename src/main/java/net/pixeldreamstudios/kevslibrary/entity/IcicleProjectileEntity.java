@@ -19,9 +19,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.spell_power.api.SpellPower;
+import net.spell_power.api.SpellSchools;
 
 public class IcicleProjectileEntity extends PersistentProjectileEntity implements FlyingItemEntity {
-    private float icicleDamage = 2.0f;
+    private float icicleDamage = 6.0f;
 
     public IcicleProjectileEntity(EntityType<? extends PersistentProjectileEntity> entityType, World world) {
         super(entityType, world);
@@ -31,7 +33,7 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
     public static IcicleProjectileEntity create(World world, LivingEntity owner, float damage) {
         IcicleProjectileEntity icicle = new IcicleProjectileEntity(KevsLibrary.ICICLE_PROJECTILE, world);
         icicle.setOwner(owner);
-        icicle.setDamage(damage);
+        icicle.setIcicleDamage(damage);
         icicle.setSilent(true);
         icicle.setCritical(false);
         return icicle;
@@ -46,14 +48,36 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
     protected void onEntityHit(EntityHitResult result) {
         if (!(getOwner() instanceof LivingEntity attacker)) return;
         if (!(result.getEntity() instanceof LivingEntity target)) return;
+        if (!(getWorld() instanceof ServerWorld world)) return;
+
+        // Spell Power system
+        SpellPower.Result resultData = SpellPower.getSpellPower(SpellSchools.FROST, attacker);
+        SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FROST);
+
+        // Manual crit roll
+        float base = icicleDamage + (float) resultData.baseValue() * (1.0f + vuln.powerBaseMultiplier());
+        boolean isCrit = attacker.getRandom().nextDouble() < (resultData.criticalChance() + vuln.criticalChanceBonus());
+        float critApplied = isCrit ? base * (float) (resultData.criticalDamage() + vuln.criticalDamageBonus()) : base;
+
+        float finalDamage = critApplied;
+
+        var dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
+        if (dmgAttr != null) {
+            finalDamage *= (float) dmgAttr.getValue();
+        }
 
         DamageSource source = this.getDamageSources().create(KevsDamageTypes.ICICLE, attacker);
-        boolean hit = target.damage(source, icicleDamage);
+        boolean hit = target.damage(source, finalDamage);
 
-        if (hit && getWorld() instanceof ServerWorld world) {
+        if (hit) {
             world.spawnParticles(ParticleTypes.ITEM_SNOWBALL, target.getX(), target.getY() + 1.0, target.getZ(),
                     10, 0.2, 0.3, 0.2, 0.01);
             world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 0.6f, 1.8f);
+
+            if (isCrit) {
+                world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0, target.getZ(),
+                        6, 0.2, 0.3, 0.2, 0.01);
+            }
         }
 
         discard();
@@ -65,7 +89,6 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
         if (getWorld() instanceof ServerWorld world) {
             BlockPos pos = hit.getBlockPos();
             BlockState block = world.getBlockState(pos);
-
 
             world.spawnParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 6, 0.1, 0.1, 0.1, 0.01);
             world.playSound(null, pos, SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.PLAYERS, 0.6f, 1.2f);

@@ -30,7 +30,8 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.FROST_NOVA_COUNT, 1)
                         .add(KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 0.0)
                         .add(KevsLibrary.PET_INHERITANCE_RATIO, 0)
-
+                        .add(KevsLibrary.SOUL_LINK_CHANCE,0)
+                        .add(KevsLibrary.SOUL_LINK_OVERLOAD_CHANCE,0)
 
 
         );

@@ -45,7 +45,12 @@ public class OnHitEffectHandler {
         if (attacker.getRandom().nextDouble() < lightningChance) {
             ChainLightningHandler.spawnChainLightning(attacker, target);
         }
+        EntityAttributeInstance soulLinkAttr = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_CHANCE);
+        double soulLinkChance = soulLinkAttr != null ? soulLinkAttr.getValue() : 0.0;
 
+        if (soulLinkChance > 0.0 && attacker.getRandom().nextDouble() < soulLinkChance) {
+            SoulLinkHandler.triggerSoulLink(attacker, target);
+        }
 
     }
 }

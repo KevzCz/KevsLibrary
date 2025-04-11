@@ -6,24 +6,21 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
-import net.spell_power.api.SpellSchool;
+import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class FrostNovaHandler {
     private static final double RADIUS = 5.0;
     private static final float BASE_DAMAGE = 3.0f;
-    private static final int SLOW_DURATION = 60; // 3 seconds
+    private static final int SLOW_DURATION = 60;
     private static final int COOLDOWN_TICKS = 40;
     private static final Map<UUID, Long> LAST_NOVA = new HashMap<>();
 
@@ -63,51 +60,50 @@ public class FrostNovaHandler {
                 doFrostNova(attacker, waveIndex, overloaded, targetsSnapshot);
             }, delay);
         }
-
     }
 
-
-    private static void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded, List<LivingEntity> targets)
-
-    {
+    private static void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded, List<LivingEntity> targets) {
         if (!(attacker.getWorld() instanceof ServerWorld world)) return;
 
-        double frostPower = SpellSchools.FROST.getValue(
-                SpellSchool.Trait.POWER,
-                new SpellSchool.QueryArgs(attacker)
-        );
-        float damage = (float) (BASE_DAMAGE + frostPower);
+        SpellPower.Result result = SpellPower.getSpellPower(SpellSchools.FROST, attacker);
+        SpellPower.Result.Value rawResult = result.nonCritical();
+
+        float base = BASE_DAMAGE + (float) result.baseValue();
+        float critChance = (float) result.criticalChance();
+        float critMultiplier = (float) result.criticalDamage();
+
+        float dmgMult = 1.0f;
         EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-        if (dmgAttr != null) {
-            damage *= (float) dmgAttr.getValue();
-        }
+        if (dmgAttr != null) dmgMult = (float) dmgAttr.getValue();
+
         if (overloaded) {
-            damage *= 1.5f;
             world.spawnParticles(ParticleTypes.ITEM_SNOWBALL, attacker.getX(), attacker.getY() + 1.0, attacker.getZ(),
-                    30, 0.6, 0.5, 0.6, 0.03);
-            world.playSound(null, attacker.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1f, 0.8f);
+                    40, 0.7, 0.6, 0.7, 0.04);
+            world.spawnParticles(ParticleTypes.SNOWFLAKE, attacker.getX(), attacker.getY() + 1.0, attacker.getZ(),
+                    30, 0.4, 0.3, 0.4, 0.01);
+            world.spawnParticles(ParticleTypes.CLOUD, attacker.getX(), attacker.getY() + 1.0, attacker.getZ(),
+                    20, 0.4, 0.1, 0.4, 0.02);
+            world.playSound(null, attacker.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1.1f, 0.8f);
         }
 
-
-        // Radius increases with each wave: base 4 + waveIndex * 1.5
         double radius = RADIUS + waveIndex * 1.5;
 
-        // Softer, more mystical sound
+        float pitch = 0.9f + waveIndex * 0.05f;
         world.playSound(null, attacker.getX(), attacker.getY(), attacker.getZ(),
-                SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.PLAYERS, 0.5f, 1.1f);
+                SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.PLAYERS, 0.7f, pitch);
 
-        // ❄️ Spiral snowflake burst
-        for (int angleDeg = 0; angleDeg < 360; angleDeg += 15) {
-            double angle = Math.toRadians(angleDeg);
+        for (int i = 0; i < 24; i++) {
+            double angle = (i / 24.0) * Math.PI * 2;
             double x = attacker.getX() + Math.cos(angle) * radius;
             double z = attacker.getZ() + Math.sin(angle) * radius;
-            double y = attacker.getY() + 1.0;
+            double y = attacker.getY() + 1.2;
 
-            world.spawnParticles(ParticleTypes.SNOWFLAKE, x, y, z, 2, 0.2, 0.2, 0.2, 0.01);
-            world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.5, z, 1, 0.1, 0.1, 0.1, 0.02);
+            world.spawnParticles(ParticleTypes.SNOWFLAKE, x, y, z, 1, 0.1, 0.1, 0.1, 0.01);
+            if (overloaded) {
+                world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.3, z, 1, 0.05, 0.05, 0.05, 0.005);
+            }
         }
 
-        // 💨 Core burst at center
         world.spawnParticles(ParticleTypes.CLOUD, attacker.getX(), attacker.getY() + 1, attacker.getZ(),
                 10, 0.5, 0.1, 0.5, 0.01);
         world.spawnParticles(ParticleTypes.ITEM_SNOWBALL, attacker.getX(), attacker.getY() + 1, attacker.getZ(),
@@ -120,22 +116,38 @@ public class FrostNovaHandler {
         );
 
         for (LivingEntity target : targets) {
-            target.damage(attacker.getDamageSources().magic(), damage);
+            SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FROST);
+
+            float raw = base * (1.0f + vuln.powerBaseMultiplier());
+            boolean isCrit = attacker.getRandom().nextDouble() < (critChance + vuln.criticalChanceBonus());
+            float critApplied = isCrit ? raw * (critMultiplier + vuln.criticalDamageBonus()) : raw;
+
+            float finalDamage = critApplied * dmgMult;
+            if (overloaded) finalDamage *= 1.5f;
+
+            target.damage(attacker.getDamageSources().magic(), finalDamage);
             Vec3d knock = target.getPos().subtract(attacker.getPos()).normalize().multiply(0.4 + 0.1 * waveIndex);
             target.addVelocity(knock.x, 0.2, knock.z);
             target.setFrozenTicks(SLOW_DURATION);
 
-            // 🎯 Impact feedback
             world.spawnParticles(ParticleTypes.ITEM_SNOWBALL,
                     target.getX(), target.getY() + 1.0, target.getZ(),
                     8, 0.3, 0.3, 0.3, 0.01);
 
-            // ❄️ On overload, launch icicles from the hit target
+            if (isCrit) {
+                world.spawnParticles(ParticleTypes.CRIT,
+                        target.getX(), target.getY() + 1.2, target.getZ(),
+                        8, 0.3, 0.2, 0.3, 0.01);
+                world.spawnParticles(ParticleTypes.SNOWFLAKE,
+                        target.getX(), target.getY() + 1.4, target.getZ(),
+                        8, 0.25, 0.25, 0.25, 0.01);
+                world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.PLAYERS, 0.5f, 1.0f);
+            }
+
             if (overloaded) {
-                spawnIcicleBurst(world, attacker, target, damage * 0.75f);
+                spawnIcicleBurst(world, attacker, target, finalDamage * 0.75f);
             }
         }
-
     }
 
     private static void spawnIcicleBurst(ServerWorld world, LivingEntity attacker, LivingEntity origin, float icicleDamage) {
@@ -153,7 +165,6 @@ public class FrostNovaHandler {
             IcicleProjectileEntity icicle = IcicleProjectileEntity.create(world, attacker, icicleDamage);
             icicle.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
 
-            // 🔼 Arc upward with randomness
             double upwardPower = 0.6 + world.random.nextDouble() * 0.4;
             double spreadX = (world.random.nextDouble() - 0.5) * 0.3;
             double spreadZ = (world.random.nextDouble() - 0.5) * 0.3;
@@ -167,9 +178,6 @@ public class FrostNovaHandler {
                 basePos.x, basePos.y + origin.getHeight() + 1.0, basePos.z,
                 20, 0.4, 0.2, 0.4, 0.01);
     }
-
-
-
 
     private static boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
         if (!entity.isAlive()) return false;

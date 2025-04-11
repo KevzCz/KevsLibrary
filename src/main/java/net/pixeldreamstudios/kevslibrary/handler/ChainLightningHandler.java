@@ -10,6 +10,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchool;
 import net.spell_power.api.SpellSchools;
 
@@ -30,37 +31,44 @@ public class ChainLightningHandler {
                 ? attacker.getAttributeValue(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE)
                 : 0.0;
 
-        double lightningPower = SpellSchools.LIGHTNING.getValue(
-                SpellSchool.Trait.POWER,
-                new SpellSchool.QueryArgs(attacker)
-        );
-
-        float damage = (float) (4.0 + lightningPower);
-
+        // SpellPower setup
+        SpellPower.Result spellResult = SpellPower.getSpellPower(SpellSchools.LIGHTNING, attacker);
         EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-        if (dmgAttr != null) {
-            damage *= (float) dmgAttr.getValue();
-        }
+        float bonus = dmgAttr != null ? (float) dmgAttr.getValue() : 1.0f;
+
+        float baseDamage = 3.0f;
+
         Set<LivingEntity> visited = new HashSet<>();
         visited.add(attacker);
         visited.add(initialTarget);
 
-        // 🎯 Hit the original target FIRST (not a bounce)
+        // 🎯 Initial target
         spawnArcParticles(world, attacker, initialTarget);
         world.playSound(null, initialTarget.getX(), initialTarget.getY(), initialTarget.getZ(),
                 SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 0.2f, 0.2f);
+
+        SpellPower.Vulnerability vuln = SpellPower.getVulnerability(initialTarget, SpellSchools.LIGHTNING);
+        SpellPower.Result.Value value = spellResult.random(vuln);
+
+        float raw = baseDamage + (float) spellResult.baseValue();
+        boolean isCrit = attacker.getRandom().nextDouble() < spellResult.criticalChance();
+        float critApplied = isCrit ? raw * (float) spellResult.criticalDamage() : raw;
+        float damage = critApplied * bonus;
+
         initialTarget.damage(attacker.getDamageSources().magic(), damage);
+        if (isCrit) {
+            world.spawnParticles(ParticleTypes.CRIT, initialTarget.getX(), initialTarget.getY() + 1.0, initialTarget.getZ(), 5, 0.2, 0.2, 0.2, 0.01);
+        }
 
         if (attacker.getRandom().nextDouble() < overloadChance) {
             spawnOverloadVisuals(world, initialTarget.getPos());
             triggerOverloadDoT(attacker, initialTarget, damage * 0.2f, bounceCount);
         }
 
-        // 🌩️ Start bouncing from the initial target
+        // 🌩️ Bounce logic
         Queue<LivingEntity> queue = new LinkedList<>();
         queue.add(initialTarget);
-
-        int jumps = 0; // ✅ Zero bounces so far
+        int jumps = 0;
 
         while (!queue.isEmpty() && jumps < bounceCount) {
             LivingEntity current = queue.poll();
@@ -79,15 +87,26 @@ public class ChainLightningHandler {
             spawnArcParticles(world, current, next);
             world.playSound(null, next.getX(), next.getY(), next.getZ(),
                     SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 0.2f, 0.2f);
-            next.damage(attacker.getDamageSources().magic(), damage);
+
+            SpellPower.Vulnerability nextVuln = SpellPower.getVulnerability(next, SpellSchools.LIGHTNING);
+            SpellPower.Result.Value nextValue = spellResult.random(nextVuln);
+
+            float nextRaw = baseDamage + (float) spellResult.baseValue();
+            boolean nextCrit = attacker.getRandom().nextDouble() < spellResult.criticalChance();
+            float nextCritApplied = nextCrit ? nextRaw * (float) spellResult.criticalDamage() : nextRaw;
+            float nextDamage = nextCritApplied * bonus;
+
+            next.damage(attacker.getDamageSources().magic(), nextDamage);
+            if (nextCrit) {
+                world.spawnParticles(ParticleTypes.CRIT, next.getX(), next.getY() + 1.0, next.getZ(), 5, 0.2, 0.2, 0.2, 0.01);
+            }
 
             if (attacker.getRandom().nextDouble() < overloadChance) {
                 spawnOverloadVisuals(world, next.getPos());
-                triggerOverloadDoT(attacker, next, damage * 0.2f, bounceCount);
+                triggerOverloadDoT(attacker, next, nextDamage * 0.2f, bounceCount);
             }
         }
     }
-
 
     private static boolean isValidBounceTarget(LivingEntity entity, LivingEntity attacker, Set<LivingEntity> visited) {
         if (!entity.isAlive()) return false;
@@ -124,8 +143,7 @@ public class ChainLightningHandler {
         if (!(attacker.getWorld() instanceof ServerWorld world)) return;
 
         new Thread(() -> {
-            // ✨ Delay before damage starts
-            for (int i = 0; i < 20; i++) { // 20 iterations = ~2 seconds (20 × 100ms)
+            for (int i = 0; i < 20; i++) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ignored) {}
@@ -134,36 +152,26 @@ public class ChainLightningHandler {
 
                 Vec3d pos = target.getPos();
                 world.getServer().execute(() -> {
-                    // 💫 Pre-detonation "charged" particles
                     world.spawnParticles(ParticleTypes.CRIT,
                             pos.x, pos.y + 1.0, pos.z,
                             3, 0.2, 0.3, 0.2, 0.01);
-
                     world.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
                             pos.x, pos.y + 0.5, pos.z,
                             2, 0.1, 0.2, 0.1, 0.01);
                 });
             }
 
-            // ⚡ Begin actual damage ticks
             for (int i = 0; i < ticks; i++) {
                 try {
-                    Thread.sleep(100); //
+                    Thread.sleep(100);
                 } catch (InterruptedException ignored) {}
 
                 if (!target.isAlive()) return;
 
                 world.getServer().execute(() -> {
-                    // Bypass i-frames
                     target.timeUntilRegen = 0;
                     target.hurtTime = 0;
-
                     target.damage(attacker.getDamageSources().magic(), tickDamage);
-
-                    // 💥 Zap visuals per tick
-                    world.playSound(null, target.getX(), target.getY(), target.getZ(),
-                            SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, SoundCategory.PLAYERS, 0.4f, 1.8f);
-
                     world.spawnParticles(ParticleTypes.END_ROD,
                             target.getX(), target.getY() + 1.2, target.getZ(),
                             6, 0.3, 0.4, 0.3, 0.01);
@@ -171,5 +179,4 @@ public class ChainLightningHandler {
             }
         }).start();
     }
-
 }
