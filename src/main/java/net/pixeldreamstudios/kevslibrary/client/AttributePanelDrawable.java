@@ -87,7 +87,10 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             double base = instance.getBaseValue();
             double value = instance.getValue();
 
-            if (showOnlyChanged && Math.abs(base - value) < 0.001) continue;
+            // 🛑 Skip NaN values when filtering changed stats
+            if (showOnlyChanged) {
+                if (Double.isNaN(value) || Math.abs(base - value) < 0.001) continue;
+            }
 
             cachedStats.add(new StatEntry(
                     Text.translatable(attr.getTranslationKey()),
