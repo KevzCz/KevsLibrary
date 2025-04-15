@@ -119,8 +119,14 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
         int visibleRows = MAX_ROWS;
         int totalPages = (int) Math.ceil(cachedStats.size() / (float) visibleRows);
-        currentPage = Math.min(currentPage, Math.max(totalPages - 1, 0));
 
+        currentPage = Math.min(currentPage, Math.max(totalPages - 1, 0));
+        if (showOnlyChanged && cachedStats.isEmpty()) {
+            String noStatsText = "No changed attributes";
+            int textWidth = tr.getWidth(noStatsText);
+            context.drawText(tr, noStatsText, x + (width - textWidth) / 2, y + 8, Formatting.GRAY.getColorValue(), false);
+            return;
+        }
         int startIndex = currentPage * visibleRows;
         int endIndex = Math.min(startIndex + visibleRows, cachedStats.size());
         int rowY = y + padding;
@@ -191,7 +197,11 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         int visibleRows = MAX_ROWS;
         int totalPages = (int) Math.ceil(cachedStats.size() / (float) visibleRows);
         currentPage = Math.min(currentPage, Math.max(totalPages - 1, 0));
-
+        if (showOnlyChanged && cachedStats.isEmpty()) {
+            String noStatsText = "No changed attributes";
+            int textWidth = tr.getWidth(noStatsText);
+            context.drawText(tr, noStatsText, x + (width - textWidth) / 2 + 5, y + 20, Formatting.DARK_GRAY.getColorValue(), false);return;
+        }
         int startIndex = currentPage * visibleRows;
         int endIndex = Math.min(startIndex + visibleRows, cachedStats.size());
         int rowY = y + padding;

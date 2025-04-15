@@ -19,6 +19,7 @@ import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
 import net.pixeldreamstudios.kevslibrary.registry.RegistryHelper;
+import net.pixeldreamstudios.kevslibrary.util.RPGUtil;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 
 public class KevsLibrary implements ModInitializer {
@@ -78,7 +79,6 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_CHANCE =
 			RegistryHelper.registerAttribute("soul_link_chance",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
-
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_DAMAGE =
 			RegistryHelper.registerAttribute("soul_link_damage",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 10.0).setTracked(true));
@@ -116,8 +116,12 @@ public class KevsLibrary implements ModInitializer {
 				}
 			}
 		});
+
 		DelayedExecutor.init();
 		KevsLibraryConfig.load();
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			RPGUtil.register(dispatcher);
+		});
 
 
 	}
