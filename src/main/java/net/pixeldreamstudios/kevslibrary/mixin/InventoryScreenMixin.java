@@ -66,6 +66,12 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
             }
         }
     }
+    @Inject(method = "render", at = @At("RETURN"))
+    private void kevslib$renderTooltipAfterEverything(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (kevslib$attributePanel != null && kevslib$attributePanel.isExpanded()) {
+            kevslib$attributePanel.renderTooltip(context);
+        }
+    }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void kevslib$onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {

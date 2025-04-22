@@ -44,7 +44,7 @@ public class KevsLibrary implements ModInitializer {
 					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 1.0, 0.1, 10.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> DAMAGE =
 			RegistryHelper.registerAttribute("damage",
-					new ClampedEntityAttribute("attribute.name.generic.damage", 1.0, 1, 100.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.damage_multiplier", 1.0, 1, 100.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_CHANCE =
 			RegistryHelper.registerAttribute("chain_lightning_chance",
 					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_chance", 0, 0, 1).setTracked(true));

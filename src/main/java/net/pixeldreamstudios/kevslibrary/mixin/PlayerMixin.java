@@ -16,7 +16,7 @@ public abstract class PlayerMixin {
         cir.setReturnValue(
                 cir.getReturnValue()
                         .add(KevsLibrary.CRIT_CHANCE, 0.0)
-                        .add(KevsLibrary.CRIT_DAMAGE, 1)
+                        .add(KevsLibrary.CRIT_DAMAGE, 1.5)
                         .add(KevsLibrary.MULTISTRIKE_CHANCE, 0.0)
                         .add(KevsLibrary.MULTISTRIKE_COUNT, 1.0)
                         .add(KevsLibrary.MULTISTRIKE_DAMAGE, 0.5)

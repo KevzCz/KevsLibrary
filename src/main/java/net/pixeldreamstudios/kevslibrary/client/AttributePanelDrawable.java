@@ -1,12 +1,16 @@
 package net.pixeldreamstudios.kevslibrary.client;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -19,10 +23,13 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.pixeldreamstudios.kevslibrary.compat.TrinketCompat;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private static final Identifier BOOK_TEXTURE = Identifier.of("minecraft", "textures/gui/book.png");
@@ -32,6 +39,10 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private final MinecraftClient client = MinecraftClient.getInstance();
     private final int x, y, width;
     private int height;
+    @Unique
+    private List<Text> queuedTooltip = null;
+    @Unique
+    private int tooltipX, tooltipY;
 
     private boolean expanded = false;
     private final List<StatEntry> cachedStats = new ArrayList<>();
@@ -39,6 +50,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
     private static final int MAX_ROWS = 6;
     private boolean showOnlyChanged = true;
+    private List<ItemStack> queuedTooltipIcons = new ArrayList<>();
 
     public AttributePanelDrawable(int x, int y, int width) {
         this.x = x;
@@ -55,6 +67,60 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         currentPage = 0;
         if (expanded) cacheStats();
     }
+    public void renderTooltip(DrawContext context) {
+        if (queuedTooltip == null || queuedTooltip.isEmpty()) return;
+
+        TextRenderer tr = client.textRenderer;
+        int zOffset = 400;
+        context.getMatrices().push();
+        context.getMatrices().translate(0, 0, zOffset);
+
+        int maxWidth = 0;
+        for (Text line : queuedTooltip) {
+            maxWidth = Math.max(maxWidth, tr.getWidth(line.getString()));
+        }
+
+        int tooltipWidth = maxWidth + 28; // + icon space + padding
+        int tooltipHeight = queuedTooltip.size() * (tr.fontHeight + 4) + 12;
+
+        int tooltipX = this.tooltipX + 12;
+        int tooltipY = this.tooltipY + 12;
+
+        int backgroundColor = 0xF0131313;
+        int borderColorStart = 0xFF5A5A5A;
+        int borderColorEnd = 0xFFAAAAAA;
+
+        // 🟫 Background with borders
+        context.fillGradient(tooltipX - 4, tooltipY - 4, tooltipX + tooltipWidth + 4, tooltipY + tooltipHeight,
+                backgroundColor, backgroundColor);
+        context.drawBorder(tooltipX - 4, tooltipY - 4, tooltipWidth + 8, tooltipHeight + 1, borderColorStart);
+
+        for (int i = 0; i < queuedTooltip.size(); i++) {
+            int lineY = tooltipY + i * (tr.fontHeight + 4);
+
+            ItemStack icon = (queuedTooltipIcons != null && i < queuedTooltipIcons.size()) ? queuedTooltipIcons.get(i) : ItemStack.EMPTY;
+
+            int iconOffset = 0;
+            if (!icon.isEmpty()) {
+                context.getMatrices().push();
+                context.getMatrices().translate(tooltipX, lineY, 0);
+                context.getMatrices().scale(0.85f, 0.85f, 1f); // Slightly shrink icon
+                context.drawItem(icon, 0, 0);
+                context.getMatrices().pop();
+                iconOffset = 18;
+            }
+
+            int textX = tooltipX + iconOffset;
+            context.drawText(tr, queuedTooltip.get(i).getString(), textX, lineY + 2, 0xFFFFFF, false);
+        }
+
+        context.getMatrices().pop();
+
+        queuedTooltip = null;
+        if (queuedTooltipIcons != null) queuedTooltipIcons.clear();
+    }
+
+
 
     public void tick() {
         if (expanded) cacheStats();
@@ -82,7 +148,12 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     || attr.getTranslationKey().contains("chain_lightning_overload_chance")
                     || attr.getTranslationKey().contains("frost_nova_chance")
                     || attr.getTranslationKey().contains("frost_nova_overload_chance")
-                    || attr.getTranslationKey().contains("ratio");
+                    || attr.getTranslationKey().contains("ratio")
+                    || attr.getTranslationKey().contains("crit_chance")
+                    || attr.getTranslationKey().contains("crit_damage")
+                    || attr.getTranslationKey().contains("soul_link_damage")
+                    || attr.getTranslationKey().contains("soul_link_chance")
+                    || attr.getTranslationKey().contains("damage_multiplier");
 
             double base = instance.getBaseValue();
             double value = instance.getValue();
@@ -99,6 +170,8 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     isPercent,
                     entry
             ));
+            cachedStats.sort((a, b) -> a.name().getString().compareToIgnoreCase(b.name().getString()));
+
         }
     }
 
@@ -125,6 +198,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             String noStatsText = "No changed attributes";
             int textWidth = tr.getWidth(noStatsText);
             context.drawText(tr, noStatsText, x + (width - textWidth) / 2, y + 8, Formatting.GRAY.getColorValue(), false);
+            drawVanillaButtons(context, tr, mouseX, mouseY, y + height - 12); // Still draw buttons!
             return;
         }
         int startIndex = currentPage * visibleRows;
@@ -200,6 +274,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         if (showOnlyChanged && cachedStats.isEmpty()) {
             String noStatsText = "No changed attributes";
             int textWidth = tr.getWidth(noStatsText);
+            drawBookButtons(context, tr, mouseX, mouseY, y + height - 20); // Still draw buttons!
             context.drawText(tr, noStatsText, x + (width - textWidth) / 2 + 5, y + 20, Formatting.DARK_GRAY.getColorValue(), false);return;
         }
         int startIndex = currentPage * visibleRows;
@@ -275,61 +350,185 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
     }
 
     private void drawTooltipContent(DrawContext context, TextRenderer tr, int hoverIndex, int mouseX, int mouseY, int rowHeight, int padding) {
-        if (hoverIndex != -1 && hoverIndex < cachedStats.size()) {
-            StatEntry stat = cachedStats.get(hoverIndex);
-            int rowIndex = hoverIndex % MAX_ROWS;
-            int yOffset = y + padding + rowIndex * rowHeight;
-            int midX = x + width / 2;
+        if (hoverIndex == -1 || hoverIndex >= cachedStats.size()) return;
 
-            boolean onName = mouseX >= x && mouseX <= midX;
-            boolean onValue = mouseX > midX && mouseX <= x + width;
+        StatEntry stat = cachedStats.get(hoverIndex);
+        int rowIndex = hoverIndex % MAX_ROWS;
+        int yOffset = y + padding + rowIndex * rowHeight;
+        int midX = x + width / 2;
 
-            if (onName) {
-                context.drawTooltip(tr, List.of(stat.name()), mouseX, mouseY);
-            } else if (onValue) {
-                List<Text> lines = new ArrayList<>();
-                lines.add(Text.literal("Base: " + String.format("%.2f", stat.base())));
-                EntityAttributeInstance instance = client.player.getAttributeInstance(stat.attribute());
+        boolean onName = mouseX >= x && mouseX <= midX;
+        boolean onValue = mouseX > midX && mouseX <= x + width;
 
-                if (instance != null && !instance.getModifiers().isEmpty()) {
-                    lines.add(Text.empty());
-                    lines.add(Text.literal("Modifiers:").formatted(Formatting.YELLOW));
-                    for (EntityAttributeModifier mod : instance.getModifiers()) {
-                        String op = switch (mod.operation()) {
-                            case ADD_VALUE -> "+" + String.format("%.2f", mod.value());
-                            case ADD_MULTIPLIED_BASE -> "× base × " + String.format("%.2f", mod.value());
-                            case ADD_MULTIPLIED_TOTAL -> "× total × " + String.format("%.2f", mod.value());
-                        };
+        if (onName) {
+            String attributeId = stat.attribute().getKey()
+                    .map(key -> key.getValue().toString())
+                    .orElse("[unregistered]");
+            List<Text> tooltip = List.of(
+                    stat.name(),
+                    Text.literal(attributeId).formatted(Formatting.DARK_GRAY)
+            );
+            context.drawTooltip(tr, tooltip, mouseX, mouseY);
+            return;
+        }
 
-                        String source = null;
-                        for (EquipmentSlot slot : EquipmentSlot.values()) {
-                            ItemStack stack = client.player.getEquippedStack(slot);
-                            if (!stack.isEmpty()) {
-                                var modifiers = stack.getItem().getAttributeModifiers();
-                                for (var entry : modifiers.modifiers()) {
-                                    if (entry.modifier().id().equals(mod.id())) {
-                                        String name = stack.getName().getString();
-                                        if (name.matches("^[a-z0-9_]+:[a-z0-9_/.]+$"))
-                                            name = Text.translatable(stack.getItem().getTranslationKey()).getString();
-                                        source = name;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (source != null) break;
-                        }
+        if (!onValue) return;
 
-                        String label = source != null ? source + " (" + mod.id() + ")" : mod.id().toString();
-                        lines.add(Text.literal("- " + label).append(Text.literal(" " + op).formatted(Formatting.GRAY)));
+        boolean shiftDown = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), client.options.sneakKey.getDefaultKey().getCode());
+
+        EntityAttributeInstance instance = client.player.getAttributeInstance(stat.attribute());
+
+        List<Text> tooltipLines = new ArrayList<>();
+        List<ItemStack> iconStacks = new ArrayList<>();
+
+        tooltipLines.add(Text.literal("Base: " + String.format("%.2f", stat.base())));
+        iconStacks.add(ItemStack.EMPTY);
+
+        double flat = 0.0;
+        double multBase = 0.0;
+        double multTotal = 0.0;
+
+        if (instance != null && !instance.getModifiers().isEmpty()) {
+            tooltipLines.add(Text.empty());
+            iconStacks.add(ItemStack.EMPTY);
+            tooltipLines.add(Text.literal("Modifiers:").formatted(Formatting.YELLOW));
+            iconStacks.add(ItemStack.EMPTY);
+
+            for (EntityAttributeModifier mod : instance.getModifiers()) {
+                String opText = switch (mod.operation()) {
+                    case ADD_VALUE -> {
+                        flat += mod.value();
+                        yield String.format("+%.2f", mod.value());
                     }
-                } else {
-                    lines.add(Text.literal("No active modifiers").formatted(Formatting.DARK_GRAY));
+                    case ADD_MULTIPLIED_BASE -> {
+                        multBase += mod.value();
+                        yield "× base × " + String.format("%.2f", mod.value());
+                    }
+                    case ADD_MULTIPLIED_TOTAL -> {
+                        multTotal += mod.value();
+                        yield "× total × " + String.format("%.2f", mod.value());
+                    }
+                };
+
+                Identifier modId = mod.id();
+                ItemStack matchingStack = ItemStack.EMPTY;
+                String sourceName = null;
+
+                // Try equipped items
+                for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    ItemStack stack = client.player.getEquippedStack(slot);
+                    if (stack.isEmpty()) continue;
+
+                    boolean[] matched = {false};
+                    var component = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+                    if (component != null) {
+                        component.applyModifiers(slot, (attr, entryMod) -> {
+                            if (entryMod.id().equals(modId)) matched[0] = true;
+                        });
+                    }
+                    if (!matched[0]) {
+                        stack.getItem().getAttributeModifiers().applyModifiers(slot, (attr, entryMod) -> {
+                            if (entryMod.id().equals(modId)) matched[0] = true;
+                        });
+                    }
+
+                    if (matched[0]) {
+                        sourceName = stack.getName().getString();
+                        matchingStack = stack;
+                        break;
+                    }
                 }
 
-                context.drawTooltip(tr, lines, mouseX, mouseY);
+                // Try Trinkets
+                if (sourceName == null && FabricLoader.getInstance().isModLoaded("trinkets")) {
+                    var result = TrinketCompat.findModifierSource(client.player, modId);
+                    if (result != null) {
+                        matchingStack = result.getLeft();
+                        sourceName = result.getRight();
+                    }
+                }
+
+                // Final fallback
+                if (sourceName == null) {
+                    sourceName = formatModifierId(modId);
+                }
+
+                // Append final formatted line
+                Text displayLine = Text.literal(sourceName)
+                        .append(" ")
+                        .append(Text.literal(opText).formatted(Formatting.GREEN));
+                tooltipLines.add(displayLine);
+                iconStacks.add(matchingStack);
+
             }
+        } else {
+            tooltipLines.add(Text.literal("No active modifiers").formatted(Formatting.DARK_GRAY));
+            iconStacks.add(ItemStack.EMPTY);
         }
+
+        tooltipLines.add(Text.empty());
+        iconStacks.add(ItemStack.EMPTY);
+
+        if (shiftDown) {
+            double base = stat.base();
+            double total = base + flat;
+            double withMultBase = total + base * multBase;
+            double finalValue = withMultBase + withMultBase * multTotal;
+
+            StringBuilder formula = new StringBuilder("= ");
+            boolean hasPrev = false;
+
+            if (base != 0 || flat != 0) {
+                formula.append("(").append(String.format("%.2f + %.2f", base, flat)).append(")");
+                hasPrev = true;
+            }
+
+            if (base != 0 && multBase != 0) {
+                if (hasPrev) formula.append(" + ");
+                formula.append(String.format("(%.2f × %.2f)", base, multBase));
+                hasPrev = true;
+            }
+
+            double totalBeforeMultTotal = base + flat + base * multBase;
+
+            if (multTotal != 0) {
+                if (hasPrev) formula.append(" + ");
+                formula.append(String.format("%.2f × %.2f", totalBeforeMultTotal, multTotal));
+            }
+
+            tooltipLines.add(Text.literal("Calculated:").formatted(Formatting.DARK_GRAY));
+            iconStacks.add(ItemStack.EMPTY);
+            tooltipLines.add(Text.literal(formula.toString()).formatted(Formatting.DARK_GRAY));
+            iconStacks.add(ItemStack.EMPTY);
+            tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue)).formatted(Formatting.GREEN));
+            iconStacks.add(ItemStack.EMPTY);
+
+        } else {
+            tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
+            iconStacks.add(ItemStack.EMPTY);
+        }
+
+        // Final save
+        this.queuedTooltip = tooltipLines;
+        this.queuedTooltipIcons = iconStacks;
+        this.tooltipX = mouseX;
+        this.tooltipY = mouseY;
     }
+    private static String formatModifierId(Identifier id) {
+        String path = id.getPath();
+        if (path.contains("/")) {
+            path = path.substring(0, path.indexOf('/'));
+        }
+        String[] parts = path.split("_");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return sb.toString();
+    }
+
+
     private record ButtonCoords(int prevX, int checkX, int nextX, int prevW, int checkW, int nextW) {}
 
     private ButtonCoords getBookButtonCoords(TextRenderer tr) {
@@ -481,4 +680,5 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
     @Override public boolean isFocused() { return false; }
     @Override public SelectionType getType() { return SelectionType.NONE; }
     @Override public void appendNarrations(NarrationMessageBuilder builder) {}
+
 }

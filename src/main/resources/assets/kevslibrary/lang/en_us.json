@@ -1,7 +1,7 @@
 {
   "attribute.name.generic.crit_chance": "Critical Hit Chance",
   "attribute.name.generic.crit_damage": "Critical Damage Multiplier",
-  "attribute.name.generic.damage": "Damage Multiplier",
+  "attribute.name.generic.damage_multiplier": "Damage Multiplier",
 
   "attribute.name.generic.multistrike_chance": "Multistrike Chance",
   "attribute.name.generic.multistrike_count": "Multistrike Count",

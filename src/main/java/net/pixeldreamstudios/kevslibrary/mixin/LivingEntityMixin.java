@@ -39,23 +39,31 @@ public abstract class LivingEntityMixin {
             return amount;
         }
 
+        // Skip if it's a multistrike-type custom damage source
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
             CRIT_DAMAGE_TRACKER.set(amount);
             return amount;
         }
 
+        // Detect vanilla crits (e.g. falling, not on ground)
         boolean isVanillaCrit = attacker instanceof PlayerEntity player &&
                 player.fallDistance > 0.0F && !player.isOnGround();
 
+        // Check for custom crit via grounded + crit chance
         EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
         double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
-
         boolean isGroundedCrit = attacker.isOnGround() &&
                 attacker.getRandom().nextFloat() < critChance;
 
+        // True if either vanilla or attribute-based crit
         boolean isCrit = isVanillaCrit || isGroundedCrit;
 
         float finalDamage = amount;
+
+        // 🔥 Normalize vanilla crit (if it applied internally)
+        if (isVanillaCrit) {
+            finalDamage /= 1.5f;  // Remove vanilla crit boost if it's built-in
+        }
 
         // 🔥 Apply universal damage multiplier
         EntityAttributeInstance dmgMultAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
@@ -70,7 +78,6 @@ public abstract class LivingEntityMixin {
 
             finalDamage *= critMultiplier;
 
-            // Only play sound/message if critMultiplier > 1.0
             if (critMultiplier > 1.0f && attacker instanceof PlayerEntity player2) {
                 player2.getWorld().playSound(null, player2.getX(), player2.getY(), player2.getZ(),
                         SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.0f, 1.0f);
@@ -80,6 +87,7 @@ public abstract class LivingEntityMixin {
         CRIT_DAMAGE_TRACKER.set(finalDamage);
         return finalDamage;
     }
+
 
     @Inject(method = "damage", at = @At("RETURN"))
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -91,7 +99,9 @@ public abstract class LivingEntityMixin {
                         name.equals("multistrike_ranged") ||
                         name.equals("icicle") ||
                         name.equals("frost_nova") ||
-                        name.equals("chain_lightning")
+                        name.equals("chain_lightning") ||
+                        name.equals("fire_tornado")
+
         ) return;
 
         if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
