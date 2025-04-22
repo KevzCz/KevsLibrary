@@ -461,53 +461,53 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 iconStacks.add(matchingStack);
 
             }
-        } else {
-            tooltipLines.add(Text.literal("No active modifiers").formatted(Formatting.DARK_GRAY));
+        } else if (stat.isChanged()) {
+            tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
             iconStacks.add(ItemStack.EMPTY);
         }
 
         tooltipLines.add(Text.empty());
         iconStacks.add(ItemStack.EMPTY);
+        if (stat.isChanged()) {
+            if (shiftDown) {
+                double base = stat.base();
+                double total = base + flat;
+                double withMultBase = total + base * multBase;
+                double finalValue = withMultBase + withMultBase * multTotal;
 
-        if (shiftDown) {
-            double base = stat.base();
-            double total = base + flat;
-            double withMultBase = total + base * multBase;
-            double finalValue = withMultBase + withMultBase * multTotal;
+                StringBuilder formula = new StringBuilder("= ");
+                boolean hasPrev = false;
 
-            StringBuilder formula = new StringBuilder("= ");
-            boolean hasPrev = false;
+                if (base != 0 || flat != 0) {
+                    formula.append("(").append(String.format("%.2f + %.2f", base, flat)).append(")");
+                    hasPrev = true;
+                }
 
-            if (base != 0 || flat != 0) {
-                formula.append("(").append(String.format("%.2f + %.2f", base, flat)).append(")");
-                hasPrev = true;
+                if (base != 0 && multBase != 0) {
+                    if (hasPrev) formula.append(" + ");
+                    formula.append(String.format("(%.2f × %.2f)", base, multBase));
+                    hasPrev = true;
+                }
+
+                double totalBeforeMultTotal = base + flat + base * multBase;
+
+                if (multTotal != 0) {
+                    if (hasPrev) formula.append(" + ");
+                    formula.append(String.format("%.2f × %.2f", totalBeforeMultTotal, multTotal));
+                }
+
+                tooltipLines.add(Text.literal("Calculated:").formatted(Formatting.DARK_GRAY));
+                iconStacks.add(ItemStack.EMPTY);
+                tooltipLines.add(Text.literal(formula.toString()).formatted(Formatting.DARK_GRAY));
+                iconStacks.add(ItemStack.EMPTY);
+                tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue)).formatted(Formatting.GREEN));
+                iconStacks.add(ItemStack.EMPTY);
+
+            } else if (stat.isChanged()) {
+                tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
+                iconStacks.add(ItemStack.EMPTY);
             }
-
-            if (base != 0 && multBase != 0) {
-                if (hasPrev) formula.append(" + ");
-                formula.append(String.format("(%.2f × %.2f)", base, multBase));
-                hasPrev = true;
-            }
-
-            double totalBeforeMultTotal = base + flat + base * multBase;
-
-            if (multTotal != 0) {
-                if (hasPrev) formula.append(" + ");
-                formula.append(String.format("%.2f × %.2f", totalBeforeMultTotal, multTotal));
-            }
-
-            tooltipLines.add(Text.literal("Calculated:").formatted(Formatting.DARK_GRAY));
-            iconStacks.add(ItemStack.EMPTY);
-            tooltipLines.add(Text.literal(formula.toString()).formatted(Formatting.DARK_GRAY));
-            iconStacks.add(ItemStack.EMPTY);
-            tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue)).formatted(Formatting.GREEN));
-            iconStacks.add(ItemStack.EMPTY);
-
-        } else {
-            tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
-            iconStacks.add(ItemStack.EMPTY);
         }
-
         // Final save
         this.queuedTooltip = tooltipLines;
         this.queuedTooltipIcons = iconStacks;
