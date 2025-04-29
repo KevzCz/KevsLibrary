@@ -1,10 +1,10 @@
 package net.pixeldreamstudios.kevslibrary.client;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.render.entity.ArrowEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
-
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 
 
@@ -19,8 +19,6 @@ public class KevsLibraryClient implements ClientModInitializer {
                 KevsLibrary.ICICLE_PROJECTILE,
                 context -> new FlyingItemEntityRenderer<>(context)
         );
-
-
 
     }
 }

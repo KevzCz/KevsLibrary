@@ -19,8 +19,8 @@ import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
 import net.pixeldreamstudios.kevslibrary.registry.RegistryHelper;
-import net.pixeldreamstudios.kevslibrary.util.RPGUtil;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
+import net.pixeldreamstudios.kevslibrary.util.RPGUtil;
 
 public class KevsLibrary implements ModInitializer {
 	public static final String MOD_ID = "kevslibrary";
@@ -29,7 +29,7 @@ public class KevsLibrary implements ModInitializer {
 			RegistryHelper.registerAttribute("crit_chance", new ClampedEntityAttribute("attribute.name.generic.crit_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> CRIT_DAMAGE =
-			RegistryHelper.registerAttribute("crit_damage", new ClampedEntityAttribute("attribute.name.generic.crit_damage", 1.5, 1.0, 10.0).setTracked(true));
+			RegistryHelper.registerAttribute("crit_damage", new ClampedEntityAttribute("attribute.name.generic.crit_damage", 1.5, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_CHANCE =
 			RegistryHelper.registerAttribute("multistrike_chance",
@@ -37,7 +37,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_COUNT =
 			RegistryHelper.registerAttribute("multistrike_count",
-					new ClampedEntityAttribute("attribute.name.generic.multistrike_count", 1.0, 1.0, 10.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.multistrike_count", 1.0, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_DAMAGE =
 			RegistryHelper.registerAttribute("multistrike_damage",
@@ -50,7 +50,7 @@ public class KevsLibrary implements ModInitializer {
 					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_chance", 0, 0, 1).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_COUNT =
 			RegistryHelper.registerAttribute("chain_lightning_count",
-					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_count", 3.0, 1.0, 10.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_count", 3.0, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_OVERLOAD_CHANCE =
 			RegistryHelper.registerAttribute("chain_lightning_overload_chance",
@@ -69,13 +69,13 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_COUNT =
 			RegistryHelper.registerAttribute("frost_nova_count",
-					new ClampedEntityAttribute("attribute.name.generic.frost_nova_count", 1, 1, 10).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.frost_nova_count", 1, 1, 100).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_OVERLOAD_CHANCE =
 			RegistryHelper.registerAttribute("frost_nova_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> PET_INHERITANCE_RATIO =
 			RegistryHelper.registerAttribute("pet_inheritance_ratio",
-					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.25, 0.0, 1.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.0, 0.0, 10.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_CHANCE =
 			RegistryHelper.registerAttribute("soul_link_chance",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
@@ -104,6 +104,7 @@ public class KevsLibrary implements ModInitializer {
 							.trackedUpdateRate(10)
 							.build()
 			);
+
 	@Override
 	public void onInitialize() {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -122,7 +123,6 @@ public class KevsLibrary implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			RPGUtil.register(dispatcher);
 		});
-
 
 	}
 

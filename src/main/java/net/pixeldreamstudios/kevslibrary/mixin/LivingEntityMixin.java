@@ -178,13 +178,11 @@ public abstract class LivingEntityMixin {
                     linkData.soulPower()
             );
         });
-// 💥 Check if target is already part of a link → attempt to expand it
         SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
             if (attacker.getRandom().nextDouble() < soulLinkChance) {
                 SoulLinkHandler.tryExtendLink(attacker, target);
             }
         });
-
     }
 
 }

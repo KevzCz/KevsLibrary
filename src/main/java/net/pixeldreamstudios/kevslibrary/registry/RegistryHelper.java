@@ -12,7 +12,7 @@ public class RegistryHelper {
     public static RegistryEntry<EntityAttribute> registerAttribute(String name, EntityAttribute attribute) {
         return Registry.registerReference(
                 Registries.ATTRIBUTE,
-                Identifier.of(KevsLibrary.MOD_ID, name), // ✅ This is the correct factory method in 1.21.1
+                Identifier.of(KevsLibrary.MOD_ID, name),
                 attribute
         );
     }

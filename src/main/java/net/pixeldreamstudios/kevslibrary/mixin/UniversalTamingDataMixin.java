@@ -92,6 +92,5 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         }
     }
 
-    // For Jade
 
 }

@@ -33,7 +33,8 @@
 		"java": ">=21",
 		"fabric-api": "*",
 		"spell_power": "*",
-		"spell_engine": "*"
+		"spell_engine": "*",
+		"projectileimmunityfix": "*"
 	},
 	"suggests": {
 		"another-mod": "*"

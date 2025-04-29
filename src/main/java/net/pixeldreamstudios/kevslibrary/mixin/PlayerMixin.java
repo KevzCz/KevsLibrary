@@ -18,7 +18,7 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.CRIT_CHANCE, 0.0)
                         .add(KevsLibrary.CRIT_DAMAGE, 1.5)
                         .add(KevsLibrary.MULTISTRIKE_CHANCE, 0.0)
-                        .add(KevsLibrary.MULTISTRIKE_COUNT, 1.0)
+                        .add(KevsLibrary.MULTISTRIKE_COUNT, 2.0)
                         .add(KevsLibrary.MULTISTRIKE_DAMAGE, 0.5)
                         .add(KevsLibrary.DAMAGE, 1)
                         .add(KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0)
@@ -32,7 +32,6 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.PET_INHERITANCE_RATIO, 0)
                         .add(KevsLibrary.SOUL_LINK_CHANCE,0)
                         .add(KevsLibrary.SOUL_LINK_DAMAGE,1)
-
 
         );
     }
