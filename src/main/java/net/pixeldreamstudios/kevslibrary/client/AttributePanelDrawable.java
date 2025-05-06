@@ -12,13 +12,18 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundEvents;
@@ -488,9 +493,31 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 }
 
                 if (!foundSource) {
-                    System.out.println("[DEBUG] Unknown source for modifier ID: " + modId);
-                }
+                    for (var entry : client.player.getStatusEffects()) {
+                        StatusEffect effect = entry.getEffectType().value();
+                        int amplifier = entry.getAmplifier();
+                        EntityAttribute attr = stat.attribute().value();
 
+                        Map<EntityAttribute, EntityAttributeModifier> effectMods = new HashMap<>();
+                        effect.forEachAttributeModifier(amplifier, (attribute, modifier) -> {
+                            effectMods.put(attribute.value(), modifier);
+                        });
+
+                        if (effectMods.containsKey(attr)) {
+                            EntityAttributeModifier potionMod = effectMods.get(attr);
+
+                            if (potionMod.operation() == mod.operation() &&
+                                    Math.abs(potionMod.value() - mod.value()) < 0.0001) {
+
+                                displayName = Text.translatable(effect.getTranslationKey());
+                                matchingStack = createColoredPotionItem(effect);
+                                foundSource = true;
+
+                                break;
+                            }
+                        }
+                    }
+                }
                 Text displayLine = displayName.copy()
                         .append(" ")
                         .append(Text.literal(opText).formatted(Formatting.GREEN));
@@ -549,6 +576,21 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         this.tooltipX = mouseX;
         this.tooltipY = mouseY;
     }
+
+    private ItemStack createColoredPotionItem(StatusEffect effect) {
+        ItemStack stack = new ItemStack(Items.POTION);
+
+        // Set the custom name to the effect's translated name
+        stack.set(DataComponentTypes.CUSTOM_NAME, Text.translatable(effect.getTranslationKey()));
+
+        // Make it red by setting a fixed NBT color (since CUSTOM_POTION_COLOR doesn't exist)
+        NbtCompound nbt = new NbtCompound();
+        nbt.putInt("CustomPotionColor", 0xFF0000); // Red
+        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
+
+        return stack;
+    }
+
 
 
     private static String formatModifierId(Identifier id) {
