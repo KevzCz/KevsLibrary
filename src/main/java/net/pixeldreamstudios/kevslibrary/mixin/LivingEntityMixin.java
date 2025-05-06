@@ -39,33 +39,31 @@ public abstract class LivingEntityMixin {
             return amount;
         }
 
-        // Skip if it's a multistrike-type custom damage source
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
             CRIT_DAMAGE_TRACKER.set(amount);
             return amount;
         }
 
-        // Detect vanilla crits (e.g. falling, not on ground)
         boolean isVanillaCrit = attacker instanceof PlayerEntity player &&
                 player.fallDistance > 0.0F && !player.isOnGround();
 
-        // Check for custom crit via grounded + crit chance
+
         EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
         double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
         boolean isGroundedCrit = attacker.isOnGround() &&
                 attacker.getRandom().nextFloat() < critChance;
 
-        // True if either vanilla or attribute-based crit
+
         boolean isCrit = isVanillaCrit || isGroundedCrit;
 
         float finalDamage = amount;
 
-        // 🔥 Normalize vanilla crit (if it applied internally)
+
         if (isVanillaCrit) {
-            finalDamage /= 1.5f;  // Remove vanilla crit boost if it's built-in
+            finalDamage /= 1.5f;
         }
 
-        // 🔥 Apply universal damage multiplier
+
         EntityAttributeInstance dmgMultAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
         if (dmgMultAttr != null) {
             finalDamage *= (float) dmgMultAttr.getValue();
@@ -183,6 +181,17 @@ public abstract class LivingEntityMixin {
                 SoulLinkHandler.tryExtendLink(attacker, target);
             }
         });
+        EntityAttributeInstance arcaneChanceAttr = attacker.getAttributeInstance(KevsLibrary.ARCANE_RUPTURE_CHANCE);
+        double arcaneChance = arcaneChanceAttr != null ? arcaneChanceAttr.getValue() : 0.0;
+
+        if (
+                arcaneChance > 0.0 &&
+                        attacker.getRandom().nextDouble() < arcaneChance &&
+                        !source.getName().equals("arcane_shard") // 🛡️ prevent self-trigger
+        ) {
+            ArcaneRuptureHandler.trigger(attacker, target);
+        }
+
     }
 
 }

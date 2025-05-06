@@ -26,8 +26,7 @@ public abstract class TameableEntityMixin extends AnimalEntity {
         super(type, world);
     }
 
-    // Inject into setOwner for immediate taming
-    @Inject(method = "setOwner", at = @At("TAIL"))
+     @Inject(method = "setOwner", at = @At("TAIL"))
     private void onSetOwner(PlayerEntity player, CallbackInfo ci) {
         TameableEntity tameable = (TameableEntity) (Object) this;
 
@@ -36,8 +35,7 @@ public abstract class TameableEntityMixin extends AnimalEntity {
         }
     }
 
-    // Inject into readCustomDataFromNbt for tamed pets loaded from saved data or summoned
-    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
+     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void onReadNbt(NbtCompound nbt, CallbackInfo ci) {
         TameableEntity tameable = (TameableEntity)(Object)this;
 

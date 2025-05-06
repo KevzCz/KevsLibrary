@@ -11,14 +11,14 @@ public class DelayedExecutor {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            // ✅ Avoid concurrent modification by copying the list
+
             List<DelayedTask> toRun = new ArrayList<>(tasks);
 
             for (DelayedTask task : toRun) {
                 task.ticksLeft--;
                 if (task.ticksLeft <= 0) {
                     task.runnable.run();
-                    tasks.remove(task); // safe to remove after iteration
+                    tasks.remove(task);
                 }
             }
         });

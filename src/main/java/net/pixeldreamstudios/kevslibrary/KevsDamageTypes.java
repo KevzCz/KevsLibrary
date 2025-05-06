@@ -11,6 +11,9 @@ public class KevsDamageTypes {
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "multistrike"));
     public static final RegistryKey<DamageType> MULTISTRIKE_RANGED =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "multistrike_ranged"));
+    public static final RegistryKey<DamageType> ARCANE_SHARD =
+            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "arcane_shard"));
+
     public static final RegistryKey<DamageType> ICICLE =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "icicle"));
 }

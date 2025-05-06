@@ -10,8 +10,7 @@ import java.io.FileWriter;
 public class KevsLibraryConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_FILE = new File("config/kevs_library_config.json");
-    public boolean useBookBackground = true; // true = use book.png, false = NAME_BG + VALUE_BG
-
+    public boolean useBookBackground = true;
     public int xOffset = -61;
     public int yOffset = 10;
 
@@ -27,7 +26,6 @@ public class KevsLibraryConfig {
             }
         }
 
-        // If not found or failed, save defaults
         save();
     }
 
@@ -39,8 +37,6 @@ public class KevsLibraryConfig {
         }
     }
     public static void apply() {
-        // If the panel is already rendered, update offsets directly.
-        // We'll hook into this from wherever the buttonX/Y gets used.
-        System.out.println("[KevsLibrary] Config applied: xOffset=" + INSTANCE.xOffset + ", yOffset=" + INSTANCE.yOffset);
+         System.out.println("[KevsLibrary] Config applied: xOffset=" + INSTANCE.xOffset + ", yOffset=" + INSTANCE.yOffset);
     }
 }

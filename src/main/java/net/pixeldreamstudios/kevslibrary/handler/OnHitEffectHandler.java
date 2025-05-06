@@ -25,21 +25,20 @@ public class OnHitEffectHandler {
 
     public static void triggerAll(LivingEntity attacker, LivingEntity target, float damage) {
         if (!(attacker.getWorld() instanceof ServerWorld world)) return;
-        // 🔥 Fire Tornado
+
         EntityAttributeInstance fireTornadoAttr = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_CHANCE);
         double fireTornadoChance = fireTornadoAttr != null ? fireTornadoAttr.getValue() : 0.0;
         if (attacker.getRandom().nextDouble() < fireTornadoChance) {
             FireTornadoHandler.spawnFireTornado(attacker, target);
         }
 
-        // ❄️ Frost Nova
         EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
         double frostNovaChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;
         if (attacker.getRandom().nextDouble() < frostNovaChance) {
             FrostNovaHandler.triggerFrostNova(attacker);
         }
 
-        // ⚡ Chain Lightning
+
         EntityAttributeInstance lightningAttr = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_CHANCE);
         double lightningChance = lightningAttr != null ? lightningAttr.getValue() : 0.0;
         if (attacker.getRandom().nextDouble() < lightningChance) {

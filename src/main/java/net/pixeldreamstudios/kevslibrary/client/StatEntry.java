@@ -9,7 +9,7 @@ public record StatEntry(
         double base,
         double current,
         boolean percent,
-        RegistryEntry<EntityAttribute> attribute // <-- Add this
+        RegistryEntry<EntityAttribute> attribute
 ) {
     public boolean isChanged() {
         return Math.abs(current - base) > 0.001;

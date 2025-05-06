@@ -32,7 +32,9 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.PET_INHERITANCE_RATIO, 0)
                         .add(KevsLibrary.SOUL_LINK_CHANCE,0)
                         .add(KevsLibrary.SOUL_LINK_DAMAGE,1)
-
+                        .add(KevsLibrary.ARCANE_RUPTURE_CHANCE, 0)
+                        .add(KevsLibrary.ARCANE_RUPTURE_DAMAGE,1)
+                        .add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE,0)
         );
     }
 }

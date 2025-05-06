@@ -41,7 +41,7 @@ public class KevsLibraryModMenu implements ModMenuApi {
 
             builder.setSavingRunnable(() -> {
                 KevsLibraryConfig.save();
-                KevsLibraryConfig.apply(); // <-- Apply after saving
+                KevsLibraryConfig.apply();
             });
 
             return builder.build();

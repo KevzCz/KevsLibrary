@@ -29,7 +29,7 @@
         private static final Set<UUID> handledProjectiles = Collections.newSetFromMap(new WeakHashMap<>());
     
         public static boolean tryMarkProjectile(UUID uuid) {
-            return handledProjectiles.add(uuid); // true = first time seen
+            return handledProjectiles.add(uuid);
         }
         private static final Map<String, MultistrikeBomb> bombs = new HashMap<>();
         private static final Map<UUID, List<HoveringArrow>> hoveringArrows = new HashMap<>();
@@ -81,14 +81,13 @@
                 world.spawnEntity(arrow);
     
                 double angleOffset = ((2 * Math.PI) / count) * i;
-                int delay = 50 + (i * 15); // ⏱️ delay per arrow
+                int delay = 50 + (i * 15);
                 arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay));
             }
     
         }
     
         public static void tick(ServerWorld world) {
-            // 🔥 Tick all multistrike bombs
             Iterator<Map.Entry<String, MultistrikeBomb>> bombIt = bombs.entrySet().iterator();
             while (bombIt.hasNext()) {
                 Map.Entry<String, MultistrikeBomb> entry = bombIt.next();
@@ -120,7 +119,7 @@
                 for (HoveringArrow arrow : arrows) {
                     if (!arrow.launched && !arrow.shouldStartLaunching) {
                         arrow.shouldStartLaunching = true;
-                        break; // immediately launch the next one
+                        break;
                     }
                 }
 
@@ -150,7 +149,7 @@
             final double orbitRadius = 1.5;
 
             private static final int MAX_LIFESPAN = 1000;
-            private static final int HOMING_DELAY = 20; // 1 second after launch
+            private static final int HOMING_DELAY = 20;
 
             HoveringArrow(PersistentProjectileEntity arrow, LivingEntity attacker, LivingEntity target, double angleOffset, int delayBeforeLaunch) {
                 this.arrow = arrow;
@@ -193,12 +192,11 @@
                     return false;
                 }
 
-                // After upward launch, wait before homing
                 ticksSinceLaunch++;
                 if (ticksSinceLaunch >= HOMING_DELAY) {
                     Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(arrow.getPos());
-                    Vec3d newVelocity = toTarget.normalize().multiply(0.45); // gentle curve-in
-                    arrow.setVelocity(arrow.getVelocity().lerp(newVelocity, 0.3)); // smooth tracking
+                    Vec3d newVelocity = toTarget.normalize().multiply(0.45);
+                    arrow.setVelocity(arrow.getVelocity().lerp(newVelocity, 0.3));
 
                     world.spawnParticles(ParticleTypes.END_ROD, arrow.getX(), arrow.getY(), arrow.getZ(), 1, 0, 0, 0, 0.001);
                 }
@@ -263,7 +261,7 @@
             private float diminishingTimerAdd = 0.5f;
     
             private int ticksUntilDetonate = 60;
-            private long lastStrikeTime = 0; // ✅ for tick gating
+            private long lastStrikeTime = 0;
     
             public MultistrikeBomb(LivingEntity source, LivingEntity target, float damage, ItemStack weaponUsed) {
                 this.source = source;

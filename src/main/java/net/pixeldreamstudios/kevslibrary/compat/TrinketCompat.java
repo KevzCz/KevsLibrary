@@ -1,45 +1,42 @@
 package net.pixeldreamstudios.kevslibrary.compat;
 
+import dev.emi.trinkets.TrinketModifiers;
+import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketComponent;
 import dev.emi.trinkets.api.TrinketsApi;
-import net.minecraft.util.Pair;
-
-import net.minecraft.component.type.AttributeModifierSlot;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.registry.entry.RegistryEntry;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.*;
 
 public class TrinketCompat {
-    @Nullable
-    public static Pair<ItemStack, String> findModifierSource(PlayerEntity player, Identifier modifierId) {
-        Optional<TrinketComponent> opt = TrinketsApi.getTrinketComponent(player);
-        if (opt.isEmpty()) return null;
+    public record TrinketModifierSource(ItemStack stack, EntityAttributeModifier modifier, RegistryEntry<EntityAttribute> id) {}
+    public static List<TrinketModifierSource> getTrinketModifierSources(PlayerEntity player) {
+        List<TrinketModifierSource> results = new ArrayList<>();
+        Optional<TrinketComponent> optComponent = TrinketsApi.getTrinketComponent(player);
+        if (optComponent.isEmpty()) return results;
 
-        TrinketComponent component = opt.get();
-        for (var entry : component.getAllEquipped()) {
-            ItemStack stack = entry.getRight();
-            if (stack == null || stack.isEmpty() || stack.getItem() == net.minecraft.item.Items.AIR) continue;
+        TrinketComponent component = optComponent.get();
 
+        for (var pair : component.getEquipped(stack -> true)) {
+            SlotReference ref = pair.getLeft();
+            ItemStack stack = pair.getRight();
 
-            var attributeData = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
-            if (attributeData != null) {
-                boolean[] matched = {false};
-                attributeData.applyModifiers((AttributeModifierSlot) null, (attr, mod) -> {
-                    if (mod.id().equals(modifierId)) matched[0] = true;
-                });
-                if (matched[0]) {
-                    return new Pair<>(stack.copy(), stack.getName().getString());
+            if (stack.isEmpty()) continue;
 
+            Collection<Map.Entry<RegistryEntry<EntityAttribute>, EntityAttributeModifier>> modifiers =
+                    TrinketModifiers.get(stack, ref, player).entries();
 
-                }
+            for (Map.Entry<RegistryEntry<EntityAttribute>, EntityAttributeModifier> entry : modifiers) {
+                results.add(new TrinketModifierSource(stack, entry.getValue(), entry.getKey()));
             }
+
         }
-        return null;
+
+        return results;
     }
 
 

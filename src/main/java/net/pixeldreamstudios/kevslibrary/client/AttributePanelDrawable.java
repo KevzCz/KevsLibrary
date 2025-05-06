@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.EquipmentSlot;
@@ -16,6 +17,7 @@ import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -27,9 +29,7 @@ import net.pixeldreamstudios.kevslibrary.compat.TrinketCompat;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Unique;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private static final Identifier BOOK_TEXTURE = Identifier.of("minecraft", "textures/gui/book.png");
@@ -51,7 +51,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private static final int MAX_ROWS = 6;
     private boolean showOnlyChanged = true;
     private List<ItemStack> queuedTooltipIcons = new ArrayList<>();
-
+    private static final String DESCRIPTION_PREFIX = "description.";
     public AttributePanelDrawable(int x, int y, int width) {
         this.x = x;
         this.y = y;
@@ -80,7 +80,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             maxWidth = Math.max(maxWidth, tr.getWidth(line.getString()));
         }
 
-        int tooltipWidth = maxWidth + 28; // + icon space + padding
+        int tooltipWidth = maxWidth + 28;
         int tooltipHeight = queuedTooltip.size() * (tr.fontHeight + 4) + 12;
 
         int tooltipX = this.tooltipX + 12;
@@ -90,7 +90,6 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         int borderColorStart = 0xFF5A5A5A;
         int borderColorEnd = 0xFFAAAAAA;
 
-        // 🟫 Background with borders
         context.fillGradient(tooltipX - 4, tooltipY - 4, tooltipX + tooltipWidth + 4, tooltipY + tooltipHeight,
                 backgroundColor, backgroundColor);
         context.drawBorder(tooltipX - 4, tooltipY - 4, tooltipWidth + 8, tooltipHeight + 1, borderColorStart);
@@ -104,14 +103,14 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             if (!icon.isEmpty()) {
                 context.getMatrices().push();
                 context.getMatrices().translate(tooltipX, lineY, 0);
-                context.getMatrices().scale(0.85f, 0.85f, 1f); // Slightly shrink icon
+                context.getMatrices().scale(0.85f, 0.85f, 1f);
                 context.drawItem(icon, 0, 0);
                 context.getMatrices().pop();
                 iconOffset = 18;
             }
 
             int textX = tooltipX + iconOffset;
-            context.drawText(tr, queuedTooltip.get(i).getString(), textX, lineY + 2, 0xFFFFFF, false);
+            context.drawText(tr, queuedTooltip.get(i), textX, lineY + 2, 0xFFFFFF, false);
         }
 
         context.getMatrices().pop();
@@ -158,7 +157,6 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             double base = instance.getBaseValue();
             double value = instance.getValue();
 
-            // 🛑 Skip NaN values when filtering changed stats
             if (showOnlyChanged) {
                 if (Double.isNaN(value) || Math.abs(base - value) < 0.001) continue;
             }
@@ -198,7 +196,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             String noStatsText = "No changed attributes";
             int textWidth = tr.getWidth(noStatsText);
             context.drawText(tr, noStatsText, x + (width - textWidth) / 2, y + 8, Formatting.GRAY.getColorValue(), false);
-            drawVanillaButtons(context, tr, mouseX, mouseY, y + height - 12); // Still draw buttons!
+            drawVanillaButtons(context, tr, mouseX, mouseY, y + height - 12);
             return;
         }
         int startIndex = currentPage * visibleRows;
@@ -265,7 +263,6 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         int rowHeight = 20;
         int padding = 20;
 
-        // Draw full book background
         context.drawTexture(BOOK_TEXTURE, x - 25, y, 0, 0, 240, 230, 240, 230);
 
         int visibleRows = MAX_ROWS;
@@ -274,7 +271,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         if (showOnlyChanged && cachedStats.isEmpty()) {
             String noStatsText = "No changed attributes";
             int textWidth = tr.getWidth(noStatsText);
-            drawBookButtons(context, tr, mouseX, mouseY, y + height - 20); // Still draw buttons!
+            drawBookButtons(context, tr, mouseX, mouseY, y + height - 20);
             context.drawText(tr, noStatsText, x + (width - textWidth) / 2 + 5, y + 20, Formatting.DARK_GRAY.getColorValue(), false);return;
         }
         int startIndex = currentPage * visibleRows;
@@ -349,7 +346,13 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         drawBookButtons(context, tr, mouseX, mouseY, btnY);
     }
 
-    private void drawTooltipContent(DrawContext context, TextRenderer tr, int hoverIndex, int mouseX, int mouseY, int rowHeight, int padding) {
+    private void drawTooltipContent(DrawContext context,
+                                    TextRenderer tr,
+                                    int hoverIndex,
+                                    int mouseX,
+                                    int mouseY,
+                                    int rowHeight,
+                                    int padding) {
         if (hoverIndex == -1 || hoverIndex >= cachedStats.size()) return;
 
         StatEntry stat = cachedStats.get(hoverIndex);
@@ -361,20 +364,20 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         boolean onValue = mouseX > midX && mouseX <= x + width;
 
         if (onName) {
-            String attributeId = stat.attribute().getKey()
-                    .map(key -> key.getValue().toString())
-                    .orElse("[unregistered]");
-            List<Text> tooltip = List.of(
-                    stat.name(),
-                    Text.literal(attributeId).formatted(Formatting.DARK_GRAY)
-            );
-            context.drawTooltip(tr, tooltip, mouseX, mouseY);
+            AttributeDescriptionProvider.TooltipContents tooltip = AttributeDescriptionProvider.getTooltip(stat.attribute().value());
+            this.queuedTooltip = tooltip.lines();
+            this.queuedTooltipIcons = tooltip.icons();
+            this.tooltipX = mouseX;
+            this.tooltipY = mouseY;
             return;
         }
 
         if (!onValue) return;
 
-        boolean shiftDown = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), client.options.sneakKey.getDefaultKey().getCode());
+        boolean shiftDown = InputUtil.isKeyPressed(
+                MinecraftClient.getInstance().getWindow().getHandle(),
+                client.options.sneakKey.getDefaultKey().getCode()
+        );
 
         EntityAttributeInstance instance = client.player.getAttributeInstance(stat.attribute());
 
@@ -384,9 +387,11 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         tooltipLines.add(Text.literal("Base: " + String.format("%.2f", stat.base())));
         iconStacks.add(ItemStack.EMPTY);
 
-        double flat = 0.0;
-        double multBase = 0.0;
-        double multTotal = 0.0;
+        double flat = 0.0, multBase = 0.0, multTotal = 0.0;
+        List<TrinketCompat.TrinketModifierSource> unmatchedTrinketSources = new ArrayList<>();
+        if (FabricLoader.getInstance().isModLoaded("trinkets")) {
+            unmatchedTrinketSources.addAll(TrinketCompat.getTrinketModifierSources(client.player));
+        }
 
         if (instance != null && !instance.getModifiers().isEmpty()) {
             tooltipLines.add(Text.empty());
@@ -412,9 +417,10 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
                 Identifier modId = mod.id();
                 ItemStack matchingStack = ItemStack.EMPTY;
-                String sourceName = null;
+                Text displayName = Text.literal(formatModifierId(modId));
+                boolean foundSource = false;
 
-                // Try equipped items
+
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
                     ItemStack stack = client.player.getEquippedStack(slot);
                     if (stack.isEmpty()) continue;
@@ -426,6 +432,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                             if (entryMod.id().equals(modId)) matched[0] = true;
                         });
                     }
+
                     if (!matched[0]) {
                         stack.getItem().getAttributeModifiers().applyModifiers(slot, (attr, entryMod) -> {
                             if (entryMod.id().equals(modId)) matched[0] = true;
@@ -433,34 +440,65 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     }
 
                     if (matched[0]) {
-                        sourceName = stack.getName().getString();
                         matchingStack = stack;
+                        displayName = stack.getName();
+                        foundSource = true;
                         break;
                     }
                 }
 
-                // Try Trinkets
-                if (sourceName == null && FabricLoader.getInstance().isModLoaded("trinkets")) {
-                    var result = TrinketCompat.findModifierSource(client.player, modId);
-                    if (result != null) {
-                        matchingStack = result.getLeft();
-                        sourceName = result.getRight();
+                if (!foundSource && FabricLoader.getInstance().isModLoaded("trinkets")) {
+                    for (Iterator<TrinketCompat.TrinketModifierSource> iter = unmatchedTrinketSources.iterator(); iter.hasNext(); ) {
+                        var source = iter.next();
+                        if (source.modifier().id().equals(mod.id())) {
+                            matchingStack = source.stack();
+                            displayName = matchingStack.getName();
+                            foundSource = true;
+                            iter.remove();
+                            break;
+                        }
+                    }
+                    if (!foundSource) {
+                        for (Iterator<TrinketCompat.TrinketModifierSource> iter = unmatchedTrinketSources.iterator(); iter.hasNext(); ) {
+                            var source = iter.next();
+                            if (source.modifier().operation() == mod.operation() &&
+                                    Math.abs(source.modifier().value() - mod.value()) < 0.0001) {
+                                matchingStack = source.stack();
+                                displayName = matchingStack.getName();
+                                foundSource = true;
+                                iter.remove();
+                                break;
+                            }
+                        }
                     }
                 }
 
-                // Final fallback
-                if (sourceName == null) {
-                    sourceName = formatModifierId(modId);
+                if (!foundSource) {
+                    String[] pathParts = modId.getPath().split("/");
+                    if (pathParts.length > 0) {
+                        String itemGuess = pathParts[pathParts.length - 1];
+                        Identifier itemId = Identifier.of(modId.getNamespace(), itemGuess);
+                        if (Registries.ITEM.containsId(itemId)) {
+                            Item item = Registries.ITEM.get(itemId);
+                            matchingStack = new ItemStack(item);
+                            displayName = matchingStack.getName();
+                            foundSource = true;
+                        }
+                    }
                 }
 
-                // Append final formatted line
-                Text displayLine = Text.literal(sourceName)
+                if (!foundSource) {
+                    System.out.println("[DEBUG] Unknown source for modifier ID: " + modId);
+                }
+
+                Text displayLine = displayName.copy()
                         .append(" ")
                         .append(Text.literal(opText).formatted(Formatting.GREEN));
+
                 tooltipLines.add(displayLine);
                 iconStacks.add(matchingStack);
-
             }
+
         } else if (stat.isChanged()) {
             tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
             iconStacks.add(ItemStack.EMPTY);
@@ -468,12 +506,14 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
         tooltipLines.add(Text.empty());
         iconStacks.add(ItemStack.EMPTY);
+
         if (stat.isChanged()) {
             if (shiftDown) {
                 double base = stat.base();
                 double total = base + flat;
                 double withMultBase = total + base * multBase;
                 double finalValue = withMultBase + withMultBase * multTotal;
+                double totalBeforeMultTotal = base + flat + base * multBase;
 
                 StringBuilder formula = new StringBuilder("= ");
                 boolean hasPrev = false;
@@ -482,15 +522,11 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     formula.append("(").append(String.format("%.2f + %.2f", base, flat)).append(")");
                     hasPrev = true;
                 }
-
                 if (base != 0 && multBase != 0) {
                     if (hasPrev) formula.append(" + ");
                     formula.append(String.format("(%.2f × %.2f)", base, multBase));
                     hasPrev = true;
                 }
-
-                double totalBeforeMultTotal = base + flat + base * multBase;
-
                 if (multTotal != 0) {
                     if (hasPrev) formula.append(" + ");
                     formula.append(String.format("%.2f × %.2f", totalBeforeMultTotal, multTotal));
@@ -502,18 +538,19 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 iconStacks.add(ItemStack.EMPTY);
                 tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue)).formatted(Formatting.GREEN));
                 iconStacks.add(ItemStack.EMPTY);
-
-            } else if (stat.isChanged()) {
+            } else {
                 tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
                 iconStacks.add(ItemStack.EMPTY);
             }
         }
-        // Final save
+
         this.queuedTooltip = tooltipLines;
         this.queuedTooltipIcons = iconStacks;
         this.tooltipX = mouseX;
         this.tooltipY = mouseY;
     }
+
+
     private static String formatModifierId(Identifier id) {
         String path = id.getPath();
         if (path.contains("/")) {
@@ -557,7 +594,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         String nextText = "»»";
         String checkLabel = "[ " + (showOnlyChanged ? "✓" : " ") + " ]";
 
-        int spacing = 24; // space between buttons
+        int spacing = 24;
         int buttonHeight = 10;
 
         int prevWidth = tr.getWidth(prevText);
@@ -586,7 +623,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         String nextText = "Next »";
         String checkLabel = "[ " + (showOnlyChanged ? "✓" : " ") + " ]";
 
-        int spacing = 12; // <- Add more spacing here
+        int spacing = 12;
         int buttonHeight = 10;
 
         int prevWidth = tr.getWidth(prevText);

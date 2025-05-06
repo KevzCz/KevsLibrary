@@ -34,7 +34,6 @@ public class FireTornadoHandler {
         if (currentTime - LAST_TORNADO_CAST.getOrDefault(attackerId, 0L) < COOLDOWN_TICKS) return;
         LAST_TORNADO_CAST.put(attackerId, currentTime);
 
-        // Overload check
         boolean isOverloaded;
         double overloadChance = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE) != null
                 ? attacker.getAttributeValue(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE)
@@ -71,12 +70,10 @@ public class FireTornadoHandler {
                 );
 
                 for (LivingEntity target : affected) {
-                    // SpellPower setup
                     SpellPower.Result result = SpellPower.getSpellPower(SpellSchools.FIRE, attacker);
                     SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FIRE);
                     SpellPower.Result.Value rawResult = result.nonCritical();
 
-                    // Calculate full damage
                     float base = BASE_DAMAGE + (float) result.baseValue() * (1.0f + vuln.powerBaseMultiplier());
                     boolean isCrit = attacker.getRandom().nextDouble() < (result.criticalChance() + vuln.criticalChanceBonus());
                     float critMultiplier = isCrit ? (float) (result.criticalDamage() + vuln.criticalDamageBonus()) : 1.0f;
@@ -143,7 +140,6 @@ public class FireTornadoHandler {
                     target.addVelocity(velocity.x, velocity.y, velocity.z);
                 }
 
-                // Spiral particles
                 for (int i = 0; i < 20; i++) {
                     double angle = Math.toRadians(i * 18 + (currentTick * 15));
                     double spiralRadius = 1.0 + 0.05 * currentTick;

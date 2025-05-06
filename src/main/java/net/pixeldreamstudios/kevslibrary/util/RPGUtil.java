@@ -21,8 +21,6 @@ public class RPGUtil
         dispatcher.register(
                 CommandManager.literal("rpgutility")
                         .requires(source -> source.hasPermissionLevel(2))
-                        // ✅ /rpgutility after
-
                         .then(
                                 CommandManager.literal("anger")
                                         .then(

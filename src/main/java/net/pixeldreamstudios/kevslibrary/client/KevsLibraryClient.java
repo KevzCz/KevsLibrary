@@ -19,6 +19,10 @@ public class KevsLibraryClient implements ClientModInitializer {
                 KevsLibrary.ICICLE_PROJECTILE,
                 context -> new FlyingItemEntityRenderer<>(context)
         );
+        EntityRendererRegistry.register(
+                KevsLibrary.ARCANE_SHARD,
+                context -> new FlyingItemEntityRenderer<>(context)
+        );
 
     }
 }

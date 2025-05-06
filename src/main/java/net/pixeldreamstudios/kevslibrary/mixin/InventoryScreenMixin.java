@@ -50,7 +50,7 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
             boolean hovered = mouseX >= buttonX && mouseX <= buttonX + iconSize &&
                     mouseY >= buttonY && mouseY <= buttonY + iconSize;
 
-            int color = hovered ? 0xFFFFFFFF : 0xFF666666; // full bright vs dimmed
+            int color = hovered ? 0xFFFFFFFF : 0xFF666666;
             context.setShaderColor(
                     ((color >> 16) & 0xFF) / 255f,
                     ((color >> 8) & 0xFF) / 255f,
@@ -59,7 +59,7 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
             );
 
             context.drawTexture(ATTRIBUTE_BOOK, buttonX, buttonY, 0, 0, iconSize, iconSize, 9, 9);
-            context.setShaderColor(1f, 1f, 1f, 1f); // reset color
+            context.setShaderColor(1f, 1f, 1f, 1f);
 
             if (hovered) {
                 context.drawTooltip(this.textRenderer, Text.of("Attributes Panel"), mouseX, mouseY);

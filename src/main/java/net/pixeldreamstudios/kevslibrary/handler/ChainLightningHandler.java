@@ -31,7 +31,6 @@ public class ChainLightningHandler {
                 ? attacker.getAttributeValue(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE)
                 : 0.0;
 
-        // SpellPower setup
         SpellPower.Result spellResult = SpellPower.getSpellPower(SpellSchools.LIGHTNING, attacker);
         EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
         float bonus = dmgAttr != null ? (float) dmgAttr.getValue() : 1.0f;
@@ -42,7 +41,6 @@ public class ChainLightningHandler {
         visited.add(attacker);
         visited.add(initialTarget);
 
-        // 🎯 Initial target
         spawnArcParticles(world, attacker, initialTarget);
         world.playSound(null, initialTarget.getX(), initialTarget.getY(), initialTarget.getZ(),
                 SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 0.2f, 0.2f);
@@ -65,7 +63,6 @@ public class ChainLightningHandler {
             triggerOverloadDoT(attacker, initialTarget, damage * 0.2f, bounceCount);
         }
 
-        // 🌩️ Bounce logic
         Queue<LivingEntity> queue = new LinkedList<>();
         queue.add(initialTarget);
         int jumps = 0;

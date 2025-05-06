@@ -15,6 +15,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
+import net.pixeldreamstudios.kevslibrary.entity.ArcaneShardEntity;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
@@ -82,6 +83,27 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_DAMAGE =
 			RegistryHelper.registerAttribute("soul_link_damage",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 10.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_CHANCE =
+			RegistryHelper.registerAttribute("arcane_rupture_chance",
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 0.0, 0.0, 1.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_DAMAGE =
+			RegistryHelper.registerAttribute("arcane_rupture_damage",
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_damage", 5.0, 0.0, 100.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_OVERLOAD_CHANCE =
+			RegistryHelper.registerAttribute("arcane_rupture_overload_chance",
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
+
+	public static final EntityType<ArcaneShardEntity> ARCANE_SHARD =
+			Registry.register(
+					Registries.ENTITY_TYPE,
+					Identifier.of(MOD_ID, "arcane_shard"),
+					FabricEntityTypeBuilder.<ArcaneShardEntity>create(SpawnGroup.MISC, ArcaneShardEntity::new)
+							.dimensions(EntityDimensions.fixed(0.25f, 0.25f))
+							.trackRangeBlocks(6)
+							.trackedUpdateRate(10)
+							.build()
+			);
 
 	public static final EntityType<IcicleProjectileEntity> ICICLE_PROJECTILE =
 			Registry.register(

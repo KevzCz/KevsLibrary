@@ -50,11 +50,9 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
         if (!(result.getEntity() instanceof LivingEntity target)) return;
         if (!(getWorld() instanceof ServerWorld world)) return;
 
-        // Spell Power system
         SpellPower.Result resultData = SpellPower.getSpellPower(SpellSchools.FROST, attacker);
         SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FROST);
 
-        // Manual crit roll
         float base = icicleDamage + (float) resultData.baseValue() * (1.0f + vuln.powerBaseMultiplier());
         boolean isCrit = attacker.getRandom().nextDouble() < (resultData.criticalChance() + vuln.criticalChanceBonus());
         float critApplied = isCrit ? base * (float) (resultData.criticalDamage() + vuln.criticalDamageBonus()) : base;
@@ -113,8 +111,7 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
 
     @Override
     public void onPlayerCollision(PlayerEntity player) {
-        // Do nothing — prevents pickup
-    }
+          }
 
     @Override
     public void tick() {

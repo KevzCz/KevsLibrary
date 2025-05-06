@@ -22,5 +22,79 @@
 
   "attribute.name.generic.soul_link_chance": "Soul Link Chance",
 
-  "attribute.name.generic.soul_link_damage": "Soul Link Damage"
+  "attribute.name.generic.soul_link_damage": "Soul Link Damage",
+
+  "description.attribute.name.generic.crit_chance": "Increases your chance to land a critical strike on enemies.",
+  "description.attribute.name.generic.crit_damage": "Multiplies your critical hit damage by this factor.",
+  "description.attribute.name.generic.damage_multiplier": "Scales all of your outgoing damage, regardless of type.",
+
+  "description.attribute.name.generic.multistrike_chance": "Chance to trigger additional strikes with each attack.",
+  "description.attribute.name.generic.multistrike_count": "Number of extra strikes when Multistrike activates.",
+  "description.attribute.name.generic.multistrike_damage": "Damage multiplier for each multistrike hit.",
+
+  "description.attribute.name.generic.chain_lightning_chance": "Chance for attacks to emit Chain Lightning.",
+  "description.attribute.name.generic.chain_lightning_count": "How many times Chain Lightning can bounce.",
+  "description.attribute.name.generic.chain_lightning_overload_chance": "Chance to trigger Overload effects when Chain Lightning hits.",
+
+  "description.attribute.name.generic.frost_nova_chance": "Chance for attacks to release a Frost Nova blast.",
+  "description.attribute.name.generic.frost_nova_count": "Number of Frost Nova explosions triggered.",
+  "description.attribute.name.generic.frost_nova_overload_chance": "Chance for Frost Nova to cause an Overload effect.",
+
+  "description.attribute.name.generic.fire_tornado_chance": "Chance for attacks to summon a Fire Tornado.",
+  "description.attribute.name.generic.fire_tornado_overload_chance": "Chance for Fire Tornado to trigger Overload when it hits.",
+
+  "description.attribute.name.generic.pet_inheritance_ratio": "Percent of your stats inherited by tamed creatures.",
+
+  "description.attribute.name.generic.soul_link_chance": "Chance to link souls on hit, sharing incoming damage.",
+  "description.attribute.name.generic.soul_link_damage": "Multiplier applied to damage shared through soul link.",
+
+  "description.attribute.name.generic.arcane_rupture_chance": "Chance for Arcane Rupture to trigger on hit.",
+  "description.attribute.name.generic.arcane_rupture_damage": "Scales the damage dealt by Arcane Rupture.",
+
+  "description.attribute.name.spell_power.arcane": "Increases the effectiveness of Arcane spells.",
+  "description.attribute.name.spell_power.fire": "Increases the effectiveness of Fire spells.",
+  "description.attribute.name.spell_power.frost": "Increases the effectiveness of Frost spells.",
+  "description.attribute.name.spell_power.lightning": "Increases the effectiveness of Lightning spells.",
+  "description.attribute.name.spell_power.healing": "Increases the effectiveness of Healing spells.",
+  "description.attribute.name.spell_power.haste": "Improves spell casting speed.",
+  "description.attribute.name.spell_power.soul": "Increases the effectiveness of Soul spells.",
+  "description.attribute.name.spell_power.generic": "Increases general spell effectiveness.",
+  "description.attribute.name.spell_power.critical_chance": "Chance for spells to critically strike.",
+  "description.attribute.name.spell_power.critical_damage": "Multiplier for spell critical hit damage.",
+  "description.attribute.name.spell_power.resistance.generic": "Reduces damage taken from all spell types.",
+  "description.attribute.name.spell_engine.damage_taken": "Modifies how much damage is taken.",
+  "description.attribute.name.spell_engine.healing_taken": "Modifies how much healing is received.",
+
+  "description.attribute.name.generic.armor": "Reduces incoming physical damage.",
+  "description.attribute.name.generic.armor_toughness": "Improves armor effectiveness against strong attacks.",
+  "description.attribute.name.generic.attack_damage": "Amount of melee damage dealt per attack.",
+  "description.attribute.name.generic.attack_knockback": "Controls how far targets are knocked back.",
+  "description.attribute.name.generic.attack_speed": "The cooldown of each attack.",
+  "description.attribute.name.generic.burning_time": "Duration of time entities remain on fire.",
+  "description.attribute.name.generic.explosion_knockback_resistance": "Reduces knockback received from explosions.",
+  "description.attribute.name.generic.fall_damage_multiplier": "Scales the damage taken from falling.",
+  "description.attribute.name.generic.flying_speed": "Modifies flight speed (for elytra or creative).",
+  "description.attribute.name.generic.follow_range": "Distance at which mobs detect and follow targets.",
+  "description.attribute.name.generic.gravity": "Controls how strongly gravity affects the entity.",
+  "description.attribute.name.generic.jump_strength": "Affects how high an entity can jump.",
+  "description.attribute.name.generic.knockback_resistance": "Chance to resist knockback completely.",
+  "description.attribute.name.generic.luck": "Increases luck, affecting loot tables and fishing.",
+  "description.attribute.name.generic.max_absorption": "Maximum temporary health (yellow hearts).",
+  "description.attribute.name.generic.max_health": "Maximum amount of health (red hearts).",
+  "description.attribute.name.generic.movement_efficiency": "Improves overall movement effectiveness.",
+  "description.attribute.name.generic.movement_speed": "Controls walking and running speed.",
+  "description.attribute.name.generic.oxygen_bonus": "Additional time the entity can breathe underwater.",
+  "description.attribute.name.generic.safe_fall_distance": "Fall distance you can survive without taking damage.",
+  "description.attribute.name.generic.scale": "Scales the physical size of the entity.",
+  "description.attribute.name.generic.step_height": "Controls how high the entity can step up automatically.",
+  "description.attribute.name.generic.water_movement_efficiency": "Improves movement while swimming.",
+  "description.attribute.name.zombie.spawn_reinforcements": "Chance for zombies to summon allies when hurt.",
+
+  "description.attribute.name.player.block_break_speed": "Increases how quickly the player can break blocks.",
+  "description.attribute.name.player.block_interaction_range": "Distance from which blocks can be used or opened.",
+  "description.attribute.name.player.entity_interaction_range": "Distance from which entities can be interacted with.",
+  "description.attribute.name.player.mining_efficiency": "Improves effectiveness when mining blocks.",
+  "description.attribute.name.player.sneaking_speed": "Controls movement speed while sneaking.",
+  "description.attribute.name.player.submerged_mining_speed": "Improves mining speed while underwater.",
+  "description.attribute.name.player.sweeping_damage_ratio": "Percentage of damage dealt to nearby mobs by sweep attacks."
 }
