@@ -88,8 +88,22 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         int tooltipWidth = maxWidth + 28;
         int tooltipHeight = queuedTooltip.size() * (tr.fontHeight + 4) + 12;
 
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+
         int tooltipX = this.tooltipX + 12;
         int tooltipY = this.tooltipY + 12;
+
+        if (tooltipX + tooltipWidth > screenWidth) {
+            tooltipX = screenWidth - tooltipWidth - 8;
+        }
+        if (tooltipY + tooltipHeight > screenHeight) {
+            tooltipY = screenHeight - tooltipHeight - 8;
+        }
+
+        tooltipX = Math.max(tooltipX, 4);
+        tooltipY = Math.max(tooltipY, 4);
+
 
         int backgroundColor = 0xF0131313;
         int borderColorStart = 0xFF5A5A5A;
@@ -383,7 +397,9 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 MinecraftClient.getInstance().getWindow().getHandle(),
                 client.options.sneakKey.getDefaultKey().getCode()
         );
-
+        List<Double> flatComponents = new ArrayList<>();
+        List<Double> baseMultComponents = new ArrayList<>();
+        List<Double> totalMultComponents = new ArrayList<>();
         EntityAttributeInstance instance = client.player.getAttributeInstance(stat.attribute());
 
         List<Text> tooltipLines = new ArrayList<>();
@@ -391,6 +407,11 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
         tooltipLines.add(Text.literal("Base: " + String.format("%.2f", stat.base())));
         iconStacks.add(ItemStack.EMPTY);
+
+        if (instance != null) {
+            tooltipLines.add(Text.literal("Final: " + String.format("%.2f", instance.getValue())));
+            iconStacks.add(ItemStack.EMPTY);
+        }
 
         double flat = 0.0, multBase = 0.0, multTotal = 0.0;
         List<TrinketCompat.TrinketModifierSource> unmatchedTrinketSources = new ArrayList<>();
@@ -408,23 +429,26 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 String opText = switch (mod.operation()) {
                     case ADD_VALUE -> {
                         flat += mod.value();
+                        flatComponents.add(mod.value());
                         yield String.format("+%.2f", mod.value());
                     }
                     case ADD_MULTIPLIED_BASE -> {
                         multBase += mod.value();
+                        baseMultComponents.add(mod.value());
                         yield "× base × " + String.format("%.2f", mod.value());
                     }
                     case ADD_MULTIPLIED_TOTAL -> {
                         multTotal += mod.value();
+                        totalMultComponents.add(mod.value());
                         yield "× total × " + String.format("%.2f", mod.value());
                     }
                 };
+
 
                 Identifier modId = mod.id();
                 ItemStack matchingStack = ItemStack.EMPTY;
                 Text displayName = Text.literal(formatModifierId(modId));
                 boolean foundSource = false;
-
 
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
                     ItemStack stack = client.player.getEquippedStack(slot);
@@ -457,7 +481,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                         var source = iter.next();
                         if (source.modifier().id().equals(mod.id())) {
                             matchingStack = source.stack();
-                            displayName = matchingStack.getName();
+                            displayName = matchingStack.getName().copy().formatted(matchingStack.getRarity().getFormatting());
                             foundSource = true;
                             iter.remove();
                             break;
@@ -469,7 +493,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                             if (source.modifier().operation() == mod.operation() &&
                                     Math.abs(source.modifier().value() - mod.value()) < 0.0001) {
                                 matchingStack = source.stack();
-                                displayName = matchingStack.getName();
+                                displayName = matchingStack.getName().copy().formatted(matchingStack.getRarity().getFormatting());
                                 foundSource = true;
                                 iter.remove();
                                 break;
@@ -486,7 +510,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                         if (Registries.ITEM.containsId(itemId)) {
                             Item item = Registries.ITEM.get(itemId);
                             matchingStack = new ItemStack(item);
-                            displayName = matchingStack.getName();
+                            displayName = matchingStack.getName().copy().formatted(matchingStack.getRarity().getFormatting());
                             foundSource = true;
                         }
                     }
@@ -508,22 +532,35 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
                             if (potionMod.operation() == mod.operation() &&
                                     Math.abs(potionMod.value() - mod.value()) < 0.0001) {
-
                                 displayName = Text.translatable(effect.getTranslationKey());
                                 matchingStack = createColoredPotionItem(effect);
                                 foundSource = true;
-
                                 break;
                             }
                         }
                     }
                 }
-                Text displayLine = displayName.copy()
-                        .append(" ")
-                        .append(Text.literal(opText).formatted(Formatting.GREEN));
 
-                tooltipLines.add(displayLine);
-                iconStacks.add(matchingStack);
+                // ✅ Modified Display Block
+                if (modId.getNamespace().equals("tiered")) {
+                    String path = modId.getPath();
+                    String[] pathParts = path.split("_");
+                    String tierRarity = pathParts.length > 0 ? pathParts[0] : "Tiered";
+                    String tierName = tierRarity.substring(0, 1).toUpperCase() + tierRarity.substring(1).toLowerCase();
+
+                    Text tierLine = Text.literal(tierName + " Tier Bonus: ").formatted(Formatting.AQUA)
+                            .append(Text.literal(opText).formatted(Formatting.GREEN));
+
+                    tooltipLines.add(tierLine);
+                    iconStacks.add(new ItemStack(Items.ANVIL));
+                } else {
+                    Text displayLine = displayName.copy()
+                            .append(" ")
+                            .append(Text.literal(opText).formatted(Formatting.GREEN));
+
+                    tooltipLines.add(displayLine);
+                    iconStacks.add(matchingStack);
+                }
             }
 
         } else if (stat.isChanged()) {
@@ -533,38 +570,96 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
 
         tooltipLines.add(Text.empty());
         iconStacks.add(ItemStack.EMPTY);
-
         if (stat.isChanged()) {
             if (shiftDown) {
                 double base = stat.base();
-                double total = base + flat;
-                double withMultBase = total + base * multBase;
-                double finalValue = withMultBase + withMultBase * multTotal;
-                double totalBeforeMultTotal = base + flat + base * multBase;
+                double flatTotal = flat;
 
-                StringBuilder formula = new StringBuilder("= ");
-                boolean hasPrev = false;
+                double tieredMultTotal = 0.0;
+                double nonTieredMultTotal = 0.0;
 
-                if (base != 0 || flat != 0) {
-                    formula.append("(").append(String.format("%.2f + %.2f", base, flat)).append(")");
-                    hasPrev = true;
+                instance = client.player.getAttributeInstance(stat.attribute());
+                if (instance != null && !instance.getModifiers().isEmpty()) {
+                    for (EntityAttributeModifier mod : instance.getModifiers()) {
+                        if (mod.operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+                            if (mod.id().getNamespace().equals("tiered")) {
+                                tieredMultTotal += mod.value();
+                            } else {
+                                nonTieredMultTotal += mod.value();
+                            }
+                        }
+                    }
                 }
-                if (base != 0 && multBase != 0) {
-                    if (hasPrev) formula.append(" + ");
-                    formula.append(String.format("(%.2f × %.2f)", base, multBase));
-                    hasPrev = true;
-                }
-                if (multTotal != 0) {
-                    if (hasPrev) formula.append(" + ");
-                    formula.append(String.format("%.2f × %.2f", totalBeforeMultTotal, multTotal));
-                }
+
+                double basePlusAdditive = base + flatTotal;
+                double afterTiered = (tieredMultTotal != 0.0) ? basePlusAdditive * (1.0 + tieredMultTotal) : basePlusAdditive;
+                double afterBaseMult = (multBase != 0.0) ? afterTiered * (1.0 + multBase) : afterTiered;
+                double finalValue = (nonTieredMultTotal != 0.0) ? afterBaseMult * (1.0 + nonTieredMultTotal) : afterBaseMult;
 
                 tooltipLines.add(Text.literal("Calculated:").formatted(Formatting.DARK_GRAY));
                 iconStacks.add(ItemStack.EMPTY);
-                tooltipLines.add(Text.literal(formula.toString()).formatted(Formatting.DARK_GRAY));
+
+                if (flatTotal != 0.0) {
+                    String flatBreakdown = flatComponents.stream()
+                            .map(v -> String.format("%.2f", v))
+                            .reduce((a, b) -> a + " + " + b).orElse("0.00");
+
+                    tooltipLines.add(Text.literal(
+                                    String.format("⟶ %.2f + (%s) = %.2f", base, flatBreakdown, basePlusAdditive))
+                            .formatted(Formatting.GRAY));
+
+                    iconStacks.add(ItemStack.EMPTY);
+                } else {
+                    tooltipLines.add(Text.literal(
+                                    String.format("= %.2f", base))
+                            .formatted(Formatting.GRAY));
+                    iconStacks.add(ItemStack.EMPTY);
+                }
+
+                if (tieredMultTotal != 0.0) {
+                    tooltipLines.add(Text.literal(
+                                    String.format("⟶ %.2f × %.2f = %.2f", basePlusAdditive, 1.0 + tieredMultTotal, afterTiered))
+                            .formatted(Formatting.GRAY));
+                    iconStacks.add(ItemStack.EMPTY);
+                }
+
+                if (multBase != 0.0) {
+                    String baseMultBreakdown = baseMultComponents.stream()
+                            .map(v -> String.format("%.2f", v))
+                            .reduce((a, b) -> a + " + " + b).orElse("0.00");
+
+                    tooltipLines.add(Text.literal(
+                                    String.format("⟶ %.2f × (1.00 + %s) = %.2f", afterTiered, baseMultBreakdown, afterBaseMult))
+                            .formatted(Formatting.GRAY));
+                    iconStacks.add(ItemStack.EMPTY);
+                }
+
+                if (nonTieredMultTotal != 0.0) {
+                    // Only include non-tiered total multipliers
+                    List<Double> nonTieredTotalComponents = new ArrayList<>();
+                    for (EntityAttributeModifier mod : instance.getModifiers()) {
+                        if (mod.operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL &&
+                                !mod.id().getNamespace().equals("tiered")) {
+                            nonTieredTotalComponents.add(mod.value());
+                        }
+                    }
+
+                    String totalMultBreakdown = nonTieredTotalComponents.stream()
+                            .map(v -> String.format("%.2f", v))
+                            .reduce((a, b) -> a + " + " + b).orElse("0.00");
+
+                    if (!nonTieredTotalComponents.isEmpty()) {
+                        tooltipLines.add(Text.literal(
+                                        String.format("⟶ %.2f × (1.00 + %s) = %.2f", afterBaseMult, totalMultBreakdown, finalValue))
+                                .formatted(Formatting.GRAY));
+                    }
+
+                }
+
+                tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue))
+                        .formatted(Formatting.GREEN));
                 iconStacks.add(ItemStack.EMPTY);
-                tooltipLines.add(Text.literal("= " + String.format("%.2f", finalValue)).formatted(Formatting.GREEN));
-                iconStacks.add(ItemStack.EMPTY);
+
             } else {
                 tooltipLines.add(Text.literal("Hold \u21E7 Shift to show calculation").formatted(Formatting.GRAY));
                 iconStacks.add(ItemStack.EMPTY);
@@ -576,6 +671,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
         this.tooltipX = mouseX;
         this.tooltipY = mouseY;
     }
+
 
     private ItemStack createColoredPotionItem(StatusEffect effect) {
         ItemStack stack = new ItemStack(Items.POTION);
