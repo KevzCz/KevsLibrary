@@ -541,7 +541,6 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     }
                 }
 
-                // ✅ Modified Display Block
                 if (modId.getNamespace().equals("tiered")) {
                     String path = modId.getPath();
                     String[] pathParts = path.split("_");
@@ -635,7 +634,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 }
 
                 if (nonTieredMultTotal != 0.0) {
-                    // Only include non-tiered total multipliers
+
                     List<Double> nonTieredTotalComponents = new ArrayList<>();
                     for (EntityAttributeModifier mod : instance.getModifiers()) {
                         if (mod.operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL &&
@@ -676,12 +675,11 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private ItemStack createColoredPotionItem(StatusEffect effect) {
         ItemStack stack = new ItemStack(Items.POTION);
 
-        // Set the custom name to the effect's translated name
+
         stack.set(DataComponentTypes.CUSTOM_NAME, Text.translatable(effect.getTranslationKey()));
 
-        // Make it red by setting a fixed NBT color (since CUSTOM_POTION_COLOR doesn't exist)
-        NbtCompound nbt = new NbtCompound();
-        nbt.putInt("CustomPotionColor", 0xFF0000); // Red
+         NbtCompound nbt = new NbtCompound();
+        nbt.putInt("CustomPotionColor", 0xFF0000);
         stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
 
         return stack;
