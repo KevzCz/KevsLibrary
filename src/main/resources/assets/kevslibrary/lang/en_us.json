@@ -21,8 +21,12 @@
   "attribute.name.generic.pet_inheritance_ratio": "Pet Inheritance Ratio",
 
   "attribute.name.generic.soul_link_chance": "Soul Link Chance",
-
   "attribute.name.generic.soul_link_damage": "Soul Link Damage",
+
+  "attribute.name.generic.arcane_rupture_chance": "Arcane Rupture Chance",
+  "attribute.name.generic.arcane_rupture_damage": "Arcane Rupture Damage",
+  "attribute.name.generic.arcane_rupture_overload_chance": "Arcane Rupture Overload Chance",
+
 
   "description.attribute.name.generic.crit_chance": "Increases your chance to land a critical strike on enemies.",
   "description.attribute.name.generic.crit_damage": "Multiplies your critical hit damage by this factor.",
@@ -50,6 +54,7 @@
 
   "description.attribute.name.generic.arcane_rupture_chance": "Chance for Arcane Rupture to trigger on hit.",
   "description.attribute.name.generic.arcane_rupture_damage": "Scales the damage dealt by Arcane Rupture.",
+  "description.attribute.name.generic.arcane_rupture_overload_chance": "Chance for Arcane Rupture to trigger Overload when it hits.",
 
   "description.attribute.name.spell_power.arcane": "Increases the effectiveness of Arcane spells.",
   "description.attribute.name.spell_power.fire": "Increases the effectiveness of Fire spells.",

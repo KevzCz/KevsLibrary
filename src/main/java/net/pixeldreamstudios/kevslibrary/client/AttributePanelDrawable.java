@@ -167,6 +167,9 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                     || attr.getTranslationKey().contains("chain_lightning_overload_chance")
                     || attr.getTranslationKey().contains("frost_nova_chance")
                     || attr.getTranslationKey().contains("frost_nova_overload_chance")
+                    || attr.getTranslationKey().contains("arcane_rupture_chance")
+                    || attr.getTranslationKey().contains("arcane_rupture_damage")
+                    || attr.getTranslationKey().contains("arcane_rupture_overload_chance")
                     || attr.getTranslationKey().contains("ratio")
                     || attr.getTranslationKey().contains("crit_chance")
                     || attr.getTranslationKey().contains("crit_damage")
@@ -427,33 +430,60 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
             iconStacks.add(ItemStack.EMPTY);
 
             for (EntityAttributeModifier mod : instance.getModifiers()) {
-                String opText = switch (mod.operation()) {
+                String opText;
+                Formatting color;
+
+                switch (mod.operation()) {
                     case ADD_VALUE -> {
-                        flat += mod.value();
-                        flatComponents.add(mod.value());
-                        yield String.format("+%.2f", mod.value());
+                        double value = mod.value();
+                        flat += value;
+                        flatComponents.add(value);
+
+                        color = value >= 0 ? Formatting.GREEN : Formatting.RED;
+                        String sign = value >= 0 ? "+" : "";
+                        opText = sign + String.format("%.2f", value);
                     }
+
                     case ADD_MULTIPLIED_BASE -> {
-                        multBase += mod.value();
-                        baseMultComponents.add(mod.value());
-                        yield "× base × " + String.format("%.2f", mod.value());
+                        double value = mod.value();
+                        multBase += value;
+                        baseMultComponents.add(value);
+
+                        int percent = (int) Math.round(value * 100);
+                        color = percent >= 0 ? Formatting.GREEN : Formatting.RED;
+                        String sign = percent >= 0 ? "+" : "";
+
+                        opText = sign + percent + "% Base";
                     }
+
                     case ADD_MULTIPLIED_TOTAL -> {
-                        multTotal += mod.value();
-                        totalMultComponents.add(mod.value());
-                        yield "× total × " + String.format("%.2f", mod.value());
+                        double value = mod.value();
+                        multTotal += value;
+                        totalMultComponents.add(value);
+
+                        int percent = (int) Math.round(value * 100);
+                        color = percent >= 0 ? Formatting.GREEN : Formatting.RED;
+                        String sign = percent >= 0 ? "+" : "";
+
+                        opText = sign + percent + "% Total";
                     }
-                };
+
+                    default -> {
+                        opText = "?";
+                        color = Formatting.GRAY;
+                    }
+                }
 
 
-                // parse out an optional “.custom_name” suffix
+
+
+
                 Identifier rawId    = mod.id();
-                String     fullPath = rawId.getPath();                       // e.g. "ruby_ring.mystic_essence"
-                String[]   parts    = fullPath.split("\\.", 2);              // ["ruby_ring","mystic_essence"]
+                String     fullPath = rawId.getPath();
+                String[]   parts    = fullPath.split("\\.", 2);
                 Identifier modId    = Identifier.of(rawId.getNamespace(), parts[0]);
                 String     customName = parts.length > 1 ? parts[1] : null;
 
-// setup icon + default display
                 ItemStack matchingStack = new ItemStack(Registries.ITEM.get(modId));
                 Text displayName       = Text.literal(formatModifierId(modId));
                 boolean foundSource    = false;
@@ -568,7 +598,7 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 } else {
                     Text displayLine = displayName.copy()
                             .append(" ")
-                            .append(Text.literal(opText).formatted(Formatting.GREEN));
+                            .append(Text.literal(opText).formatted(color));
 
                     tooltipLines.add(displayLine);
                     iconStacks.add(matchingStack);
