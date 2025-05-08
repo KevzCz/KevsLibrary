@@ -35,6 +35,7 @@ import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AttributePanelDrawable implements Drawable, Element, Selectable {
     private static final Identifier BOOK_TEXTURE = Identifier.of("minecraft", "textures/gui/book.png");
@@ -445,10 +446,17 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                 };
 
 
-                Identifier modId = mod.id();
-                ItemStack matchingStack = ItemStack.EMPTY;
-                Text displayName = Text.literal(formatModifierId(modId));
-                boolean foundSource = false;
+                // parse out an optional “.custom_name” suffix
+                Identifier rawId    = mod.id();
+                String     fullPath = rawId.getPath();                       // e.g. "ruby_ring.mystic_essence"
+                String[]   parts    = fullPath.split("\\.", 2);              // ["ruby_ring","mystic_essence"]
+                Identifier modId    = Identifier.of(rawId.getNamespace(), parts[0]);
+                String     customName = parts.length > 1 ? parts[1] : null;
+
+// setup icon + default display
+                ItemStack matchingStack = new ItemStack(Registries.ITEM.get(modId));
+                Text displayName       = Text.literal(formatModifierId(modId));
+                boolean foundSource    = false;
 
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
                     ItemStack stack = client.player.getEquippedStack(slot);
@@ -540,7 +548,12 @@ public class AttributePanelDrawable implements Drawable, Element, Selectable {
                         }
                     }
                 }
-
+                if (customName != null) {
+                    String pretty = Arrays.stream(customName.split("_"))
+                            .map(s -> s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase())
+                            .collect(Collectors.joining(" "));
+                    displayName = Text.literal(pretty).formatted(Formatting.LIGHT_PURPLE);
+                }
                 if (modId.getNamespace().equals("tiered")) {
                     String path = modId.getPath();
                     String[] pathParts = path.split("_");
