@@ -57,8 +57,8 @@
     
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
-    
-            float finalDamage = baseDamage * multiplier * 0.5f;
+
+            float finalDamage = baseDamage * multiplier * 1.43f;
             List<HoveringArrow> arrows = hoveringArrows.computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>());
     
             for (int i = 0; i < count; i++) {
@@ -68,11 +68,10 @@
                 if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) {
                     continue;
                 }
-
+                arrow.setCritical(true);
                 arrow.setDamage(finalDamage);
                 arrow.setSilent(true);
                 arrow.setGlowing(true);
-                arrow.setCritical(false);
                 arrow.setNoGravity(true);
                 arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
     
