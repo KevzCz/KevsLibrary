@@ -14,7 +14,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.entity.ArcaneShardEntity;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
@@ -141,7 +140,6 @@ public class KevsLibrary implements ModInitializer {
 		});
 
 		DelayedExecutor.init();
-		KevsLibraryConfig.load();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			RPGUtil.register(dispatcher);
 		});

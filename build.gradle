@@ -37,14 +37,6 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation("maven.modrinth:spell-power:1.2.3+1.21.1")
-	modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-base:6.1.2")
-	modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:6.1.2")
-	modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-base:6.1.2")
-	modLocalRuntime("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:6.1.2")
-	modCompileOnly("maven.modrinth:trinkets:3.10.0")
-	modLocalRuntime("maven.modrinth:trinkets:3.10.0")
-	modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:15.0.140")
-	modCompileOnly("com.terraformersmc:modmenu:11.0.3")
 	modImplementation("net.fabricmc.fabric-api:fabric-api:0.115.4+1.21.1")
 
 }

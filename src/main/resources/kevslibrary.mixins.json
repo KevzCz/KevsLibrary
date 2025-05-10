@@ -6,7 +6,6 @@
 	"mixins": [
 		"LivingEntityMixin",
 		"PlayerMixin",
-		"InventoryScreenMixin",
 		"TameableEntityMixin",
 		"AbstractHorseEntityMixin",
 		"UniversalTamingDataMixin"
