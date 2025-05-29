@@ -26,7 +26,9 @@
   "attribute.name.generic.arcane_rupture_chance": "Arcane Rupture Chance",
   "attribute.name.generic.arcane_rupture_damage": "Arcane Rupture Damage",
   "attribute.name.generic.arcane_rupture_overload_chance": "Arcane Rupture Overload Chance",
+  "attribute.name.generic.trident_damage_multiplier": "Trident Damage Multiplier",
 
+  "description.attribute.name.generic.trident_damage_multiplier": "Increases your Trident Damage",
 
   "description.attribute.name.generic.crit_chance": "Increases your chance to land a critical strike on enemies.",
   "description.attribute.name.generic.crit_damage": "Multiplies your critical hit damage by this factor.",

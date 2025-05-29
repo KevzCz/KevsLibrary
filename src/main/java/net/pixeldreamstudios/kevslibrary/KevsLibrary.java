@@ -92,7 +92,9 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_OVERLOAD_CHANCE =
 			RegistryHelper.registerAttribute("arcane_rupture_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
-
+	public static final RegistryEntry<EntityAttribute> TRIDENT_DAMAGE_MULTIPLIER =
+			RegistryHelper.registerAttribute("trident_damage_multiplier",
+					new ClampedEntityAttribute("attribute.name.generic.trident_damage_multiplier", 1.0, 0.0, 100.0).setTracked(true));
 	public static final EntityType<ArcaneShardEntity> ARCANE_SHARD =
 			Registry.register(
 					Registries.ENTITY_TYPE,

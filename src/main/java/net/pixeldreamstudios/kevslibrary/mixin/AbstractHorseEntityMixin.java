@@ -1,91 +1,90 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.pixeldreamstudios.kevslibrary.KevsLibrary;
-import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
+import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
+import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Set;
-
 @Mixin(AbstractHorseEntity.class)
-public abstract class AbstractHorseEntityMixin {
+public abstract class AbstractHorseEntityMixin implements UniversalTameable {
 
-    private static final Set<RegistryEntry<EntityAttribute>> INHERITABLE_ATTRIBUTES = Set.of(
-            EntityAttributes.GENERIC_MAX_HEALTH,
-            EntityAttributes.GENERIC_ATTACK_DAMAGE,
-            EntityAttributes.GENERIC_SCALE,
-            EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE,
-            EntityAttributes.GENERIC_ARMOR,
-            EntityAttributes.GENERIC_MOVEMENT_SPEED
-    );
+    @Unique
+    private NbtCompound kevslib$petInheritanceData = new NbtCompound();
+
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void onReadNbt(NbtCompound nbt, CallbackInfo ci) {
-        AbstractHorseEntity horse = (AbstractHorseEntity) (Object) this;
+        if (nbt.contains("petinheritance")) {
+            kevslib$petInheritanceData = nbt.getCompound("petinheritance");
+        }
 
+        AbstractHorseEntity horse = (AbstractHorseEntity)(Object)this;
         if (horse.isTame() && horse.getOwnerUuid() != null && horse.getWorld() instanceof ServerWorld serverWorld) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(horse.getOwnerUuid());
             if (owner != null) {
-                applyAttributeInheritance(owner, horse);
+                kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
+                        owner,
+                        horse,
+                        kevslib$petInheritanceData,
+                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                );
             }
+        }
+    }
+
+    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
+    private void onWriteNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!kevslib$petInheritanceData.isEmpty()) {
+            nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
 
     @Inject(method = "bondWithPlayer", at = @At("TAIL"))
     private void onBondWithPlayer(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) {
-            AbstractHorseEntity horse = (AbstractHorseEntity) (Object) this;
-            applyAttributeInheritance(player, horse);
+            AbstractHorseEntity horse = (AbstractHorseEntity)(Object)this;
+            kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
+                    player,
+                    horse,
+                    kevslib$petInheritanceData,
+                    player.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+            );
         }
     }
-
-    private void applyAttributeInheritance(PlayerEntity owner, AbstractHorseEntity horse) {
-        double ratio = owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
-        StringBuilder debug = new StringBuilder();
-        debug.append("🐴 ").append(horse.getName().getString())
-                .append(" [").append(horse.getUuidAsString()).append("] inherited attributes from ")
-                .append(owner.getName().getString()).append(" (ratio: ").append(ratio).append(")\n");
-
-        boolean inheritedAny = false;
-
-        for (RegistryEntry<EntityAttribute> attribute : INHERITABLE_ATTRIBUTES) {
-            EntityAttributeInstance ownerAttr = owner.getAttributeInstance(attribute);
-            if (ownerAttr == null) continue;
-
-            double inheritedValue = ownerAttr.getValue() * ratio;
-
-            EntityAttributeInstance horseAttr = horse.getAttributeInstance(attribute);
-            if (horseAttr != null) {
-                double original = horseAttr.getBaseValue();
-                horseAttr.setBaseValue(original + inheritedValue);
-
-                if (attribute.value().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
-                    horse.setHealth((float) horse.getAttributeValue(attribute));
-                }
-
-                debug.append("  ➤ ")
-                        .append(attribute.getKey().map(key -> key.getValue().toString()).orElse("unknown"))
-                        .append(": ").append(original)
-                        .append(" ➝ ").append(horseAttr.getBaseValue())
-                        .append(" (+").append(inheritedValue).append(")\n");
-
-                inheritedAny = true;
-            }
-        }
-
-        if (inheritedAny) {
-            System.out.println(debug);
-        } else {
-            System.out.println("⚠️ No attributes were inherited by " + horse.getName().getString());
-        }
+    @Unique
+    @Override
+    public boolean kevslib$isTamed() {
+        return ((AbstractHorseEntity)(Object)this).isTame();
     }
+
+    @Unique
+    @Override
+    public java.util.UUID kevslib$getOwnerUuid() {
+        return ((AbstractHorseEntity)(Object)this).getOwnerUuid();
+    }
+
+    @Unique
+    @Override
+    public void kevslib$setInheritanceData(NbtCompound data) {
+        this.kevslib$petInheritanceData = data;
+    }
+
+    @Unique
+    @Override
+    public NbtCompound kevslib$getInheritanceData() {
+        return this.kevslib$petInheritanceData;
+    }
+
 }

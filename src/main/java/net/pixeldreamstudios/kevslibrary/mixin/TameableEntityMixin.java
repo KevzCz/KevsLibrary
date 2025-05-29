@@ -1,100 +1,95 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
+import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
+import java.util.UUID;
 
 @Mixin(TameableEntity.class)
-public abstract class TameableEntityMixin extends AnimalEntity {
+public abstract class TameableEntityMixin extends AnimalEntity implements UniversalTameable {
+
+    @Unique
+    private NbtCompound kevslib$petInheritanceData = new NbtCompound();
 
     protected TameableEntityMixin(EntityType<? extends AnimalEntity> type, World world) {
         super(type, world);
     }
 
-     @Inject(method = "setOwner", at = @At("TAIL"))
+    @Inject(method = "setOwner", at = @At("TAIL"))
     private void onSetOwner(PlayerEntity player, CallbackInfo ci) {
         TameableEntity tameable = (TameableEntity) (Object) this;
-
         if (tameable.isTamed()) {
-            applyAttributeInheritance(player, tameable);
+            this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
+                    player,
+                    tameable,
+                    this.kevslib$petInheritanceData,
+                    player.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+            );
         }
     }
 
-     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
-    private void onReadNbt(NbtCompound nbt, CallbackInfo ci) {
-        TameableEntity tameable = (TameableEntity)(Object)this;
+    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
+    private void readInheritanceData(NbtCompound nbt, CallbackInfo ci) {
+        if (nbt.contains("petinheritance")) {
+            kevslib$petInheritanceData = nbt.getCompound("petinheritance");
+        }
 
+        TameableEntity tameable = (TameableEntity)(Object)this;
         if (tameable.isTamed() && tameable.getOwnerUuid() != null && this.getWorld() instanceof ServerWorld serverWorld) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(tameable.getOwnerUuid());
             if (owner != null) {
-                applyAttributeInheritance(owner, tameable);
+                this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
+                        owner,
+                        tameable,
+                        this.kevslib$petInheritanceData,
+                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                );
             }
         }
     }
 
-    private static final Set<RegistryEntry<EntityAttribute>> INHERITABLE_ATTRIBUTES = Set.of(
-            EntityAttributes.GENERIC_MAX_HEALTH,
-            EntityAttributes.GENERIC_ATTACK_DAMAGE,
-            EntityAttributes.GENERIC_SCALE,
-            EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE,
-            EntityAttributes.GENERIC_ARMOR,
-            EntityAttributes.GENERIC_MOVEMENT_SPEED
-    );
-
-    private void applyAttributeInheritance(PlayerEntity owner, TameableEntity pet) {
-        double ratio = owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
-        StringBuilder debug = new StringBuilder();
-        debug.append("🐾 ").append(pet.getName().getString())
-                .append(" [").append(pet.getUuidAsString()).append("] inherited attributes from ")
-                .append(owner.getName().getString()).append(" (ratio: ").append(ratio).append(")\n");
-
-        boolean inheritedAny = false;
-
-        for (RegistryEntry<EntityAttribute> attribute : INHERITABLE_ATTRIBUTES) {
-            EntityAttributeInstance ownerAttr = owner.getAttributeInstance(attribute);
-            if (ownerAttr == null) continue;
-
-            double inheritedValue = ownerAttr.getValue() * ratio;
-
-            EntityAttributeInstance petAttr = pet.getAttributeInstance(attribute);
-            if (petAttr != null) {
-                double original = petAttr.getBaseValue();
-                petAttr.setBaseValue(original + inheritedValue);
-
-                if (attribute.value().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
-                    pet.setHealth((float) pet.getAttributeValue(attribute));
-                }
-
-                debug.append("  ➤ ")
-                        .append(attribute.getKey().map(key -> key.getValue().toString()).orElse("unknown"))
-                        .append(": ").append(original)
-                        .append(" ➝ ").append(petAttr.getBaseValue())
-                        .append(" (+").append(inheritedValue).append(")\n");
-
-                inheritedAny = true;
-            }
-        }
-
-        if (inheritedAny) {
-            System.out.println(debug);
-        } else {
-            System.out.println("⚠️ No attributes were inherited by " + pet.getName().getString());
+    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
+    private void writeInheritanceData(NbtCompound nbt, CallbackInfo ci) {
+        if (!kevslib$petInheritanceData.isEmpty()) {
+            nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
+    @Unique
+    @Override
+    public boolean kevslib$isTamed() {
+        return ((TameableEntity)(Object)this).isTamed();
+    }
+
+    @Unique
+    @Override
+    public java.util.UUID kevslib$getOwnerUuid() {
+        return ((TameableEntity)(Object)this).getOwnerUuid();
+    }
+
+    @Unique
+    @Override
+    public void kevslib$setInheritanceData(NbtCompound data) {
+        this.kevslib$petInheritanceData = data;
+    }
+
+    @Unique
+    @Override
+    public NbtCompound kevslib$getInheritanceData() {
+        return this.kevslib$petInheritanceData;
+    }
+
 }
-

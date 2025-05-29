@@ -16,6 +16,7 @@
     import net.minecraft.server.world.ServerWorld;
     import net.minecraft.sound.SoundCategory;
     import net.minecraft.sound.SoundEvents;
+    import net.minecraft.text.Text;
     import net.minecraft.util.math.Vec3d;
     import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
     import net.pixeldreamstudios.kevslibrary.KevsLibrary;
@@ -33,7 +34,6 @@
         }
         private static final Map<String, MultistrikeBomb> bombs = new HashMap<>();
         private static final Map<UUID, List<HoveringArrow>> hoveringArrows = new HashMap<>();
-        private static final Map<UUID, LaunchTiming> launchDelays = new HashMap<>();
     
         public static void triggerMultistrike(LivingEntity attacker, LivingEntity target, float damage, ItemStack weaponUsed) {
             String key = attacker.getUuid() + "|" + target.getUuid();
@@ -48,44 +48,57 @@
                 }
             });
         }
-    
+
         public static void spawnHoveringArrows(LivingEntity attacker, LivingEntity target, float baseDamage, PersistentProjectileEntity sourceProjectile, ItemStack weaponUsed) {
             if (!(attacker.getWorld() instanceof ServerWorld world)) return;
-    
+
             EntityAttributeInstance countAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
             int count = countAttr != null ? (int) countAttr.getValue() : 1;
-    
+
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
 
             float finalDamage = baseDamage * multiplier * 1.43f;
             List<HoveringArrow> arrows = hoveringArrows.computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>());
-    
+
+            Vec3d forward = attacker.getRotationVec(1.0f).normalize();
+            Vec3d up = new Vec3d(0, 1, 0);
+            Vec3d right = forward.crossProduct(up).normalize();
+            double sideOffset = 0.8;
+
             for (int i = 0; i < count; i++) {
                 EntityType<?> type = sourceProjectile.getType();
                 Entity newArrowEntity = type.create(world);
 
-                if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) {
-                    continue;
-                }
+                if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) continue;
+
                 arrow.setCritical(true);
                 arrow.setDamage(finalDamage);
                 arrow.setSilent(true);
                 arrow.setGlowing(true);
                 arrow.setNoGravity(true);
                 arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
-    
-                arrow.setPosition(attacker.getX(), attacker.getY() + attacker.getHeight() + 2.0, attacker.getZ());
+
+                // Offset side + upward from player
+                Vec3d side = (i % 2 == 0 ? right : right.multiply(-1));
+                Vec3d spawnPos = attacker.getPos()
+                        .add(side.multiply(sideOffset))
+                        .add(0, attacker.getHeight() * 0.5 + 0.5, 0);
+                arrow.setPosition(spawnPos);
                 arrow.setVelocity(Vec3d.ZERO);
                 world.spawnEntity(arrow);
-    
+                arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
+                arrow.setCustomNameVisible(false); // mark it in some way
+                arrow.setCustomName(Text.of("multistrike_orphan")); // for debugging
+                arrow.addCommandTag("multistrike_arrow");
+
                 double angleOffset = ((2 * Math.PI) / count) * i;
-                int delay = 50 + (i * 15);
-                arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay));
+                int delay = 30 + (i * 10);
+                arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, i % 2 == 0));
             }
-    
         }
-    
+
+
         public static void tick(ServerWorld world) {
             Iterator<Map.Entry<String, MultistrikeBomb>> bombIt = bombs.entrySet().iterator();
             while (bombIt.hasNext()) {
@@ -106,56 +119,43 @@
                 arrows.removeIf(arrow -> arrow.tick(world));
                 if (arrows.isEmpty()) {
                     it.remove();
-                    launchDelays.remove(attackerId);
-                    continue;
-                }
-    
-                LaunchTiming timing = launchDelays.computeIfAbsent(attackerId, id -> new LaunchTiming());
-                if (timing.initialDelay > 0) {
-                    timing.initialDelay--;
-                    continue;
-                }
-                for (HoveringArrow arrow : arrows) {
-                    if (!arrow.launched && !arrow.shouldStartLaunching) {
-                        arrow.shouldStartLaunching = true;
-                        break;
-                    }
                 }
 
+
             }
+            world.iterateEntities().forEach(entity -> {
+                if (entity instanceof PersistentProjectileEntity ppe &&
+                        ppe.getCommandTags().contains("multistrike_arrow") &&
+                        ppe.age > 200 &&
+                        (ppe.getOwner() == null || ppe.isRemoved())) {
+                    ppe.discard();
+                }
+            });
+
         }
-    
-    
-        private static class LaunchTiming {
-            int initialDelay = 60;
-            int perArrowDelay = 80;
-        }
+
 
         private static class HoveringArrow {
             final PersistentProjectileEntity arrow;
             final LivingEntity attacker;
             final LivingEntity target;
 
+            final boolean fromRightSide;
+
             boolean launched = false;
-            boolean shouldStartLaunching = false;
 
             int ticksSinceSpawn = 0;
-            int ticksSinceLaunch = 0;
-            final int delayBeforeLaunch;
+            private static final int MAX_LIFESPAN = 400;
+            private static final double INITIAL_SPEED = 1.5;
+            private static final double HOMING_FORCE = 0.3;
+            private static final double TARGET_RADIUS = 0.6;
 
-            double orbitAngle = 0;
-            final double orbitAngleOffset;
-            final double orbitRadius = 1.5;
-
-            private static final int MAX_LIFESPAN = 1000;
-            private static final int HOMING_DELAY = 20;
-
-            HoveringArrow(PersistentProjectileEntity arrow, LivingEntity attacker, LivingEntity target, double angleOffset, int delayBeforeLaunch) {
+            private int ticksSinceLaunch = 0;
+            HoveringArrow(PersistentProjectileEntity arrow, LivingEntity attacker, LivingEntity target, double angleOffset, int delayBeforeLaunch, boolean fromRightSide) {
                 this.arrow = arrow;
                 this.attacker = attacker;
                 this.target = target;
-                this.orbitAngleOffset = angleOffset;
-                this.delayBeforeLaunch = delayBeforeLaunch;
+                this.fromRightSide = fromRightSide;
             }
 
             boolean tick(ServerWorld world) {
@@ -176,73 +176,82 @@
                 }
 
                 if (!launched) {
-                    if (!shouldStartLaunching || ticksSinceSpawn < delayBeforeLaunch) {
-                        orbitAngle += 0.15;
-                        double angle = orbitAngle + orbitAngleOffset;
-                        Vec3d orbitCenter = attacker.getPos().add(0, attacker.getHeight() + 1.5, 0);
-                        Vec3d orbitTargetPos = orbitCenter.add(Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius);
-                        arrow.setPosition(arrow.getPos().lerp(orbitTargetPos, 0.3));
-                        arrow.setYaw(0f);
-                        arrow.setPitch(-90f);
-                        return false;
-                    }
-
-                    launchArrowUpward();
-                    return false;
+                    launchArrow(world);
+                    launched = true;
                 }
 
-                ticksSinceLaunch++;
-                if (ticksSinceLaunch >= HOMING_DELAY) {
-                    Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(arrow.getPos());
-                    Vec3d newVelocity = toTarget.normalize().multiply(0.45);
-                    arrow.setVelocity(arrow.getVelocity().lerp(newVelocity, 0.3));
+                if (launched) {
+                    ticksSinceLaunch++;
 
-                    world.spawnParticles(ParticleTypes.END_ROD, arrow.getX(), arrow.getY(), arrow.getZ(), 1, 0, 0, 0, 0.001);
-                }
+                    // Wait before homing kicks in
+                    if (ticksSinceLaunch >= 10) { // 0.5 seconds (20 ticks = 1 second)
+                        Vec3d toTarget = target.getPos()
+                                .add(0, target.getHeight() * 0.8, 0)
+                                .subtract(arrow.getPos());
 
-                if (arrow.getBoundingBox().intersects(target.getBoundingBox())) {
-                    float damage = (float) arrow.getDamage();
-                    DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
-                    boolean hit = target.damage(source, damage);
+                        Vec3d homing = toTarget.normalize().multiply(HOMING_FORCE);
 
-                    if (hit) {
-                        OnHitEffectHandler.withMultistrikeContext(() -> {
-                            OnHitEffectHandler.triggerAll(attacker, target, damage);
-                        });
-
-                        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
-                            SoulLinkHandler.handleLinkedDamage(
-                                    linkData.attacker(),
-                                    target,
-                                    damage,
-                                    linkData.group(),
-                                    linkData.soulPower()
-                            );
-                        });
-
-                        ((ServerWorld) target.getWorld()).spawnParticles(
-                                ParticleTypes.SONIC_BOOM,
-                                target.getX(), target.getY() + 1, target.getZ(),
-                                5, 0.3, 0.3, 0.3, 0.01
+                        arrow.setVelocity(
+                                arrow.getVelocity().add(homing).normalize().multiply(INITIAL_SPEED)
                         );
                     }
 
-                    arrow.discard();
-                    return true;
+                    // Trail particles always
+                    world.spawnParticles(ParticleTypes.END_ROD, arrow.getX(), arrow.getY(), arrow.getZ(), 1, 0, 0, 0, 0.001);
+
+                    // Accurate collision check
+                    if (arrow.collidesWith(target)) {
+                        float damage = (float) arrow.getDamage();
+                        DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
+                        boolean hit = target.damage(source, damage);
+
+                        if (hit) {
+                            OnHitEffectHandler.withMultistrikeContext(() -> {
+                                OnHitEffectHandler.triggerAll(attacker, target, damage);
+                            });
+
+                            SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                                SoulLinkHandler.handleLinkedDamage(
+                                        linkData.attacker(),
+                                        target,
+                                        damage,
+                                        linkData.group(),
+                                        linkData.soulPower()
+                                );
+                            });
+
+                            world.spawnParticles(
+                                    ParticleTypes.SONIC_BOOM,
+                                    target.getX(), target.getY() + 1, target.getZ(),
+                                    5, 0.3, 0.3, 0.3, 0.01
+                            );
+                        }
+
+                        arrow.discard();
+                        return true;
+                    }
                 }
+
 
                 return false;
             }
 
-            void launchArrowUpward() {
-                this.launched = true;
-                this.ticksSinceLaunch = 0;
+            void launchArrow(ServerWorld world) {
                 arrow.setNoGravity(false);
-                arrow.setVelocity(0, 1.5, 0);
 
-                arrow.getWorld().playSound(null, arrow.getBlockPos(), SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0f, 1.2f);
+                Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(attacker.getPos());
+                Vec3d forward = toTarget.normalize();
+                Vec3d side = forward.crossProduct(new Vec3d(0, 1, 0)).normalize();
+                Vec3d offsetCurve = side.multiply(fromRightSide ? 0.6 : -0.6);
+
+                Vec3d launchDirection = forward.add(offsetCurve).normalize().multiply(INITIAL_SPEED);
+                arrow.setVelocity(launchDirection);
+
+                arrow.getWorld().playSound(null, arrow.getBlockPos(), SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 0.4f, 0.4f);
             }
         }
+
+
 
 
 

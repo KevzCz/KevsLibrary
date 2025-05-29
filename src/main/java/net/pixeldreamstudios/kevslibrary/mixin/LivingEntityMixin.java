@@ -43,7 +43,12 @@ public abstract class LivingEntityMixin {
             CRIT_DAMAGE_TRACKER.set(amount);
             return amount;
         }
-
+        if (source.getName().equals("trident")) {
+            EntityAttributeInstance tridentMultiplierAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
+            if (tridentMultiplierAttr != null) {
+                amount *= tridentMultiplierAttr.getValue();
+            }
+        }
         boolean isVanillaCrit = attacker instanceof PlayerEntity player &&
                 player.fallDistance > 0.0F && !player.isOnGround();
 
@@ -82,6 +87,7 @@ public abstract class LivingEntityMixin {
             }
         }
 
+
         CRIT_DAMAGE_TRACKER.set(finalDamage);
         return finalDamage;
     }
@@ -104,8 +110,6 @@ public abstract class LivingEntityMixin {
 
         if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
         LivingEntity target = (LivingEntity)(Object) this;
-        int depth;
-        boolean overloadTriggered;
         boolean isRanged = source.getName().equals("arrow") || source.getName().equals("trident");
 
         PersistentProjectileEntity sourceProjectile = null;
