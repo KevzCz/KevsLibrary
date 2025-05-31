@@ -58,7 +58,7 @@
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
 
-            float finalDamage = baseDamage * multiplier * 1.43f;
+            float finalDamage = baseDamage * multiplier * 0.6f;
             List<HoveringArrow> arrows = hoveringArrows.computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>());
 
             Vec3d forward = attacker.getRotationVec(1.0f).normalize();
@@ -79,23 +79,40 @@
                 arrow.setNoGravity(true);
                 arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
 
-                // Offset side + upward from player
-                Vec3d side = (i % 2 == 0 ? right : right.multiply(-1));
-                Vec3d spawnPos = attacker.getPos()
-                        .add(side.multiply(sideOffset))
-                        .add(0, attacker.getHeight() * 0.5 + 0.5, 0);
+                Vec3d spawnPos;
+                boolean fromRight;
+
+                if (count >= 3) {
+                    // Spread arrows in a circular pattern relative to the player's look direction
+                    double radius = 1.6;
+                    double angle = (2 * Math.PI / count) * i;
+
+                    Vec3d rotatedOffset = forward.multiply(Math.cos(angle)).add(right.multiply(Math.sin(angle))).normalize().multiply(radius);
+                    spawnPos = attacker.getPos().add(rotatedOffset).add(0, attacker.getHeight() * 0.6, 0);
+                    fromRight = rotatedOffset.dotProduct(right) > 0;
+                }
+                else {
+                    // Default left/right logic for 1–2 arrows
+                    Vec3d side = (i % 2 == 0 ? right : right.multiply(-1));
+                    spawnPos = attacker.getPos()
+                            .add(side.multiply(sideOffset))
+                            .add(0, attacker.getHeight() * 0.5 + 0.5, 0);
+                    fromRight = i % 2 == 0;
+                }
+
                 arrow.setPosition(spawnPos);
                 arrow.setVelocity(Vec3d.ZERO);
                 world.spawnEntity(arrow);
                 arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
-                arrow.setCustomNameVisible(false); // mark it in some way
-                arrow.setCustomName(Text.of("multistrike_orphan")); // for debugging
+                arrow.setCustomNameVisible(false);
+                arrow.setCustomName(Text.of("multistrike_arrow"));
                 arrow.addCommandTag("multistrike_arrow");
 
                 double angleOffset = ((2 * Math.PI) / count) * i;
                 int delay = 30 + (i * 10);
-                arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, i % 2 == 0));
+                arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, fromRight));
             }
+
         }
 
 
@@ -345,7 +362,9 @@
                         });
                     });
                 }
-                world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1f, 1f);
+                if (strikeIndex == 0) {
+                    world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1f, 1f);
+                }
                 world.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1, target.getZ(), 2, 0.5, 0.3, 0.5, 0.05);
 
                 totalStrikes--;
