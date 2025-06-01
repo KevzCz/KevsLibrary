@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
+import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +19,7 @@ public class AttributeInheritanceUtil {
 
         set.add(EntityAttributes.GENERIC_MAX_HEALTH);
         set.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        set.add(KevsLibrary.PET_DAMAGE_BONUS);
         set.add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
         set.add(EntityAttributes.GENERIC_ARMOR);
         set.add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -62,7 +64,23 @@ public class AttributeInheritanceUtil {
                 newBaseAttrTag.putDouble(key, baseValue);
             }
 
-            double bonus = ownerAttr.getValue() * ratio;
+            double bonus;
+
+            if (key.equals("minecraft:generic.attack_damage")) {
+                bonus = ownerAttr.getValue() * ratio;
+
+                EntityAttributeInstance extraBonusAttr = owner.getAttributeInstance(KevsLibrary.PET_DAMAGE_BONUS);
+                if (extraBonusAttr != null) {
+                    bonus += extraBonusAttr.getValue(); // 100% inheritance
+                }
+
+            } else if (key.equals("kevslibrary:pet_damage_bonus")) {
+                continue;
+            } else {
+                bonus = ownerAttr.getValue() * ratio;
+            }
+
+
             if (attribute.value().equals(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
                 bonus = Math.min(bonus, 0.2);
             }

@@ -28,26 +28,26 @@ public abstract class LivingEntityMixin {
             cir.setReturnValue(false);
         }
     }
-    @Inject(method = "damage", at = @At("HEAD"))
-    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        Entity attacker = source.getAttacker();
-        Entity actualSource = source.getSource();
-        LivingEntity self = (LivingEntity) (Object) this;
-
-        if (self.getWorld().isClient()) return;
-
-        self.getWorld().getEntitiesByClass(
-                SpellProjectile.class,
-                self.getBoundingBox().expand(2.5),
-                proj -> proj.getOwner() != self
-        ).forEach(proj -> {
-            System.out.println("[DEBUG] Nearby SpellProjectile:");
-            System.out.println("  -> Pos: " + proj.getPos());
-            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
-            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
-            System.out.println("  -> Command Tags: " + proj.getCommandTags());
-        });
-    }
+//    @Inject(method = "damage", at = @At("HEAD"))
+//    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+//        Entity attacker = source.getAttacker();
+//        Entity actualSource = source.getSource();
+//        LivingEntity self = (LivingEntity) (Object) this;
+//
+//        if (self.getWorld().isClient()) return;
+//
+//        self.getWorld().getEntitiesByClass(
+//                SpellProjectile.class,
+//                self.getBoundingBox().expand(2.5),
+//                proj -> proj.getOwner() != self
+//        ).forEach(proj -> {
+//            System.out.println("[DEBUG] Nearby SpellProjectile:");
+//            System.out.println("  -> Pos: " + proj.getPos());
+//            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
+//            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
+//            System.out.println("  -> Command Tags: " + proj.getCommandTags());
+//        });
+//    }
 
 
 
@@ -180,11 +180,10 @@ public abstract class LivingEntityMixin {
             ).size() > 0;
 
             if (hasNearbyRealSpellProjectile) {
-                System.out.println("[DEBUG] Skipping multistrike: nearby real spell projectile detected.");
+//                System.out.println("[DEBUG] Skipping multistrike: nearby real spell projectile detected.");
                 return;
             }
 
-// Proceed to trigger multistrike normally
             if (source.getSource() != null) {
                 MultistrikeHandler.spawnHoveringProjectiles(attacker, target, finalDamage, source.getSource(), weaponUsed);
             } else {

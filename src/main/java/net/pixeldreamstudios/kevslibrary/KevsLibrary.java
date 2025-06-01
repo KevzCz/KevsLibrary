@@ -41,7 +41,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_DAMAGE =
 			RegistryHelper.registerAttribute("multistrike_damage",
-					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 1.0, 0.1, 10.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 1.0, 0.1, 100.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> DAMAGE =
 			RegistryHelper.registerAttribute("damage",
 					new ClampedEntityAttribute("attribute.name.generic.damage_multiplier", 1.0, 1, 100.0).setTracked(true));
@@ -75,13 +75,16 @@ public class KevsLibrary implements ModInitializer {
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> PET_INHERITANCE_RATIO =
 			RegistryHelper.registerAttribute("pet_inheritance_ratio",
-					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.0, 0.0, 10.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.0, 0.0, 100.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> PET_DAMAGE_BONUS =
+			RegistryHelper.registerAttribute("pet_damage_bonus",
+					new ClampedEntityAttribute("attribute.name.generic.pet_damage_bonus", 0.0, 0.0, 100.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_CHANCE =
 			RegistryHelper.registerAttribute("soul_link_chance",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_DAMAGE =
 			RegistryHelper.registerAttribute("soul_link_damage",
-					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 10.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 100.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_CHANCE =
 			RegistryHelper.registerAttribute("arcane_rupture_chance",
 					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 0.0, 0.0, 1.0).setTracked(true));

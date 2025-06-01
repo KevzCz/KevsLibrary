@@ -19,6 +19,7 @@
   "attribute.name.generic.fire_tornado_overload_chance": "Fire Tornado Overload Chance",
 
   "attribute.name.generic.pet_inheritance_ratio": "Pet Inheritance Ratio",
+  "attribute.name.generic.pet_damage_bonus": "Pet Damage Bonus",
 
   "attribute.name.generic.soul_link_chance": "Soul Link Chance",
   "attribute.name.generic.soul_link_damage": "Soul Link Damage",
@@ -29,6 +30,7 @@
   "attribute.name.generic.trident_damage_multiplier": "Trident Damage Multiplier",
 
   "description.attribute.name.generic.trident_damage_multiplier": "Increases your Trident Damage",
+  "description.attribute.name.generic.pet_damage_bonus": "Bonus damage for pets when Pet Inheritance procs",
 
   "description.attribute.name.generic.crit_chance": "Increases your chance to land a critical strike on enemies.",
   "description.attribute.name.generic.crit_damage": "Multiplies your critical hit damage by this factor.",
