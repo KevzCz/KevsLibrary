@@ -1,6 +1,6 @@
-    
+
     package net.pixeldreamstudios.kevslibrary.handler;
-    
+
     import net.minecraft.component.DataComponentTypes;
     import net.minecraft.component.type.ItemEnchantmentsComponent;
     import net.minecraft.enchantment.EnchantmentHelper;
@@ -21,35 +21,76 @@
     import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
     import net.pixeldreamstudios.kevslibrary.KevsLibrary;
     import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
-    
+    import net.spell_engine.entity.SpellProjectile;
+
     import java.util.*;
 
     import static java.lang.Math.clamp;
 
     public class MultistrikeHandler {
         private static final Set<UUID> handledProjectiles = Collections.newSetFromMap(new WeakHashMap<>());
-    
+        private static final Map<UUID, List<HoveringSpellProjectile>> hoveringSpellProjectiles = new HashMap<>();
+
         public static boolean tryMarkProjectile(UUID uuid) {
             return handledProjectiles.add(uuid);
         }
         private static final Map<String, MultistrikeBomb> bombs = new HashMap<>();
         private static final Map<UUID, List<HoveringArrow>> hoveringArrows = new HashMap<>();
-    
+        private static class HoveringSpellProjectile {
+            final SpellProjectile projectile;
+            final LivingEntity attacker;
+            final LivingEntity target;
+
+            int ticksSinceLaunch = 0;
+            private static final int MAX_LIFESPAN = 200;
+            private static final double HOMING_FORCE = 0.25;
+            private static final double SPEED = 1.5;
+
+            HoveringSpellProjectile(SpellProjectile projectile, LivingEntity attacker, LivingEntity target) {
+                this.projectile = projectile;
+                this.attacker = attacker;
+                this.target = target;
+            }
+
+            boolean tick(ServerWorld world) {
+                if (!projectile.isAlive() || !target.isAlive() || target.isRemoved()) {
+                    projectile.discard();
+                    return true;
+                }
+
+                ticksSinceLaunch++;
+                if (ticksSinceLaunch > MAX_LIFESPAN) {
+                    projectile.discard();
+                    return true;
+                }
+
+                Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(projectile.getPos());
+                Vec3d homing = toTarget.normalize().multiply(HOMING_FORCE);
+                projectile.setVelocity(
+                        projectile.getVelocity().add(homing).normalize().multiply(SPEED)
+                );
+
+                world.spawnParticles(ParticleTypes.END_ROD, projectile.getX(), projectile.getY(), projectile.getZ(), 1, 0, 0, 0, 0.001);
+
+                return false;
+            }
+        }
+
         public static void triggerMultistrike(LivingEntity attacker, LivingEntity target, float damage, ItemStack weaponUsed) {
             String key = attacker.getUuid() + "|" + target.getUuid();
             bombs.compute(key, (k, existing) -> {
                 if (existing == null) {
-    
+
                     return new MultistrikeBomb(attacker, target, damage, weaponUsed);
                 } else {
-    
+
                     existing.addStack(damage);
                     return existing;
                 }
             });
         }
 
-        public static void spawnHoveringArrows(LivingEntity attacker, LivingEntity target, float baseDamage, PersistentProjectileEntity sourceProjectile, ItemStack weaponUsed) {
+        public static void spawnHoveringProjectiles(LivingEntity attacker, LivingEntity target, float baseDamage, Entity sourceProjectile, ItemStack weaponUsed) {
             if (!(attacker.getWorld() instanceof ServerWorld world)) return;
 
             EntityAttributeInstance countAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
@@ -59,7 +100,6 @@
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
 
             float finalDamage = baseDamage * multiplier * 0.6f;
-            List<HoveringArrow> arrows = hoveringArrows.computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>());
 
             Vec3d forward = attacker.getRotationVec(1.0f).normalize();
             Vec3d up = new Vec3d(0, 1, 0);
@@ -67,53 +107,93 @@
             double sideOffset = 0.8;
 
             for (int i = 0; i < count; i++) {
-                EntityType<?> type = sourceProjectile.getType();
-                Entity newArrowEntity = type.create(world);
-
-                if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) continue;
-
-                arrow.setCritical(true);
-                arrow.setDamage(finalDamage);
-                arrow.setSilent(true);
-                arrow.setGlowing(true);
-                arrow.setNoGravity(true);
-                arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
-
                 Vec3d spawnPos;
                 boolean fromRight;
 
                 if (count >= 3) {
-                    // Spread arrows in a circular pattern relative to the player's look direction
-                    double radius = 1.6;
                     double angle = (2 * Math.PI / count) * i;
-
-                    Vec3d rotatedOffset = forward.multiply(Math.cos(angle)).add(right.multiply(Math.sin(angle))).normalize().multiply(radius);
-                    spawnPos = attacker.getPos().add(rotatedOffset).add(0, attacker.getHeight() * 0.6, 0);
-                    fromRight = rotatedOffset.dotProduct(right) > 0;
-                }
-                else {
-                    // Default left/right logic for 1–2 arrows
+                    Vec3d side = right.multiply(Math.sin(angle)).normalize();
+                    spawnPos = attacker.getPos().add(side.multiply(1.0)).add(0, attacker.getHeight() * 0.6, 0);
+                    fromRight = side.dotProduct(right) > 0;
+                } else {
                     Vec3d side = (i % 2 == 0 ? right : right.multiply(-1));
                     spawnPos = attacker.getPos()
-                            .add(side.multiply(sideOffset))
-                            .add(0, attacker.getHeight() * 0.5 + 0.5, 0);
+                            .add(side.multiply(1.0))
+                            .add(0, attacker.getHeight() * 0.6, 0);
                     fromRight = i % 2 == 0;
                 }
 
-                arrow.setPosition(spawnPos);
-                arrow.setVelocity(Vec3d.ZERO);
-                world.spawnEntity(arrow);
-                arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
-                arrow.setCustomNameVisible(false);
-                arrow.setCustomName(Text.of("multistrike_arrow"));
-                arrow.addCommandTag("multistrike_arrow");
+                if (sourceProjectile instanceof SpellProjectile spellProj && attacker instanceof LivingEntity) {
+                    SpellProjectile newSpell = new SpellProjectile(
+                            world,
+                            attacker,
+                            spawnPos.x,
+                            spawnPos.y,
+                            spawnPos.z,
+                            spellProj.getBehaviour(),
+                            spellProj.getSpellEntry(),
+                            spellProj.getImpactContext(),
+                            spellProj.mutablePerks().copy()
+                    );
 
-                double angleOffset = ((2 * Math.PI) / count) * i;
-                int delay = 30 + (i * 10);
-                arrows.add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, fromRight));
+
+                    Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(attacker.getPos());
+                    Vec3d forwardDir = toTarget.normalize();
+                    Vec3d sideVec = forwardDir.crossProduct(new Vec3d(0, 1, 0)).normalize();
+                    Vec3d offsetCurve = sideVec.multiply(fromRight ? 0.6 : -0.6);
+                    Vec3d launchDir = forwardDir.add(offsetCurve).normalize().multiply(1.5);
+
+
+                    newSpell.setVelocity(launchDir);
+                    newSpell.setYaw((float) (Math.toDegrees(Math.atan2(launchDir.z, launchDir.x)) - 90));
+                    newSpell.setPitch((float) (-Math.toDegrees(Math.atan2(launchDir.y, launchDir.horizontalLength()))));
+                    newSpell.setHeadYaw(newSpell.getYaw());
+                    newSpell.setBodyYaw(newSpell.getYaw());
+
+                    newSpell.setSilent(true);
+                    newSpell.setGlowing(true);
+                    newSpell.addCommandTag("multistrike_spell");
+
+                    world.spawnEntity(newSpell);
+                    hoveringSpellProjectiles
+                            .computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>())
+                            .add(new HoveringSpellProjectile(newSpell, attacker, target));
+
+                    continue;
+                }
+
+                if (sourceProjectile instanceof PersistentProjectileEntity projectile) {
+                    EntityType<?> type = projectile.getType();
+                    Entity newArrowEntity = type.create(world);
+                    if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) continue;
+
+                    arrow.setCritical(true);
+                    arrow.setDamage(finalDamage);
+                    arrow.setSilent(true);
+                    arrow.setGlowing(true);
+                    arrow.setNoGravity(true);
+                    arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
+
+                    arrow.setPosition(spawnPos);
+                    arrow.setVelocity(Vec3d.ZERO);
+                    world.spawnEntity(arrow);
+                    arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
+                    arrow.setCustomNameVisible(false);
+                    arrow.setCustomName(Text.of("multistrike_arrow"));
+                    arrow.addCommandTag("multistrike_arrow");
+
+                    double angleOffset = ((2 * Math.PI) / count) * i;
+                    int delay = 30 + (i * 10);
+                    hoveringArrows
+                            .computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>())
+                            .add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, fromRight));
+                }else {
+                    MultistrikeHandler.triggerMultistrike(attacker, target, baseDamage, weaponUsed);
+                    break;
+                }
             }
-
         }
+
 
 
         public static void tick(ServerWorld world) {
@@ -126,13 +206,22 @@
                     bombIt.remove();
                 }
             }
+            Iterator<Map.Entry<UUID, List<HoveringSpellProjectile>>> spellIt = hoveringSpellProjectiles.entrySet().iterator();
+            while (spellIt.hasNext()) {
+                Map.Entry<UUID, List<HoveringSpellProjectile>> entry = spellIt.next();
+                List<HoveringSpellProjectile> projectiles = entry.getValue();
+                projectiles.removeIf(p -> p.tick(world));
+                if (projectiles.isEmpty()) {
+                    spellIt.remove();
+                }
+            }
 
             Iterator<Map.Entry<UUID, List<HoveringArrow>>> it = hoveringArrows.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<UUID, List<HoveringArrow>> entry = it.next();
                 UUID attackerId = entry.getKey();
                 List<HoveringArrow> arrows = entry.getValue();
-    
+
                 arrows.removeIf(arrow -> arrow.tick(world));
                 if (arrows.isEmpty()) {
                     it.remove();
@@ -200,8 +289,7 @@
                 if (launched) {
                     ticksSinceLaunch++;
 
-                    // Wait before homing kicks in
-                    if (ticksSinceLaunch >= 10) { // 0.5 seconds (20 ticks = 1 second)
+                    if (ticksSinceLaunch >= 10) {
                         Vec3d toTarget = target.getPos()
                                 .add(0, target.getHeight() * 0.8, 0)
                                 .subtract(arrow.getPos());
@@ -213,10 +301,9 @@
                         );
                     }
 
-                    // Trail particles always
+
                     world.spawnParticles(ParticleTypes.END_ROD, arrow.getX(), arrow.getY(), arrow.getZ(), 1, 0, 0, 0, 0.001);
 
-                    // Accurate collision check
                     if (arrow.collidesWith(target)) {
                         float damage = (float) arrow.getDamage();
                         DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
@@ -284,10 +371,10 @@
             private int triggerCount = 0;
             private boolean detonating = false;
             private float diminishingTimerAdd = 0.5f;
-    
+
             private int ticksUntilDetonate = 60;
             private long lastStrikeTime = 0;
-    
+
             public MultistrikeBomb(LivingEntity source, LivingEntity target, float damage, ItemStack weaponUsed) {
                 this.source = source;
                 this.target = target;
@@ -296,7 +383,7 @@
                 this.totalStrikes = getStrikeCountFromAttributes(source);
                 this.triggerCount = 1;
             }
-    
+
             public void addStack(float damage) {
                 totalDamage += damage;
                 triggerCount++;
@@ -379,12 +466,12 @@
                 return countAttr != null ? (int) countAttr.getValue() : 1;
             }
         }
-    
-    
+
+
             private int getStrikeCountFromAttributes(LivingEntity source) {
                 EntityAttributeInstance countAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
                 return countAttr != null ? (int) countAttr.getValue() : 1;
             }
-    
+
         }
-    
+

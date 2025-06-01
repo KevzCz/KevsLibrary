@@ -1,5 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
@@ -10,6 +11,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.handler.*;
+import net.spell_engine.entity.SpellProjectile;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,6 +28,28 @@ public abstract class LivingEntityMixin {
             cir.setReturnValue(false);
         }
     }
+    @Inject(method = "damage", at = @At("HEAD"))
+    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        Entity attacker = source.getAttacker();
+        Entity actualSource = source.getSource();
+        LivingEntity self = (LivingEntity) (Object) this;
+
+        if (self.getWorld().isClient()) return;
+
+        self.getWorld().getEntitiesByClass(
+                SpellProjectile.class,
+                self.getBoundingBox().expand(2.5),
+                proj -> proj.getOwner() != self
+        ).forEach(proj -> {
+            System.out.println("[DEBUG] Nearby SpellProjectile:");
+            System.out.println("  -> Pos: " + proj.getPos());
+            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
+            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
+            System.out.println("  -> Command Tags: " + proj.getCommandTags());
+        });
+    }
+
+
 
     @ModifyVariable(
             method = "damage",
@@ -110,7 +134,22 @@ public abstract class LivingEntityMixin {
 
         if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
         LivingEntity target = (LivingEntity)(Object) this;
-        boolean isRanged = source.getName().equals("arrow") || source.getName().equals("trident");
+
+        // Prevent recursive multistrike from multistrike spell projectiles
+        if (!target.getWorld().isClient()) {
+            boolean nearMultistrikeSpell = target.getWorld()
+                    .getEntitiesByClass(SpellProjectile.class, target.getBoundingBox().expand(1.5), spell ->
+                            spell.getCommandTags().contains("multistrike_spell") &&
+                                    spell.getOwner() == attacker
+                    )
+                    .size() > 0;
+
+            if (nearMultistrikeSpell) {
+                return;
+            }
+        }
+
+
 
         PersistentProjectileEntity sourceProjectile = null;
 
@@ -128,12 +167,32 @@ public abstract class LivingEntityMixin {
         EntityAttributeInstance multistrikeChanceAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
         double multistrikeChance = multistrikeChanceAttr != null ? multistrikeChanceAttr.getValue() : 0.0;
         if (attacker.getRandom().nextDouble() <= multistrikeChance) {
-            if (isRanged && sourceProjectile != null) {
-                MultistrikeHandler.spawnHoveringArrows(attacker, target, finalDamage, sourceProjectile, weaponUsed);
+            boolean hasNearbyRealSpellProjectile = target.getWorld().getEntitiesByClass(
+                    SpellProjectile.class,
+                    target.getBoundingBox().expand(3.0), // slightly larger radius
+                    proj -> {
+                        boolean isOwned = proj.getOwner() != null;
+                        boolean hasSpell = proj.getSpellEntry() != null;
+                        boolean isLikelySpell = !proj.getCommandTags().isEmpty(); // broader fallback
+                        boolean isNotMultistrike = !proj.getCommandTags().contains("multistrike_spell");
+                        return isOwned && isNotMultistrike && (hasSpell || isLikelySpell);
+                    }
+            ).size() > 0;
+
+            if (hasNearbyRealSpellProjectile) {
+                System.out.println("[DEBUG] Skipping multistrike: nearby real spell projectile detected.");
+                return;
+            }
+
+// Proceed to trigger multistrike normally
+            if (source.getSource() != null) {
+                MultistrikeHandler.spawnHoveringProjectiles(attacker, target, finalDamage, source.getSource(), weaponUsed);
             } else {
                 MultistrikeHandler.triggerMultistrike(attacker, target, finalDamage, weaponUsed);
             }
+
         }
+
         EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
         double frostChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;
 
