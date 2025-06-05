@@ -161,6 +161,15 @@ public abstract class LivingEntityMixin {
                         name.equals("fire_tornado")
 
         ) return;
+        if (source.getAttacker() instanceof SpellProjectile spell) {
+            if (
+                    spell.getCommandTags().contains("real_spell_projectile") ||
+                            spell.getCommandTags().contains("multistrike_spell")
+            ) {
+                return;
+            }
+        }
+
 
         if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
         LivingEntity target = (LivingEntity)(Object) this;

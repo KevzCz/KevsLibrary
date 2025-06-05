@@ -9,7 +9,8 @@
 		"TameableEntityMixin",
 		"AbstractHorseEntityMixin",
 		"UniversalTamingDataMixin",
-		"SpellHelperMixin"
+		"SpellHelperMixin",
+		"SpellHelper_ProjectileTagMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
