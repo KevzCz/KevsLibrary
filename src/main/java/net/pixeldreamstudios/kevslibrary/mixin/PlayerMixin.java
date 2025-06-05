@@ -37,6 +37,8 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE,0)
                         .add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0)
                         .add(KevsLibrary.PET_DAMAGE_BONUS,0)
+                        .add(KevsLibrary.ARMOR_PENETRATION, 0.0)
+                        .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0)
         );
     }
 }

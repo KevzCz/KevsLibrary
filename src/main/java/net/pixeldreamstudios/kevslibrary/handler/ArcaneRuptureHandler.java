@@ -203,8 +203,7 @@ public class ArcaneRuptureHandler {
         return entity.isAlive()
                 && !entity.equals(attacker)
                 && !entity.isTeammate(attacker)
-                && !(entity instanceof PlayerEntity)
-                && !entity.getType().getSpawnGroup().isPeaceful()
+                && (!(entity instanceof PlayerEntity) && entity.getType().getSpawnGroup().isPeaceful())
                 && (!(entity instanceof TameableEntity tameable) || !tameable.isTamed());
     }
 

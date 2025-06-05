@@ -11,12 +11,15 @@ import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
+import net.pixeldreamstudios.kevslibrary.util.UuidsHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.UUID;
 
 @Mixin(AbstractHorseEntity.class)
 public abstract class AbstractHorseEntityMixin implements UniversalTameable {
@@ -45,11 +48,16 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
-    private void onWriteNbt(NbtCompound nbt, CallbackInfo ci) {
+    private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
+        UUID ownerUuid = kevslib$getOwnerUuid();
+        if (ownerUuid != null) {
+            nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
+        }
         if (!kevslib$petInheritanceData.isEmpty()) {
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
+
 
     @Inject(method = "bondWithPlayer", at = @At("TAIL"))
     private void onBondWithPlayer(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {

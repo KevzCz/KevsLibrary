@@ -98,6 +98,13 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> TRIDENT_DAMAGE_MULTIPLIER =
 			RegistryHelper.registerAttribute("trident_damage_multiplier",
 					new ClampedEntityAttribute("attribute.name.generic.trident_damage_multiplier", 1.0, 0.0, 100.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION_FLAT =
+			RegistryHelper.registerAttribute("armor_penetration_flat",
+					new ClampedEntityAttribute("attribute.name.generic.armor_penetration_flat", 0.0, 0.0, 100.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION =
+			RegistryHelper.registerAttribute("armor_penetration",
+					new ClampedEntityAttribute("attribute.name.generic.armor_penetration", 0.0, 0.0, 1.0).setTracked(true));
 	public static final EntityType<ArcaneShardEntity> ARCANE_SHARD =
 			Registry.register(
 					Registries.ENTITY_TYPE,

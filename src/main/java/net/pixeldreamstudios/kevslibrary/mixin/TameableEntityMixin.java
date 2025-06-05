@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
+import net.pixeldreamstudios.kevslibrary.util.UuidsHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -63,11 +64,16 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
-    private void writeInheritanceData(NbtCompound nbt, CallbackInfo ci) {
+    private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
+        UUID ownerUuid = kevslib$getOwnerUuid();
+        if (ownerUuid != null) {
+            nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
+        }
         if (!kevslib$petInheritanceData.isEmpty()) {
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
+
     @Unique
     @Override
     public boolean kevslib$isTamed() {

@@ -96,11 +96,13 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
-        if (kevslib$isTamed()) {
-            nbt.putIntArray("Owner", UuidsHelper.toIntArray(kevslib$getOwnerUuid()));
+        UUID ownerUuid = kevslib$getOwnerUuid();
+        if (ownerUuid != null) {
+            nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
         }
         if (!kevslib$petInheritanceData.isEmpty()) {
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
+
 }

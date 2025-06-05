@@ -9,6 +9,7 @@
     import net.minecraft.entity.LivingEntity;
     import net.minecraft.entity.attribute.EntityAttributeInstance;
     import net.minecraft.entity.damage.DamageSource;
+    import net.minecraft.entity.passive.TameableEntity;
     import net.minecraft.entity.player.PlayerEntity;
     import net.minecraft.entity.projectile.PersistentProjectileEntity;
     import net.minecraft.item.ItemStack;
@@ -77,6 +78,7 @@
         }
 
         public static void triggerMultistrike(LivingEntity attacker, LivingEntity target, float damage, ItemStack weaponUsed) {
+            if (!isValidMultistrikeTarget(attacker, target)) return;
             String key = attacker.getUuid() + "|" + target.getUuid();
             bombs.compute(key, (k, existing) -> {
                 if (existing == null) {
@@ -305,6 +307,10 @@
                     world.spawnParticles(ParticleTypes.END_ROD, arrow.getX(), arrow.getY(), arrow.getZ(), 1, 0, 0, 0, 0.001);
 
                     if (arrow.collidesWith(target)) {
+                        if (!isValidMultistrikeTarget(attacker, target)) {
+                            arrow.discard();
+                            return true;
+                        }
                         float damage = (float) arrow.getDamage();
                         DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
                         boolean hit = target.damage(source, damage);
@@ -424,7 +430,7 @@
 
                 if (!target.isAlive()) return true;
                 if (totalStrikes <= 0) return true;
-
+                if (!isValidMultistrikeTarget(source, target)) return true;
                 float avgDamage = totalDamage / triggerCount;
                 EntityAttributeInstance dmgAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
                 float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
@@ -472,6 +478,13 @@
                 EntityAttributeInstance countAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
                 return countAttr != null ? (int) countAttr.getValue() : 1;
             }
+            private static boolean isValidMultistrikeTarget(LivingEntity attacker, LivingEntity target) {
+                return target.isAlive()
+                        && !target.equals(attacker)
+                        && !target.isTeammate(attacker)
+                        && (!(target instanceof TameableEntity tameable) || !tameable.isTamed());
+            }
+
 
         }
 

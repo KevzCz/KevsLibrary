@@ -1,4 +1,24 @@
 {
+  "death.attack.multistrike": "%1$s died from multistrike.",
+  "death.attack.multistrike.player": "%1$s was killed by %2$s's multistrike.",
+  "death.attack.multistrike.item": "%1$s was slain by %2$s using %3$s's multistrike.",
+
+  "death.attack.multistrike_ranged": "%1$s died from a ranged multistrike.",
+  "death.attack.multistrike_ranged.player": "%1$s was shot by %2$s's ranged multistrike.",
+  "death.attack.multistrike_ranged.item": "%1$s was shot by %2$s using %3$s's multistrike.",
+
+  "death.attack.icicle": "%1$s froze to death from an icicle.",
+  "death.attack.icicle.player": "%1$s was pierced by %2$s's icicle.",
+  "death.attack.icicle.item": "%1$s was pierced by %2$s using %3$s's icicle.",
+
+  "death.attack.arcane_shard": "%1$s was shattered by an arcane shard.",
+  "death.attack.arcane_shard.player": "%1$s was shattered by %2$s's arcane shard.",
+  "death.attack.arcane_shard.item": "%1$s was shattered by %2$s using %3$s's arcane shard.",
+
+  "attribute.name.generic.armor_penetration": "Armor Penetration %",
+  "attribute.name.generic.armor_penetration_flat": "Flat Armor Penetration",
+
+
   "attribute.name.generic.crit_chance": "Critical Hit Chance",
   "attribute.name.generic.crit_damage": "Critical Damage Multiplier",
   "attribute.name.generic.damage_multiplier": "Damage Multiplier",
@@ -59,6 +79,9 @@
   "description.attribute.name.generic.arcane_rupture_chance": "Chance for Arcane Rupture to trigger on hit.",
   "description.attribute.name.generic.arcane_rupture_damage": "Scales the damage dealt by Arcane Rupture.",
   "description.attribute.name.generic.arcane_rupture_overload_chance": "Chance for Arcane Rupture to trigger Overload when it hits.",
+
+  "description.attribute.name.generic.armor_penetration": "Ignores a percentage of the target's armor.",
+  "description.attribute.name.generic.armor_penetration_flat": "Subtracts a flat amount from the target's armor.",
 
   "description.attribute.name.spell_power.arcane": "Increases the effectiveness of Arcane spells.",
   "description.attribute.name.spell_power.fire": "Increases the effectiveness of Fire spells.",

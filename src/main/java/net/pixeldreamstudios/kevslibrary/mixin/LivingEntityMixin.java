@@ -2,6 +2,7 @@ package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
@@ -49,6 +50,34 @@ public abstract class LivingEntityMixin {
 //        });
 //    }
 
+    @Inject(method = "createLivingAttributes", at = @At("RETURN"))
+    private static void injectGlobalAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
+        DefaultAttributeContainer.Builder builder = cir.getReturnValue();
+
+        builder
+                .add(KevsLibrary.CRIT_CHANCE, 0.0)
+                .add(KevsLibrary.CRIT_DAMAGE, 1.5)
+                .add(KevsLibrary.MULTISTRIKE_CHANCE, 0.0)
+                .add(KevsLibrary.MULTISTRIKE_COUNT, 2.0)
+                .add(KevsLibrary.MULTISTRIKE_DAMAGE, 0.5)
+                .add(KevsLibrary.DAMAGE, 1)
+                .add(KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0)
+                .add(KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0)
+                .add(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE, 0.0)
+                .add(KevsLibrary.FIRE_TORNADO_CHANCE, 0)
+                .add(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE, 0.0)
+                .add(KevsLibrary.FROST_NOVA_CHANCE, 0)
+                .add(KevsLibrary.FROST_NOVA_COUNT, 3)
+                .add(KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 0.0)
+                .add(KevsLibrary.SOUL_LINK_CHANCE, 0)
+                .add(KevsLibrary.SOUL_LINK_DAMAGE, 1)
+                .add(KevsLibrary.ARCANE_RUPTURE_CHANCE, 0)
+                .add(KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1)
+                .add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0)
+                .add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0)
+                .add(KevsLibrary.ARMOR_PENETRATION, 0.0)
+                .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0);
+    }
 
 
     @ModifyVariable(
@@ -86,7 +115,8 @@ public abstract class LivingEntityMixin {
         boolean isCrit = isVanillaCrit || isGroundedCrit;
 
         float finalDamage = amount;
-
+        LivingEntity target = (LivingEntity)(Object) this;
+        finalDamage = ArmorPenetrationHandler.applyArmorPenetration(attacker, target, finalDamage);
 
         if (isVanillaCrit) {
             finalDamage /= 1.5f;

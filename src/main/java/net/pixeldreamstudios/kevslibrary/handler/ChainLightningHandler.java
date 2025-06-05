@@ -114,7 +114,7 @@ public class ChainLightningHandler {
         if (entity.equals(attacker)) return false;
         if (visited.contains(entity)) return false;
         if (entity.isTeammate(attacker)) return false;
-        if (entity instanceof PlayerEntity) return false;
+        if (!(entity instanceof PlayerEntity) && entity.getType().getSpawnGroup().isPeaceful()) return false;
         if (entity.getType().getSpawnGroup().isPeaceful()) return false;
         if (entity instanceof TameableEntity tameable && tameable.isTamed()) return false;
         return true;
