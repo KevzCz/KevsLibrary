@@ -2,6 +2,8 @@ package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.SkeletonHorseEntity;
+import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -66,9 +68,10 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
         UUID ownerUuid = kevslib$getOwnerUuid();
-        if (ownerUuid != null) {
+        if (kevslib$isTamed() && ownerUuid != null) {
             nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
         }
+
         if (!kevslib$petInheritanceData.isEmpty()) {
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
@@ -77,6 +80,9 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
     @Unique
     @Override
     public boolean kevslib$isTamed() {
+        if ((Object)this instanceof SkeletonHorseEntity || (Object)this instanceof ZombieHorseEntity) {
+            return false;
+        }
         return ((TameableEntity)(Object)this).isTamed();
     }
 

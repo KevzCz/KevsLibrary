@@ -10,11 +10,12 @@ public class UuidsHelper {
     }
 
     public static int[] toIntArray(UUID uuid) {
-        long most = uuid.getMostSignificantBits();
-        long least = uuid.getLeastSignificantBits();
-        return new int[] {
-                (int)(most >> 32), (int)most,
-                (int)(least >> 32), (int)least
-        };
-    }
+    if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
+    long most = uuid.getMostSignificantBits();
+    long least = uuid.getLeastSignificantBits();
+    return new int[] {
+        (int)(most >> 32), (int)most,
+        (int)(least >> 32), (int)least
+    };
+}
 }

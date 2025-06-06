@@ -3,6 +3,8 @@ package net.pixeldreamstudios.kevslibrary.mixin;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.data.*;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.SkeletonHorseEntity;
+import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.world.ServerWorld;
@@ -67,8 +69,12 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
 
     @Override
     public boolean kevslib$isTamed() {
+        if ((Object)this instanceof SkeletonHorseEntity || (Object)this instanceof ZombieHorseEntity) {
+            return false;
+        }
         return kevslib$getOwnerUuid() != null;
     }
+
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void kevslib$readNbt(NbtCompound nbt, CallbackInfo ci) {
@@ -97,9 +103,10 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
         UUID ownerUuid = kevslib$getOwnerUuid();
-        if (ownerUuid != null) {
+        if (kevslib$isTamed() && ownerUuid != null) {
             nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
         }
+
         if (!kevslib$petInheritanceData.isEmpty()) {
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
