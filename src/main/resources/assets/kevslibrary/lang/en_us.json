@@ -19,6 +19,23 @@
   "attribute.name.generic.armor_penetration_flat": "Flat Armor Penetration",
 
 
+  "attribute.name.generic.thorns_chance": "Thorns Chance",
+  "attribute.name.generic.thorns_amp": "Thorns Damage Multiplier",
+  "attribute.name.generic.thorns_true_damage_chance": "True Damage Thorns Chance",
+  "attribute.name.generic.cleave_damage_multiplier": "Cleave Damage Multiplier",
+  "attribute.name.generic.cleave_range": "Cleave Range",
+  "attribute.name.generic.cleave_chance": "Cleave Chance",
+  "attribute.name.generic.piercing_chance": "Piercing Chance",
+
+  "description.attribute.name.generic.thorns_chance": "Chance to return a portion of damage to attackers.",
+  "description.attribute.name.generic.thorns_amp": "Multiplier for the amount of thorns damage returned.",
+  "description.attribute.name.generic.thorns_true_damage_chance": "Chance for thorns damage to ignore armor.",
+  "description.attribute.name.generic.cleave_damage_multiplier": "Multiplier for damage dealt by cleave attacks.",
+  "description.attribute.name.generic.cleave_range": "Distance around the attacker affected by cleave.",
+  "description.attribute.name.generic.cleave_chance": "Chance to perform a cleave attack on hit.",
+  "description.attribute.name.generic.piercing_chance": "Chance to unleash a piercing energy beam on next hit.",
+
+
   "attribute.name.generic.crit_chance": "Critical Hit Chance",
   "attribute.name.generic.crit_damage": "Critical Damage Multiplier",
   "attribute.name.generic.damage_multiplier": "Damage Multiplier",

@@ -6,6 +6,7 @@ import net.minecraft.client.render.entity.ArrowEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.client.renderer.CleaveSlashRenderer;
 
 
 public class KevsLibraryClient implements ClientModInitializer {
@@ -23,6 +24,9 @@ public class KevsLibraryClient implements ClientModInitializer {
                 KevsLibrary.ARCANE_SHARD,
                 context -> new FlyingItemEntityRenderer<>(context)
         );
-
+        EntityRendererRegistry.register(
+                KevsLibrary.CLEAVE_SLASH,
+                context -> new CleaveSlashRenderer(context)
+        );
     }
 }

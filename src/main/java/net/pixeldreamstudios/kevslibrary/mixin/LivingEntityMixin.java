@@ -22,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
+    private static final ThreadLocal<Boolean> IN_CLEAVE_CONTEXT = ThreadLocal.withInitial(() -> false);
+
     private static final ThreadLocal<Float> CRIT_DAMAGE_TRACKER = new ThreadLocal<>();
     @Inject(method = "isInvulnerableTo", at = @At("HEAD"), cancellable = true)
     private void bypassMultistrike(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
@@ -50,6 +52,19 @@ public abstract class LivingEntityMixin {
 //        });
 //    }
 
+
+//    @Inject(method = "damage", at = @At("HEAD"))
+//    private void captureRawDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+//        Entity attacker = source.getAttacker();
+//        System.out.println("[DEBUG] Raw damage entry: amount = " + amount +
+//                ", attacker = " + (attacker != null ? attacker.getName().getString() : "null") +
+//                ", source = " + source.getName());
+//
+//        if (!(attacker instanceof LivingEntity livingAttacker)) return;
+//        LivingEntity target = (LivingEntity)(Object) this;
+//
+//        ThornsHandler.tryReflectThorns(target, livingAttacker, amount);
+//    }
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))
     private static void injectGlobalAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
         DefaultAttributeContainer.Builder builder = cir.getReturnValue();
@@ -76,7 +91,15 @@ public abstract class LivingEntityMixin {
                 .add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0)
                 .add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0)
                 .add(KevsLibrary.ARMOR_PENETRATION, 0.0)
-                .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0);
+                .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0)
+                .add(KevsLibrary.THORNS_CHANCE, 0.0)
+                .add(KevsLibrary.THORNS_AMP, 0.0)
+                .add(KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0)
+                .add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0)
+                .add(KevsLibrary.CLEAVE_RANGE, 4.0)
+                .add(KevsLibrary.CLEAVE_CHANCE, 0)
+                .add(KevsLibrary.PIERCING_CHANCE, 0.0)
+        ;
     }
 
 
@@ -174,7 +197,6 @@ public abstract class LivingEntityMixin {
         if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
         LivingEntity target = (LivingEntity)(Object) this;
 
-        // Prevent recursive multistrike from multistrike spell projectiles
         if (!target.getWorld().isClient()) {
             boolean nearMultistrikeSpell = target.getWorld()
                     .getEntitiesByClass(SpellProjectile.class, target.getBoundingBox().expand(1.5), spell ->
@@ -198,6 +220,7 @@ public abstract class LivingEntityMixin {
         }
 
         float finalDamage = CRIT_DAMAGE_TRACKER.get() != null ? CRIT_DAMAGE_TRACKER.get() : amount;
+        ThornsHandler.tryReflectThorns(target, attacker, amount);
         CRIT_DAMAGE_TRACKER.remove();
 
         PlayerEntity player = attacker instanceof PlayerEntity p ? p : null;
@@ -208,11 +231,12 @@ public abstract class LivingEntityMixin {
         if (attacker.getRandom().nextDouble() <= multistrikeChance) {
             boolean hasNearbyRealSpellProjectile = target.getWorld().getEntitiesByClass(
                     SpellProjectile.class,
-                    target.getBoundingBox().expand(3.0), // slightly larger radius
+                    target.getBoundingBox().expand(3.0),
                     proj -> {
                         boolean isOwned = proj.getOwner() != null;
                         boolean hasSpell = proj.getSpellEntry() != null;
-                        boolean isLikelySpell = !proj.getCommandTags().isEmpty(); // broader fallback
+                        boolean isLikelySpell = !proj.getCommandTags().isEmpty();
+
                         boolean isNotMultistrike = !proj.getCommandTags().contains("multistrike_spell");
                         return isOwned && isNotMultistrike && (hasSpell || isLikelySpell);
                     }
@@ -288,11 +312,22 @@ public abstract class LivingEntityMixin {
         if (
                 arcaneChance > 0.0 &&
                         attacker.getRandom().nextDouble() < arcaneChance &&
-                        !source.getName().equals("arcane_shard") // 🛡️ prevent self-trigger
+                        !source.getName().equals("arcane_shard")
         ) {
             ArcaneRuptureHandler.trigger(attacker, target);
         }
-
+        if (!IN_CLEAVE_CONTEXT.get() && source.getSource() == attacker) {
+            IN_CLEAVE_CONTEXT.set(true);
+            CleaveHandler.triggerCleave(attacker, finalDamage);
+            IN_CLEAVE_CONTEXT.set(false);
+        }
+        if (PiercingHandler.isPiercingActive(attacker)) {
+            PiercingHandler.consumePiercing(attacker);
+            float pierceDamage = finalDamage * 0.75f;
+            PiercingHandler.applyLineDamage(attacker, pierceDamage, 6.0f, 1.0f);
+        } else {
+            PiercingHandler.tryActivatePiercing(attacker);
+        }
     }
 
 }

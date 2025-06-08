@@ -39,6 +39,15 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.PET_DAMAGE_BONUS,0)
                         .add(KevsLibrary.ARMOR_PENETRATION, 0.0)
                         .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0)
+                        .add(KevsLibrary.THORNS_CHANCE, 0.0)
+                        .add(KevsLibrary.THORNS_AMP, 0.0)
+                        .add(KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0)
+                        .add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0)
+                        .add(KevsLibrary.CLEAVE_RANGE, 4.0)
+                        .add(KevsLibrary.CLEAVE_CHANCE, 0)
+                        .add(KevsLibrary.PIERCING_CHANCE, 0.0)
+
+
         );
     }
 }
