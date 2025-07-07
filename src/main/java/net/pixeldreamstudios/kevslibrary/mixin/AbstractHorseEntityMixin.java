@@ -1,15 +1,11 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.mob.SkeletonHorseEntity;
 import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
@@ -78,7 +74,7 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
     @Override
     public boolean kevslib$isTamed() {
         if ((Object)this instanceof SkeletonHorseEntity || (Object)this instanceof ZombieHorseEntity) {
-            return false; // treat as not tamed, skip inheritance/UUID saving
+            return false;
         }
         return ((AbstractHorseEntity)(Object)this).isTame();
     }

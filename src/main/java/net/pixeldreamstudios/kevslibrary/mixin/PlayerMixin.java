@@ -13,7 +13,6 @@ public abstract class PlayerMixin {
 
     @Inject(method = "createPlayerAttributes", at = @At("RETURN"), cancellable = true)
     private static void injectCustomAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
-        cir.setReturnValue(
                 cir.getReturnValue()
                         .add(KevsLibrary.CRIT_CHANCE, 0.0)
                         .add(KevsLibrary.CRIT_DAMAGE, 1.5)
@@ -45,9 +44,6 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0)
                         .add(KevsLibrary.CLEAVE_RANGE, 4.0)
                         .add(KevsLibrary.CLEAVE_CHANCE, 0)
-                        .add(KevsLibrary.PIERCING_CHANCE, 0.0)
-
-
-        );
+                        .add(KevsLibrary.PIERCING_CHANCE, 0.0);
     }
 }

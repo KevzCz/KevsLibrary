@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+@SuppressWarnings("unused")
 @Mixin(SpellHelper.class)
 public class SpellHelper_ProjectileTagMixin {
 
@@ -33,14 +33,10 @@ public class SpellHelper_ProjectileTagMixin {
             int sequenceIndex,
             CallbackInfo ci
     ) {
-        // Get the last spell projectile created (you need to cache it in a shadow or static field)
-        if (lastCreatedProjectile instanceof SpellProjectile spellProjectile) {
+       if (lastCreatedProjectile instanceof SpellProjectile spellProjectile) {
             spellProjectile.addCommandTag("real_spell_projectile");
         }
     }
-
-    // Shadow field trick: You need to access the projectile created in the static method
-    // You can use a redirect to capture it at assignment
 
     @Redirect(
             method = "shootProjectile(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/spell_engine/internals/SpellHelper$ImpactContext;I)V",

@@ -5,18 +5,15 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.hit.EntityHitResult;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
 import net.spell_engine.api.spell.Spell;
-import net.spell_engine.entity.SpellProjectile;
 import net.spell_engine.internals.SpellHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+@SuppressWarnings("unused")
 @Mixin(SpellHelper.class)
 public class SpellHelperMixin {
     @Inject(

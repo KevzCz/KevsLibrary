@@ -1,6 +1,5 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -17,9 +16,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+@SuppressWarnings("unused")
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
     private static final ThreadLocal<Boolean> IN_CLEAVE_CONTEXT = ThreadLocal.withInitial(() -> false);
@@ -31,40 +29,44 @@ public abstract class LivingEntityMixin {
             cir.setReturnValue(false);
         }
     }
-//    @Inject(method = "damage", at = @At("HEAD"))
-//    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-//        Entity attacker = source.getAttacker();
-//        Entity actualSource = source.getSource();
-//        LivingEntity self = (LivingEntity) (Object) this;
-//
-//        if (self.getWorld().isClient()) return;
-//
-//        self.getWorld().getEntitiesByClass(
-//                SpellProjectile.class,
-//                self.getBoundingBox().expand(2.5),
-//                proj -> proj.getOwner() != self
-//        ).forEach(proj -> {
-//            System.out.println("[DEBUG] Nearby SpellProjectile:");
-//            System.out.println("  -> Pos: " + proj.getPos());
-//            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
-//            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
-//            System.out.println("  -> Command Tags: " + proj.getCommandTags());
-//        });
-//    }
+/*
+    @Inject(method = "damage", at = @At("HEAD"))
+    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        Entity attacker = source.getAttacker();
+        Entity actualSource = source.getSource();
+        LivingEntity self = (LivingEntity) (Object) this;
+
+        if (self.getWorld().isClient()) return;
+
+        self.getWorld().getEntitiesByClass(
+                SpellProjectile.class,
+                self.getBoundingBox().expand(2.5),
+                proj -> proj.getOwner() != self
+        ).forEach(proj -> {
+            System.out.println("[DEBUG] Nearby SpellProjectile:");
+            System.out.println("  -> Pos: " + proj.getPos());
+            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
+            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
+            System.out.println("  -> Command Tags: " + proj.getCommandTags());
+        });
+    }
+*/
 
 
-//    @Inject(method = "damage", at = @At("HEAD"))
-//    private void captureRawDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-//        Entity attacker = source.getAttacker();
-//        System.out.println("[DEBUG] Raw damage entry: amount = " + amount +
-//                ", attacker = " + (attacker != null ? attacker.getName().getString() : "null") +
-//                ", source = " + source.getName());
-//
-//        if (!(attacker instanceof LivingEntity livingAttacker)) return;
-//        LivingEntity target = (LivingEntity)(Object) this;
-//
-//        ThornsHandler.tryReflectThorns(target, livingAttacker, amount);
-//    }
+/*
+    @Inject(method = "damage", at = @At("HEAD"))
+    private void captureRawDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        Entity attacker = source.getAttacker();
+        System.out.println("[DEBUG] Raw damage entry: amount = " + amount +
+                ", attacker = " + (attacker != null ? attacker.getName().getString() : "null") +
+                ", source = " + source.getName());
+
+        if (!(attacker instanceof LivingEntity livingAttacker)) return;
+        LivingEntity target = (LivingEntity)(Object) this;
+
+        ThornsHandler.tryReflectThorns(target, livingAttacker, amount);
+    }
+*/
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))
     private static void injectGlobalAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
         DefaultAttributeContainer.Builder builder = cir.getReturnValue();
@@ -101,6 +103,7 @@ public abstract class LivingEntityMixin {
                 .add(KevsLibrary.PIERCING_CHANCE, 0.0)
         ;
     }
+
 
 
     @ModifyVariable(

@@ -3,7 +3,6 @@ package net.pixeldreamstudios.kevslibrary;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 
 public class KevsDamageTypes {
@@ -13,7 +12,6 @@ public class KevsDamageTypes {
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "multistrike_ranged"));
     public static final RegistryKey<DamageType> ARCANE_SHARD =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "arcane_shard"));
-
     public static final RegistryKey<DamageType> ICICLE =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of(KevsLibrary.MOD_ID, "icicle"));
 }

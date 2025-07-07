@@ -1,7 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.SkeletonHorseEntity;
 import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -21,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
-
+@SuppressWarnings("unused")
 @Mixin(TameableEntity.class)
 public abstract class TameableEntityMixin extends AnimalEntity implements UniversalTameable {
 

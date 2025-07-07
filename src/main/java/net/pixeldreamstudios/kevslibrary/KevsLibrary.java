@@ -107,22 +107,23 @@ public class KevsLibrary implements ModInitializer {
 			RegistryHelper.registerAttribute("armor_penetration",
 					new ClampedEntityAttribute("attribute.name.generic.armor_penetration", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> THORNS_CHANCE =
-			RegistryHelper.registerAttribute("thorns_chance", new ClampedEntityAttribute("attribute.name.generic.thorns_chance", 0.0, 0.0, 1.0).setTracked(true));
+			RegistryHelper.registerAttribute("thorns_chance",
+					new ClampedEntityAttribute("attribute.name.generic.thorns_chance", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> THORNS_AMP =
-			RegistryHelper.registerAttribute("thorns_amp", new ClampedEntityAttribute("attribute.name.generic.thorns_amp", 0.3, 0.0, 2.0).setTracked(true));
+			RegistryHelper.registerAttribute("thorns_amp",
+					new ClampedEntityAttribute("attribute.name.generic.thorns_amp", 0.3, 0.0, 2.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> THORNS_TRUE_DAMAGE_CHANCE =
-			RegistryHelper.registerAttribute("thorns_true_damage_chance", new ClampedEntityAttribute("attribute.name.generic.thorns_true_damage_chance", 0.0, 0.0, 1.0).setTracked(true));
+			RegistryHelper.registerAttribute("thorns_true_damage_chance",
+					new ClampedEntityAttribute("attribute.name.generic.thorns_true_damage_chance", 0.0, 0.0, 1.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> CLEAVE_CHANCE =
 			RegistryHelper.registerAttribute("cleave_chance",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_chance", 0.0, 0.0, 1.0).setTracked(true));
-
 	public static final RegistryEntry<EntityAttribute> CLEAVE_DAMAGE_MULTIPLIER =
 			RegistryHelper.registerAttribute("cleave_damage_multiplier",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_damage_multiplier", 1.0, 0.0, 10.0).setTracked(true));
 	public static final RegistryEntry<EntityAttribute> CLEAVE_RANGE =
 			RegistryHelper.registerAttribute("cleave_range",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_range", 4.0, 1.0, 8.0).setTracked(true));
-
 	public static final RegistryEntry<EntityAttribute> PIERCING_CHANCE =
 			RegistryHelper.registerAttribute("pierce_chance",
 					new ClampedEntityAttribute("attribute.name.generic.pierce_chance", 0.0, 0.0, 1.0).setTracked(true));
