@@ -96,7 +96,23 @@ public class SoulLinkHandler {
             if (!entity.isAlive()) continue;
             EntityAttributeInstance soulLinkDamage = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_DAMAGE);
             SpellPower.Result soul = SpellPower.getSpellPower(SpellSchools.SOUL, attacker);
-            float spreadDamage = (float) (soulLinkDamage.getValue() + (soul.baseValue() * 0.4f) * 5);
+            float original = originalDamage;
+            soulPower = (float) SpellPower.getSpellPower(SpellSchools.SOUL, attacker).baseValue();
+
+// Customize this to match how steep you want the scaling
+            float base = 0.1f;
+            float maxLinear = 0.5f;
+            float postLinearCap = 0.7f;
+            float multiplier;
+            if (soulPower <= 50.0f) {
+                multiplier = base + (soulPower / 50.0f) * (maxLinear - base);
+            } else {
+                float extraPower = soulPower - 50.0f;
+                float diminishing = (float)(1 - Math.exp(-extraPower * 0.05f)); // adjust the 0.05f to change falloff
+                multiplier = maxLinear + diminishing * (postLinearCap - maxLinear);
+            }
+
+            float spreadDamage = original * multiplier;
             boolean isCrit = attacker.getRandom().nextFloat() < soul.criticalChance();
             if (isCrit) spreadDamage *= soul.criticalDamage();
 
