@@ -5,6 +5,7 @@
 
 	"mixins": [
 		"LivingEntityMixin",
+		"LivingEntityArmorPenMixin",
 		"PlayerMixin",
 		"TameableEntityMixin",
 		"AbstractHorseEntityMixin",

@@ -142,7 +142,6 @@ public abstract class LivingEntityMixin {
 
         float finalDamage = amount;
         LivingEntity target = (LivingEntity)(Object) this;
-        finalDamage = ArmorPenetrationHandler.applyArmorPenetration(attacker, target, finalDamage);
 
         if (isVanillaCrit) {
             finalDamage /= 1.5f;
