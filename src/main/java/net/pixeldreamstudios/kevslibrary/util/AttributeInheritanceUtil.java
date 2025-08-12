@@ -31,7 +31,12 @@ public class AttributeInheritanceUtil {
         addIfPresent(set, "air");
         addIfPresent(set, "earth");
         addIfPresent(set, "water");
-
+        addIfPresent(set, "lightning");
+        addIfPresent(set, "soul");
+        addIfPresent(set, "healing");
+        addIfPresent(set, "critical_chance");
+        addIfPresent(set, "critical_damage");
+        addIfPresent(set, "haste");
         return set;
     }
 

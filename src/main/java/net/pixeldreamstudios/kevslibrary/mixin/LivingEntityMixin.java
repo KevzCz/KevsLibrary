@@ -186,6 +186,7 @@ public abstract class LivingEntityMixin {
                         name.equals("fire_tornado")
 
         ) return;
+        if (source.getSource() instanceof PersistentProjectileEntity pp && pp.getCommandTags().contains("multistrike_arrow")) return;
         if (source.getAttacker() instanceof SpellProjectile spell) {
             if (
                     spell.getCommandTags().contains("real_spell_projectile") ||
@@ -250,10 +251,25 @@ public abstract class LivingEntityMixin {
             }
 
             if (source.getSource() != null) {
-                MultistrikeHandler.spawnHoveringProjectiles(attacker, target, finalDamage, source.getSource(), weaponUsed);
+                float msBase = finalDamage;
+                if (source.getSource() instanceof net.minecraft.entity.projectile.TridentEntity) {
+                    EntityAttributeInstance triAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
+                    float triMul = triAttr != null ? (float) triAttr.getValue() : 1.0f;
+                    if (triMul != 0.0f) {
+                        msBase = finalDamage / triMul;
+                    }
+                }
+                EntityAttributeInstance dmgAttr0 = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
+                float dmgMul0 = dmgAttr0 != null ? (float) dmgAttr0.getValue() : 1.0f;
+                if (dmgMul0 != 0.0f) {
+                    msBase = msBase / dmgMul0;
+                }
+                MultistrikeHandler.spawnHoveringProjectiles(attacker, target, msBase, source.getSource(), weaponUsed);
+
             } else {
                 MultistrikeHandler.triggerMultistrike(attacker, target, finalDamage, weaponUsed);
             }
+
 
         }
 

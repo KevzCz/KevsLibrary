@@ -1,17 +1,14 @@
 
     package net.pixeldreamstudios.kevslibrary.handler;
 
-    import net.minecraft.component.DataComponentTypes;
-    import net.minecraft.component.type.ItemEnchantmentsComponent;
-    import net.minecraft.enchantment.EnchantmentHelper;
     import net.minecraft.entity.Entity;
     import net.minecraft.entity.EntityType;
     import net.minecraft.entity.LivingEntity;
     import net.minecraft.entity.attribute.EntityAttributeInstance;
     import net.minecraft.entity.damage.DamageSource;
     import net.minecraft.entity.passive.TameableEntity;
-    import net.minecraft.entity.player.PlayerEntity;
     import net.minecraft.entity.projectile.PersistentProjectileEntity;
+    import net.minecraft.entity.projectile.TridentEntity;
     import net.minecraft.item.ItemStack;
     import net.minecraft.particle.ParticleTypes;
     import net.minecraft.server.world.ServerWorld;
@@ -21,12 +18,9 @@
     import net.minecraft.util.math.Vec3d;
     import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
     import net.pixeldreamstudios.kevslibrary.KevsLibrary;
-    import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
     import net.spell_engine.entity.SpellProjectile;
 
     import java.util.*;
-
-    import static java.lang.Math.clamp;
 
     public class MultistrikeHandler {
         private static final Set<UUID> handledProjectiles = Collections.newSetFromMap(new WeakHashMap<>());
@@ -101,12 +95,13 @@
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
 
+            // NOTE: baseDamage is the post-hit damage (already includes KevsLibrary.DAMAGE, crits, etc.).
+            // For non-trident projectiles we also apply the existing 0.6f taper you had.
             float finalDamage = baseDamage * multiplier * 0.6f;
 
             Vec3d forward = attacker.getRotationVec(1.0f).normalize();
             Vec3d up = new Vec3d(0, 1, 0);
             Vec3d right = forward.crossProduct(up).normalize();
-            double sideOffset = 0.8;
 
             for (int i = 0; i < count; i++) {
                 Vec3d spawnPos;
@@ -125,26 +120,28 @@
                     fromRight = i % 2 == 0;
                 }
 
-                if (sourceProjectile instanceof SpellProjectile spellProj && attacker instanceof LivingEntity) {
+                // Spell projectiles: scale SpellEngine context only (as before).
+                if (sourceProjectile instanceof SpellProjectile spellProj) {
+                    float msMultiplier = multiplier;
+
+                    var baseCtx = spellProj.getImpactContext();
+                    var scaledCtx = baseCtx.distance(baseCtx.distance() * msMultiplier);
+
                     SpellProjectile newSpell = new SpellProjectile(
                             world,
                             attacker,
-                            spawnPos.x,
-                            spawnPos.y,
-                            spawnPos.z,
+                            spawnPos.x, spawnPos.y, spawnPos.z,
                             spellProj.getBehaviour(),
                             spellProj.getSpellEntry(),
-                            spellProj.getImpactContext(),
+                            scaledCtx,
                             spellProj.mutablePerks().copy()
                     );
-
 
                     Vec3d toTarget = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(attacker.getPos());
                     Vec3d forwardDir = toTarget.normalize();
                     Vec3d sideVec = forwardDir.crossProduct(new Vec3d(0, 1, 0)).normalize();
                     Vec3d offsetCurve = sideVec.multiply(fromRight ? 0.6 : -0.6);
                     Vec3d launchDir = forwardDir.add(offsetCurve).normalize().multiply(1.5);
-
 
                     newSpell.setVelocity(launchDir);
                     newSpell.setYaw((float) (Math.toDegrees(Math.atan2(launchDir.z, launchDir.x)) - 90));
@@ -160,17 +157,26 @@
                     hoveringSpellProjectiles
                             .computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>())
                             .add(new HoveringSpellProjectile(newSpell, attacker, target));
-
                     continue;
                 }
 
+                // Arrow / Trident re-fires
                 if (sourceProjectile instanceof PersistentProjectileEntity projectile) {
                     EntityType<?> type = projectile.getType();
                     Entity newArrowEntity = type.create(world);
                     if (!(newArrowEntity instanceof PersistentProjectileEntity arrow)) continue;
 
+                    arrow.setOwner(attacker);
+
+                    // IMPORTANT:
+                    // - Trident multistrike uses baseDamage * md (no extra 0.6f taper), WITHOUT reapplying trident or DAMAGE multipliers.
+                    // - Other projectiles use the tapered finalDamage above.
+                    float dmgToSet = (projectile instanceof TridentEntity)
+                            ? baseDamage * multiplier
+                            : finalDamage;
+
                     arrow.setCritical(true);
-                    arrow.setDamage(finalDamage);
+                    arrow.setDamage(dmgToSet);
                     arrow.setSilent(true);
                     arrow.setGlowing(true);
                     arrow.setNoGravity(true);
@@ -189,12 +195,14 @@
                     hoveringArrows
                             .computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>())
                             .add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, fromRight));
-                }else {
+                } else {
+                    // fallback to melee-style bomb if source isn't a projectile
                     MultistrikeHandler.triggerMultistrike(attacker, target, baseDamage, weaponUsed);
                     break;
                 }
             }
         }
+
 
 
 
@@ -313,7 +321,13 @@
                         }
                         float damage = (float) arrow.getDamage();
                         DamageSource source = attacker.getDamageSources().create(KevsDamageTypes.MULTISTRIKE_RANGED, attacker);
+                        int prevRegen = target.timeUntilRegen;
+                        int prevHurt = target.hurtTime;
+                        target.timeUntilRegen = 0;
+                        target.hurtTime = 0;
                         boolean hit = target.damage(source, damage);
+                        target.timeUntilRegen = prevRegen;
+                        target.hurtTime = prevHurt;
 
                         if (hit) {
                             OnHitEffectHandler.withMultistrikeContext(() -> {
@@ -340,6 +354,7 @@
                         arrow.discard();
                         return true;
                     }
+
                 }
 
 

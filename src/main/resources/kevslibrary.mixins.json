@@ -11,7 +11,8 @@
 		"AbstractHorseEntityMixin",
 		"UniversalTamingDataMixin",
 		"SpellHelperMixin",
-		"SpellHelper_ProjectileTagMixin"
+		"SpellHelper_ProjectileTagMixin",
+		"TridentEntityMultistrikeMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
