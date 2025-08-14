@@ -24,7 +24,6 @@ public class AttributeInheritanceUtil {
         set.add(EntityAttributes.GENERIC_ARMOR);
         set.add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
 
-        // Try to get spell power attributes (if they exist)
         addIfPresent(set, "fire");
         addIfPresent(set, "frost");
         addIfPresent(set, "arcane");
@@ -34,9 +33,6 @@ public class AttributeInheritanceUtil {
         addIfPresent(set, "lightning");
         addIfPresent(set, "soul");
         addIfPresent(set, "healing");
-        addIfPresent(set, "critical_chance");
-        addIfPresent(set, "critical_damage");
-        addIfPresent(set, "haste");
         return set;
     }
 
@@ -76,7 +72,7 @@ public class AttributeInheritanceUtil {
 
                 EntityAttributeInstance extraBonusAttr = owner.getAttributeInstance(KevsLibrary.PET_DAMAGE_BONUS);
                 if (extraBonusAttr != null) {
-                    bonus += extraBonusAttr.getValue(); // 100% inheritance
+                    bonus += extraBonusAttr.getValue();
                 }
 
             } else if (key.equals("kevslibrary:pet_damage_bonus")) {
