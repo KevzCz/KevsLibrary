@@ -1,6 +1,7 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.mob.SkeletonHorseEntity;
 import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -20,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
+
 @SuppressWarnings("unused")
 @Mixin(TameableEntity.class)
 public abstract class TameableEntityMixin extends AnimalEntity implements UniversalTameable {
@@ -34,14 +36,25 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
     @Inject(method = "setOwner", at = @At("TAIL"))
     private void onSetOwner(PlayerEntity player, CallbackInfo ci) {
         TameableEntity tameable = (TameableEntity) (Object) this;
-        if (tameable.isTamed()) {
-            this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
-                    player,
-                    tameable,
-                    this.kevslib$petInheritanceData,
-                    player.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
-            );
+        if (!tameable.isTamed()) {
+            return;
         }
+        EntityAttributeInstance ratioInst = player.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
+        if (ratioInst == null) {
+            return;
+        }
+
+        double ratio = ratioInst.getValue();
+        if (ratio == 0.0) {
+            return;
+        }
+
+        this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
+                player,
+                tameable,
+                this.kevslib$petInheritanceData,
+                ratio
+        );
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
