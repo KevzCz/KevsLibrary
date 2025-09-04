@@ -101,6 +101,10 @@ public abstract class LivingEntityMixin {
                 .add(KevsLibrary.CLEAVE_RANGE, 4.0)
                 .add(KevsLibrary.CLEAVE_CHANCE, 0)
                 .add(KevsLibrary.PIERCING_CHANCE, 0.0)
+                .add(KevsLibrary.BARRAGE_CHANCE, 0.0)
+                .add(KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0)
+                .add(KevsLibrary.PROJECTILE_STORM_RANGE, 5)
+                .add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0)
         ;
     }
 
@@ -229,49 +233,53 @@ public abstract class LivingEntityMixin {
         PlayerEntity player = attacker instanceof PlayerEntity p ? p : null;
         ItemStack weaponUsed = player != null ? player.getMainHandStack().copy() : ItemStack.EMPTY;
 
-        EntityAttributeInstance multistrikeChanceAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
-        double multistrikeChance = multistrikeChanceAttr != null ? multistrikeChanceAttr.getValue() : 0.0;
-        if (attacker.getRandom().nextDouble() <= multistrikeChance) {
-            boolean hasNearbyRealSpellProjectile = target.getWorld().getEntitiesByClass(
-                    SpellProjectile.class,
-                    target.getBoundingBox().expand(3.0),
-                    proj -> {
-                        boolean isOwned = proj.getOwner() != null;
-                        boolean hasSpell = proj.getSpellEntry() != null;
-                        boolean isLikelySpell = !proj.getCommandTags().isEmpty();
-
-                        boolean isNotMultistrike = !proj.getCommandTags().contains("multistrike_spell");
-                        return isOwned && isNotMultistrike && (hasSpell || isLikelySpell);
-                    }
-            ).size() > 0;
-
-            if (hasNearbyRealSpellProjectile) {
-//                System.out.println("[DEBUG] Skipping multistrike: nearby real spell projectile detected.");
-                return;
-            }
-
-            if (source.getSource() != null) {
-                float msBase = finalDamage;
-                if (source.getSource() instanceof net.minecraft.entity.projectile.TridentEntity) {
-                    EntityAttributeInstance triAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
-                    float triMul = triAttr != null ? (float) triAttr.getValue() : 1.0f;
-                    if (triMul != 0.0f) {
-                        msBase = finalDamage / triMul;
-                    }
-                }
-                EntityAttributeInstance dmgAttr0 = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-                float dmgMul0 = dmgAttr0 != null ? (float) dmgAttr0.getValue() : 1.0f;
-                if (dmgMul0 != 0.0f) {
-                    msBase = msBase / dmgMul0;
-                }
-                MultistrikeHandler.spawnHoveringProjectiles(attacker, target, msBase, source.getSource(), weaponUsed);
-
-            } else {
-                MultistrikeHandler.triggerMultistrike(attacker, target, finalDamage, weaponUsed);
-            }
-
-
+        boolean stormHit = false;
+        if (source.getSource() instanceof PersistentProjectileEntity pp2
+                && ProjectileStormHandler.isStormTag(pp2)) {
+            stormHit = true;
+        } else if (source.getSource() instanceof SpellProjectile sp2
+                && ProjectileStormHandler.isStormTag(sp2)) {
+            stormHit = true;
         }
+
+        if (!stormHit) {
+            EntityAttributeInstance multistrikeChanceAttr =
+                    attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
+            double multistrikeChance = multistrikeChanceAttr != null ? multistrikeChanceAttr.getValue() : 0.0;
+
+            if (attacker.getRandom().nextDouble() <= multistrikeChance) {
+                boolean hasNearbyRealSpellProjectile = target.getWorld().getEntitiesByClass(
+                        SpellProjectile.class,
+                        target.getBoundingBox().expand(3.0),
+                        proj -> {
+                            boolean isOwned = proj.getOwner() != null;
+                            boolean hasSpell = proj.getSpellEntry() != null;
+                            boolean isLikelySpell = !proj.getCommandTags().isEmpty();
+                            boolean isNotMultistrike = !proj.getCommandTags().contains("multistrike_spell");
+                            return isOwned && isNotMultistrike && (hasSpell || isLikelySpell);
+                        }
+                ).size() > 0;
+
+                if (!hasNearbyRealSpellProjectile) {
+                    if (source.getSource() != null) {
+                        float msBase = finalDamage;
+                        if (source.getSource() instanceof net.minecraft.entity.projectile.TridentEntity) {
+                            EntityAttributeInstance triAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
+                            float triMul = triAttr != null ? (float) triAttr.getValue() : 1.0f;
+                            if (triMul != 0.0f) msBase = finalDamage / triMul;
+                        }
+                        EntityAttributeInstance dmgAttr0 = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
+                        float dmgMul0 = dmgAttr0 != null ? (float) dmgAttr0.getValue() : 1.0f;
+                        if (dmgMul0 != 0.0f) msBase = msBase / dmgMul0;
+
+                        MultistrikeHandler.spawnHoveringProjectiles(attacker, target, msBase, source.getSource(), weaponUsed);
+                    } else {
+                        MultistrikeHandler.triggerMultistrike(attacker, target, finalDamage, weaponUsed);
+                    }
+                }
+            }
+        }
+
 
         EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
         double frostChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;

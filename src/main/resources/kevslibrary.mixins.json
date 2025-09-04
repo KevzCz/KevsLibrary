@@ -12,7 +12,12 @@
 		"UniversalTamingDataMixin",
 		"SpellHelperMixin",
 		"SpellHelper_ProjectileTagMixin",
-		"TridentEntityMultistrikeMixin"
+		"TridentEntityMultistrikeMixin",
+		"BowItemMixin",
+		"CrossbowItemMixin",
+		"ProjectileEntityMixin",
+		"PersistentProjectileStormMixin",
+		"SpellProjectileStormMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

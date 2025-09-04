@@ -44,6 +44,13 @@ public abstract class PlayerMixin {
                         .add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0)
                         .add(KevsLibrary.CLEAVE_RANGE, 4.0)
                         .add(KevsLibrary.CLEAVE_CHANCE, 0)
-                        .add(KevsLibrary.PIERCING_CHANCE, 0.0);
+                        .add(KevsLibrary.PIERCING_CHANCE, 0.0)
+                        .add(KevsLibrary.BARRAGE_CHANCE, 0.0)
+                        .add(KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0)
+                        .add(KevsLibrary.PROJECTILE_STORM_RANGE, 2.5)
+                        .add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0)
+
+                ;
+
     }
 }

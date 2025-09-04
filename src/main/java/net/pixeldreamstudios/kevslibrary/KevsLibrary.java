@@ -127,6 +127,21 @@ public class KevsLibrary implements ModInitializer {
 	public static final RegistryEntry<EntityAttribute> PIERCING_CHANCE =
 			RegistryHelper.registerAttribute("pierce_chance",
 					new ClampedEntityAttribute("attribute.name.generic.pierce_chance", 0.0, 0.0, 1.0).setTracked(true));
+	public static final RegistryEntry<EntityAttribute> BARRAGE_CHANCE =
+			RegistryHelper.registerAttribute("barrage_chance",
+					new ClampedEntityAttribute("attribute.name.generic.barrage_chance", 0.0, 0.0, 1.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_CHANCE =
+			RegistryHelper.registerAttribute("projectile_storm_chance",
+					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_chance", 0.0, 0.0, 1.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_RANGE =
+			RegistryHelper.registerAttribute("projectile_storm_range",
+					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_range", 2.5, 1.0, 32.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_DURATION =
+			RegistryHelper.registerAttribute("projectile_storm_duration",
+					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_duration", 60.0, 10.0, 400.0).setTracked(true));
 
 	public static final EntityType<CleaveSlashEntity> CLEAVE_SLASH = Registry.register(
 			Registries.ENTITY_TYPE,
