@@ -1,12 +1,14 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.attribute.*;
-import net.minecraft.entity.data.*;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SkeletonHorseEntity;
 import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.taming.TameableBridge;
@@ -78,8 +80,26 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void kevslib$readNbt(NbtCompound nbt, CallbackInfo ci) {
+        UUID parsed = null;
+
         if (nbt.contains("Owner", NbtElement.INT_ARRAY_TYPE)) {
-            kevslib$setOwnerUuid(UuidsHelper.fromIntArray(nbt.getIntArray("Owner")));
+            parsed = UuidsHelper.fromIntArray(nbt.getIntArray("Owner"));
+        }
+        else if (nbt.contains("OwnerUUID", NbtElement.INT_ARRAY_TYPE)) {
+            parsed = UuidsHelper.fromIntArray(nbt.getIntArray("OwnerUUID"));
+        }
+        else if (nbt.contains("OwnerUUID", NbtElement.STRING_TYPE)) {
+            try {
+                parsed = java.util.UUID.fromString(nbt.getString("OwnerUUID"));
+            } catch (IllegalArgumentException ignored) { }
+        } else if (nbt.contains("Owner", NbtElement.STRING_TYPE)) {
+            try {
+                parsed = java.util.UUID.fromString(nbt.getString("Owner"));
+            } catch (IllegalArgumentException ignored) { }
+        }
+
+        if (parsed != null) {
+            kevslib$setOwnerUuid(parsed);
         }
 
         if (nbt.contains("petinheritance")) {
@@ -99,6 +119,7 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
             }
         }
     }
+
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {

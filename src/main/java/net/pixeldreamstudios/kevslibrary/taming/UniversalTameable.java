@@ -9,8 +9,6 @@ public interface UniversalTameable {
     void kevslib$setOwnerUuid(UUID uuid);
     boolean kevslib$isTamed();
     NbtCompound kevslib$getInheritanceData();
-
-    // ✅ Add this:
     void kevslib$setInheritanceData(NbtCompound tag);
 }
 
