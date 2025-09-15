@@ -4,11 +4,15 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.handler.*;
 import net.spell_engine.entity.SpellProjectile;
@@ -126,31 +130,36 @@ public abstract class LivingEntityMixin {
             CRIT_DAMAGE_TRACKER.set(amount);
             return amount;
         }
+
         if (source.getName().equals("trident")) {
             EntityAttributeInstance tridentMultiplierAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
             if (tridentMultiplierAttr != null) {
                 amount *= tridentMultiplierAttr.getValue();
             }
         }
-        boolean isVanillaCrit = attacker instanceof PlayerEntity player &&
-                player.fallDistance > 0.0F && !player.isOnGround();
 
+        TagKey<DamageType> magicTag = TagKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("c", "is_magic"));
+        boolean allowCrit = !source.isIn(magicTag);
 
-        EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
-        double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
-        boolean isGroundedCrit = attacker.isOnGround() &&
-                attacker.getRandom().nextFloat() < critChance;
+        boolean isVanillaCrit = false;
+        boolean isGroundedCrit = false;
 
+        if (allowCrit) {
+            if (attacker instanceof PlayerEntity player) {
+                isVanillaCrit = player.fallDistance > 0.0F && !player.isOnGround();
+            }
+            EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
+            double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
+            isGroundedCrit = attacker.isOnGround() && attacker.getRandom().nextFloat() < critChance;
+        }
 
         boolean isCrit = isVanillaCrit || isGroundedCrit;
 
         float finalDamage = amount;
-        LivingEntity target = (LivingEntity)(Object) this;
 
         if (isVanillaCrit) {
             finalDamage /= 1.5f;
         }
-
 
         EntityAttributeInstance dmgMultAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
         if (dmgMultAttr != null) {
@@ -170,10 +179,10 @@ public abstract class LivingEntityMixin {
             }
         }
 
-
         CRIT_DAMAGE_TRACKER.set(finalDamage);
         return finalDamage;
     }
+
 
 
     @Inject(method = "damage", at = @At("RETURN"))
