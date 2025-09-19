@@ -14,6 +14,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.api.CritEvents;
 import net.pixeldreamstudios.kevslibrary.handler.*;
 import net.spell_engine.entity.SpellProjectile;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,60 +22,24 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 @SuppressWarnings("unused")
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
     private static final ThreadLocal<Boolean> IN_CLEAVE_CONTEXT = ThreadLocal.withInitial(() -> false);
-
     private static final ThreadLocal<Float> CRIT_DAMAGE_TRACKER = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> IS_CRIT_FLAG = new ThreadLocal<>();
+
     @Inject(method = "isInvulnerableTo", at = @At("HEAD"), cancellable = true)
     private void bypassMultistrike(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
             cir.setReturnValue(false);
         }
     }
-/*
-    @Inject(method = "damage", at = @At("HEAD"))
-    private void debugProjectileHits(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        Entity attacker = source.getAttacker();
-        Entity actualSource = source.getSource();
-        LivingEntity self = (LivingEntity) (Object) this;
 
-        if (self.getWorld().isClient()) return;
-
-        self.getWorld().getEntitiesByClass(
-                SpellProjectile.class,
-                self.getBoundingBox().expand(2.5),
-                proj -> proj.getOwner() != self
-        ).forEach(proj -> {
-            System.out.println("[DEBUG] Nearby SpellProjectile:");
-            System.out.println("  -> Pos: " + proj.getPos());
-            System.out.println("  -> Owner: " + (proj.getOwner() != null ? proj.getOwner().getName().getString() : "null"));
-            System.out.println("  -> Spell ID: " + proj.getSpellEntry());
-            System.out.println("  -> Command Tags: " + proj.getCommandTags());
-        });
-    }
-*/
-
-
-/*
-    @Inject(method = "damage", at = @At("HEAD"))
-    private void captureRawDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        Entity attacker = source.getAttacker();
-        System.out.println("[DEBUG] Raw damage entry: amount = " + amount +
-                ", attacker = " + (attacker != null ? attacker.getName().getString() : "null") +
-                ", source = " + source.getName());
-
-        if (!(attacker instanceof LivingEntity livingAttacker)) return;
-        LivingEntity target = (LivingEntity)(Object) this;
-
-        ThornsHandler.tryReflectThorns(target, livingAttacker, amount);
-    }
-*/
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))
     private static void injectGlobalAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
         DefaultAttributeContainer.Builder builder = cir.getReturnValue();
-
         builder
                 .add(KevsLibrary.CRIT_CHANCE, 0.0)
                 .add(KevsLibrary.CRIT_DAMAGE, 1.5)
@@ -108,26 +73,20 @@ public abstract class LivingEntityMixin {
                 .add(KevsLibrary.BARRAGE_CHANCE, 0.0)
                 .add(KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0)
                 .add(KevsLibrary.PROJECTILE_STORM_RANGE, 5)
-                .add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0)
-        ;
+                .add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
     }
 
-
-
-    @ModifyVariable(
-            method = "damage",
-            at = @At("HEAD"),
-            index = 2,
-            argsOnly = true
-    )
+    @ModifyVariable(method = "damage", at = @At("HEAD"), index = 2, argsOnly = true)
     private float applyCritToDamage(float amount, DamageSource source) {
         if (!(source.getAttacker() instanceof LivingEntity attacker)) {
             CRIT_DAMAGE_TRACKER.set(null);
+            IS_CRIT_FLAG.set(null);
             return amount;
         }
 
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
             CRIT_DAMAGE_TRACKER.set(amount);
+            IS_CRIT_FLAG.set(false);
             return amount;
         }
 
@@ -180,91 +139,112 @@ public abstract class LivingEntityMixin {
         }
 
         CRIT_DAMAGE_TRACKER.set(finalDamage);
+        IS_CRIT_FLAG.set(isCrit);
         return finalDamage;
     }
 
-
-
     @Inject(method = "damage", at = @At("RETURN"))
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue()) return;
-        if (OnHitEffectHandler.isInMultistrikeContext()) return;
-        String name = source.getName();
-        if (
-                        name.equals("multistrike") ||
-                        name.equals("multistrike_ranged") ||
-                        name.equals("icicle") ||
-                        name.equals("frost_nova") ||
-                        name.equals("chain_lightning") ||
-                        name.equals("fire_tornado")
+        if (!cir.getReturnValue()) {
+            CRIT_DAMAGE_TRACKER.remove();
+            IS_CRIT_FLAG.remove();
+            return;
+        }
 
-        ) return;
-        if (source.getSource() instanceof PersistentProjectileEntity pp && pp.getCommandTags().contains("multistrike_arrow")) return;
+        LivingEntity target = (LivingEntity)(Object) this;
+
+        if (OnHitEffectHandler.isInMultistrikeContext()) {
+            CRIT_DAMAGE_TRACKER.remove();
+            IS_CRIT_FLAG.remove();
+            return;
+        }
+
+        String name = source.getName();
+        if (name.equals("multistrike") ||
+                name.equals("multistrike_ranged") ||
+                name.equals("icicle") ||
+                name.equals("frost_nova") ||
+                name.equals("chain_lightning") ||
+                name.equals("fire_tornado")) {
+            CRIT_DAMAGE_TRACKER.remove();
+            IS_CRIT_FLAG.remove();
+            return;
+        }
+
+        if (source.getSource() instanceof PersistentProjectileEntity pp && pp.getCommandTags().contains("multistrike_arrow")) {
+            CRIT_DAMAGE_TRACKER.remove();
+            IS_CRIT_FLAG.remove();
+            return;
+        }
         if (source.getAttacker() instanceof SpellProjectile spell) {
-            if (
-                    spell.getCommandTags().contains("real_spell_projectile") ||
-                            spell.getCommandTags().contains("multistrike_spell")
-            ) {
+            if (spell.getCommandTags().contains("real_spell_projectile") || spell.getCommandTags().contains("multistrike_spell")) {
+                CRIT_DAMAGE_TRACKER.remove();
+                IS_CRIT_FLAG.remove();
                 return;
             }
         }
 
-
-        if (!(source.getAttacker() instanceof LivingEntity attacker)) return;
-        LivingEntity target = (LivingEntity)(Object) this;
+        if (!(source.getAttacker() instanceof LivingEntity attacker)) {
+            CRIT_DAMAGE_TRACKER.remove();
+            IS_CRIT_FLAG.remove();
+            return;
+        }
 
         if (!target.getWorld().isClient()) {
             boolean nearMultistrikeSpell = target.getWorld()
-                    .getEntitiesByClass(SpellProjectile.class, target.getBoundingBox().expand(1.5), spell ->
-                            spell.getCommandTags().contains("multistrike_spell") &&
-                                    spell.getOwner() == attacker
-                    )
+                    .getEntitiesByClass(SpellProjectile.class, target.getBoundingBox().expand(1.5), s ->
+                            s.getCommandTags().contains("multistrike_spell") && s.getOwner() == attacker)
                     .size() > 0;
-
             if (nearMultistrikeSpell) {
+                CRIT_DAMAGE_TRACKER.remove();
+                IS_CRIT_FLAG.remove();
                 return;
             }
         }
 
-
-
-        PersistentProjectileEntity sourceProjectile = null;
-
         if (source.getSource() instanceof PersistentProjectileEntity proj) {
-            sourceProjectile = proj;
-            if (!MultistrikeHandler.tryMarkProjectile(proj.getUuid())) return;
+            if (!MultistrikeHandler.tryMarkProjectile(proj.getUuid())) {
+                CRIT_DAMAGE_TRACKER.remove();
+                IS_CRIT_FLAG.remove();
+                return;
+            }
         }
 
         float finalDamage = CRIT_DAMAGE_TRACKER.get() != null ? CRIT_DAMAGE_TRACKER.get() : amount;
+        boolean isCrit = IS_CRIT_FLAG.get() != null && IS_CRIT_FLAG.get();
+
         ThornsHandler.tryReflectThorns(target, attacker, amount);
+
+        CritEvents.CRIT.invoker().onCrit(new CritEvents.Context(
+                target, attacker, source, finalDamage, isCrit
+        ));
+
         CRIT_DAMAGE_TRACKER.remove();
+        IS_CRIT_FLAG.remove();
 
         PlayerEntity player = attacker instanceof PlayerEntity p ? p : null;
         ItemStack weaponUsed = player != null ? player.getMainHandStack().copy() : ItemStack.EMPTY;
 
         boolean stormHit = false;
-        if (source.getSource() instanceof PersistentProjectileEntity pp2
-                && ProjectileStormHandler.isStormTag(pp2)) {
+        if (source.getSource() instanceof PersistentProjectileEntity pp2 && ProjectileStormHandler.isStormTag(pp2)) {
             stormHit = true;
-        } else if (source.getSource() instanceof SpellProjectile sp2
-                && ProjectileStormHandler.isStormTag(sp2)) {
+        } else if (source.getSource() instanceof SpellProjectile sp2 && ProjectileStormHandler.isStormTag(sp2)) {
             stormHit = true;
         }
 
         if (!stormHit) {
-            EntityAttributeInstance multistrikeChanceAttr =
-                    attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
+            EntityAttributeInstance multistrikeChanceAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
             double multistrikeChance = multistrikeChanceAttr != null ? multistrikeChanceAttr.getValue() : 0.0;
 
             if (attacker.getRandom().nextDouble() <= multistrikeChance) {
                 boolean hasNearbyRealSpellProjectile = target.getWorld().getEntitiesByClass(
                         SpellProjectile.class,
                         target.getBoundingBox().expand(3.0),
-                        proj -> {
-                            boolean isOwned = proj.getOwner() != null;
-                            boolean hasSpell = proj.getSpellEntry() != null;
-                            boolean isLikelySpell = !proj.getCommandTags().isEmpty();
-                            boolean isNotMultistrike = !proj.getCommandTags().contains("multistrike_spell");
+                        proj2 -> {
+                            boolean isOwned = proj2.getOwner() != null;
+                            boolean hasSpell = proj2.getSpellEntry() != null;
+                            boolean isLikelySpell = !proj2.getCommandTags().isEmpty();
+                            boolean isNotMultistrike = !proj2.getCommandTags().contains("multistrike_spell");
                             return isOwned && isNotMultistrike && (hasSpell || isLikelySpell);
                         }
                 ).size() > 0;
@@ -289,73 +269,59 @@ public abstract class LivingEntityMixin {
             }
         }
 
-
         EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
         double frostChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;
-
         if (frostChance > 0.0 && attacker.getRandom().nextDouble() < frostChance) {
             FrostNovaHandler.triggerFrostNova(attacker);
         }
 
-
         EntityAttributeInstance lightningChanceAttr = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_CHANCE);
         double lightningChance = lightningChanceAttr != null ? lightningChanceAttr.getValue() : 0.0;
-
         if (lightningChance > 0.0) {
             double roll = attacker.getRandom().nextDouble();
-
             if (roll < lightningChance) {
                 ChainLightningHandler.spawnChainLightning(attacker, target);
-
-
             }
         }
+
         EntityAttributeInstance fireTornadoAttr = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_CHANCE);
         double fireTornadoChance = fireTornadoAttr != null ? fireTornadoAttr.getValue() : 0.0;
-
         if (fireTornadoChance > 0.0 && attacker.getRandom().nextDouble() < fireTornadoChance) {
             FireTornadoHandler.spawnFireTornado(attacker, target);
         }
+
         EntityAttributeInstance petInRaAttr = attacker.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
         double petInheritanceRatio = petInRaAttr != null ? petInRaAttr.getValue() : 0.0;
 
         EntityAttributeInstance soulLinkAttr = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_CHANCE);
         double soulLinkChance = soulLinkAttr != null ? soulLinkAttr.getValue() : 0.0;
-
         if (soulLinkChance > 0.0 && attacker.getRandom().nextDouble() < soulLinkChance) {
             SoulLinkHandler.triggerSoulLink(attacker, target);
         }
+
         SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
             if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
-
-            SoulLinkHandler.handleLinkedDamage(
-                    linkData.attacker(),
-                    target,
-                    finalDamage,
-                    linkData.group(),
-                    linkData.soulPower()
-            );
+            SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage, linkData.group(), linkData.soulPower());
         });
+
         SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
             if (attacker.getRandom().nextDouble() < soulLinkChance) {
                 SoulLinkHandler.tryExtendLink(attacker, target);
             }
         });
+
         EntityAttributeInstance arcaneChanceAttr = attacker.getAttributeInstance(KevsLibrary.ARCANE_RUPTURE_CHANCE);
         double arcaneChance = arcaneChanceAttr != null ? arcaneChanceAttr.getValue() : 0.0;
-
-        if (
-                arcaneChance > 0.0 &&
-                        attacker.getRandom().nextDouble() < arcaneChance &&
-                        !source.getName().equals("arcane_shard")
-        ) {
+        if (arcaneChance > 0.0 && attacker.getRandom().nextDouble() < arcaneChance && !source.getName().equals("arcane_shard")) {
             ArcaneRuptureHandler.trigger(attacker, target);
         }
+
         if (!IN_CLEAVE_CONTEXT.get() && source.getSource() == attacker) {
             IN_CLEAVE_CONTEXT.set(true);
             CleaveHandler.triggerCleave(attacker, finalDamage);
             IN_CLEAVE_CONTEXT.set(false);
         }
+
         if (PiercingHandler.isPiercingActive(attacker)) {
             PiercingHandler.consumePiercing(attacker);
             float pierceDamage = finalDamage * 0.75f;
@@ -364,5 +330,4 @@ public abstract class LivingEntityMixin {
             PiercingHandler.tryActivatePiercing(attacker);
         }
     }
-
 }

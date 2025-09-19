@@ -10,8 +10,8 @@ import net.spell_engine.internals.SpellHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 @SuppressWarnings("unused")
 @Mixin(SpellHelper.class)
 public class SpellHelper_ProjectileTagMixin {
@@ -21,7 +21,7 @@ public class SpellHelper_ProjectileTagMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/World;spawnEntity(Lnet/minecraft/entity/Entity;)Z",
-                    shift = At.Shift.BEFORE
+                    shift = At.Shift.AFTER
             )
     )
     private static void tagRealSpellProjectile(
@@ -33,31 +33,11 @@ public class SpellHelper_ProjectileTagMixin {
             int sequenceIndex,
             CallbackInfo ci
     ) {
-       if (lastCreatedProjectile instanceof SpellProjectile spellProjectile) {
-            spellProjectile.addCommandTag("real_spell_projectile");
-        }
+        world.getEntitiesByClass(SpellProjectile.class,
+                        caster.getBoundingBox().expand(2.5),
+                        proj -> proj.getOwner() == caster && proj.age < 5)
+                .forEach(spellProjectile -> {
+                    spellProjectile.addCommandTag("real_spell_projectile");
+                });
     }
-
-    @Redirect(
-            method = "shootProjectile(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/spell_engine/internals/SpellHelper$ImpactContext;I)V",
-            at = @At(
-                    value = "NEW",
-                    target = "net/spell_engine/entity/SpellProjectile"
-            )
-    )
-    private static SpellProjectile captureProjectile(
-            World world,
-            LivingEntity caster,
-            double x, double y, double z,
-            SpellProjectile.Behaviour behaviour,
-            RegistryEntry<Spell> spellEntry,
-            SpellHelper.ImpactContext context,
-            Spell.ProjectileData.Perks perks
-    ) {
-        SpellProjectile proj = new SpellProjectile(world, caster, x, y, z, behaviour, spellEntry, context, perks);
-        SpellHelper_ProjectileTagMixin.lastCreatedProjectile = proj;
-        return proj;
-    }
-
-    private static SpellProjectile lastCreatedProjectile;
 }
