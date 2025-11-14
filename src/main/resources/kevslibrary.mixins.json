@@ -17,7 +17,8 @@
 		"CrossbowItemMixin",
 		"ProjectileEntityMixin",
 		"PersistentProjectileStormMixin",
-		"SpellProjectileStormMixin"
+		"SpellProjectileStormMixin",
+		"HungerManagerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

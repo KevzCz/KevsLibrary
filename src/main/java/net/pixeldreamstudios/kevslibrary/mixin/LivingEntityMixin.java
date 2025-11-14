@@ -15,6 +15,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.api.CritEvents;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.*;
 import net.spell_engine.entity.SpellProjectile;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,45 +40,116 @@ public abstract class LivingEntityMixin {
 
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))
     private static void injectGlobalAttributes(CallbackInfoReturnable<DefaultAttributeContainer.Builder> cir) {
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
         DefaultAttributeContainer.Builder builder = cir.getReturnValue();
-        builder
-                .add(KevsLibrary.CRIT_CHANCE, 0.0)
-                .add(KevsLibrary.CRIT_DAMAGE, 1.5)
-                .add(KevsLibrary.MULTISTRIKE_CHANCE, 0.0)
-                .add(KevsLibrary.MULTISTRIKE_COUNT, 2.0)
-                .add(KevsLibrary.MULTISTRIKE_DAMAGE, 0.5)
-                .add(KevsLibrary.DAMAGE, 1)
-                .add(KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0)
-                .add(KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0)
-                .add(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE, 0.0)
-                .add(KevsLibrary.FIRE_TORNADO_CHANCE, 0)
-                .add(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE, 0.0)
-                .add(KevsLibrary.FROST_NOVA_CHANCE, 0)
-                .add(KevsLibrary.FROST_NOVA_COUNT, 3)
-                .add(KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 0.0)
-                .add(KevsLibrary.SOUL_LINK_CHANCE, 0)
-                .add(KevsLibrary.SOUL_LINK_DAMAGE, 1)
-                .add(KevsLibrary.ARCANE_RUPTURE_CHANCE, 0)
-                .add(KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1)
-                .add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0)
-                .add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0)
-                .add(KevsLibrary.ARMOR_PENETRATION, 0.0)
-                .add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0)
-                .add(KevsLibrary.THORNS_CHANCE, 0.0)
-                .add(KevsLibrary.THORNS_AMP, 0.0)
-                .add(KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0)
-                .add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0)
-                .add(KevsLibrary.CLEAVE_RANGE, 4.0)
-                .add(KevsLibrary.CLEAVE_CHANCE, 0)
-                .add(KevsLibrary.PIERCING_CHANCE, 0.0)
-                .add(KevsLibrary.BARRAGE_CHANCE, 0.0)
-                .add(KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0)
-                .add(KevsLibrary.PROJECTILE_STORM_RANGE, 5)
-                .add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
+
+        if (config.isAttributeEnabled("crit_chance") && KevsLibrary.CRIT_CHANCE != null)
+            builder.add(KevsLibrary.CRIT_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("crit_damage") && KevsLibrary.CRIT_DAMAGE != null)
+            builder.add(KevsLibrary.CRIT_DAMAGE, 1.5);
+
+        if (config.isAttributeEnabled("multistrike_chance") && KevsLibrary.MULTISTRIKE_CHANCE != null)
+            builder.add(KevsLibrary.MULTISTRIKE_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("multistrike_count") && KevsLibrary.MULTISTRIKE_COUNT != null)
+            builder.add(KevsLibrary.MULTISTRIKE_COUNT, 2.0);
+
+        if (config.isAttributeEnabled("multistrike_damage") && KevsLibrary.MULTISTRIKE_DAMAGE != null)
+            builder.add(KevsLibrary.MULTISTRIKE_DAMAGE, 0.5);
+
+        if (config.isAttributeEnabled("damage") && KevsLibrary.DAMAGE != null)
+            builder.add(KevsLibrary.DAMAGE, 1);
+
+        if (config.isAttributeEnabled("chain_lightning_chance") && KevsLibrary.CHAIN_LIGHTNING_CHANCE != null)
+            builder.add(KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0);
+
+        if (config.isAttributeEnabled("chain_lightning_count") && KevsLibrary.CHAIN_LIGHTNING_COUNT != null)
+            builder.add(KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0);
+
+        if (config.isAttributeEnabled("chain_lightning_overload_chance") && KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE != null)
+            builder.add(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("fire_tornado_chance") && KevsLibrary.FIRE_TORNADO_CHANCE != null)
+            builder.add(KevsLibrary.FIRE_TORNADO_CHANCE, 0);
+
+        if (config.isAttributeEnabled("fire_tornado_overload_chance") && KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE != null)
+            builder.add(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("frost_nova_chance") && KevsLibrary.FROST_NOVA_CHANCE != null)
+            builder.add(KevsLibrary.FROST_NOVA_CHANCE, 0);
+
+        if (config.isAttributeEnabled("frost_nova_count") && KevsLibrary.FROST_NOVA_COUNT != null)
+            builder.add(KevsLibrary.FROST_NOVA_COUNT, 3);
+
+        if (config.isAttributeEnabled("frost_nova_overload_chance") && KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE != null)
+            builder.add(KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("soul_link_chance") && KevsLibrary.SOUL_LINK_CHANCE != null)
+            builder.add(KevsLibrary.SOUL_LINK_CHANCE, 0);
+
+        if (config.isAttributeEnabled("soul_link_damage") && KevsLibrary.SOUL_LINK_DAMAGE != null)
+            builder.add(KevsLibrary.SOUL_LINK_DAMAGE, 1);
+
+        if (config.isAttributeEnabled("arcane_rupture_chance") && KevsLibrary.ARCANE_RUPTURE_CHANCE != null)
+            builder.add(KevsLibrary.ARCANE_RUPTURE_CHANCE, 0);
+
+        if (config.isAttributeEnabled("arcane_rupture_damage") && KevsLibrary.ARCANE_RUPTURE_DAMAGE != null)
+            builder.add(KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1);
+
+        if (config.isAttributeEnabled("arcane_rupture_overload_chance") && KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE != null)
+            builder.add(KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0);
+
+        if (config.isAttributeEnabled("trident_damage_multiplier") && KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER != null)
+            builder.add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0);
+
+        if (config.isAttributeEnabled("armor_penetration") && KevsLibrary.ARMOR_PENETRATION != null)
+            builder.add(KevsLibrary.ARMOR_PENETRATION, 0.0);
+
+        if (config.isAttributeEnabled("armor_penetration_flat") && KevsLibrary.ARMOR_PENETRATION_FLAT != null)
+            builder.add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0);
+
+        if (config.isAttributeEnabled("thorns_chance") && KevsLibrary.THORNS_CHANCE != null)
+            builder.add(KevsLibrary.THORNS_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("thorns_amp") && KevsLibrary.THORNS_AMP != null)
+            builder.add(KevsLibrary.THORNS_AMP, 0.0);
+
+        if (config.isAttributeEnabled("thorns_true_damage_chance") && KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE != null)
+            builder.add(KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("cleave_damage_multiplier") && KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER != null)
+            builder.add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0);
+
+        if (config.isAttributeEnabled("cleave_range") && KevsLibrary.CLEAVE_RANGE != null)
+            builder.add(KevsLibrary.CLEAVE_RANGE, 4.0);
+
+        if (config.isAttributeEnabled("cleave_chance") && KevsLibrary.CLEAVE_CHANCE != null)
+            builder.add(KevsLibrary.CLEAVE_CHANCE, 0);
+
+        if (config.isAttributeEnabled("pierce_chance") && KevsLibrary.PIERCING_CHANCE != null)
+            builder.add(KevsLibrary.PIERCING_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("barrage_chance") && KevsLibrary.BARRAGE_CHANCE != null)
+            builder.add(KevsLibrary.BARRAGE_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("projectile_storm_chance") && KevsLibrary.PROJECTILE_STORM_CHANCE != null)
+            builder.add(KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0);
+
+        if (config.isAttributeEnabled("projectile_storm_range") && KevsLibrary.PROJECTILE_STORM_RANGE != null)
+            builder.add(KevsLibrary.PROJECTILE_STORM_RANGE, 5);
+
+        if (config.isAttributeEnabled("projectile_storm_duration") && KevsLibrary.PROJECTILE_STORM_DURATION != null)
+            builder.add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
+
+        if (config.isAttributeEnabled("hunger_consumption") && KevsLibrary.HUNGER_CONSUMPTION != null)
+            builder.add(KevsLibrary.HUNGER_CONSUMPTION, 1.0);
     }
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), index = 2, argsOnly = true)
     private float applyCritToDamage(float amount, DamageSource source) {
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
+
         if (!(source.getAttacker() instanceof LivingEntity attacker)) {
             CRIT_DAMAGE_TRACKER.set(null);
             IS_CRIT_FLAG.set(null);
@@ -90,7 +162,7 @@ public abstract class LivingEntityMixin {
             return amount;
         }
 
-        if (source.getName().equals("trident")) {
+        if (config.isTridentEnabled() && source.getName().equals("trident")) {
             EntityAttributeInstance tridentMultiplierAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
             if (tridentMultiplierAttr != null) {
                 amount *= tridentMultiplierAttr.getValue();
@@ -98,7 +170,7 @@ public abstract class LivingEntityMixin {
         }
 
         TagKey<DamageType> magicTag = TagKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("c", "is_magic"));
-        boolean allowCrit = !source.isIn(magicTag);
+        boolean allowCrit = !source.isIn(magicTag) && config.isCritEnabled();
 
         boolean isVanillaCrit = false;
         boolean isGroundedCrit = false;
@@ -107,9 +179,11 @@ public abstract class LivingEntityMixin {
             if (attacker instanceof PlayerEntity player) {
                 isVanillaCrit = player.fallDistance > 0.0F && !player.isOnGround();
             }
-            EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
-            double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
-            isGroundedCrit = attacker.isOnGround() && attacker.getRandom().nextFloat() < critChance;
+
+                EntityAttributeInstance critChanceAttr = attacker.getAttributeInstance(KevsLibrary.CRIT_CHANCE);
+                double critChance = critChanceAttr != null ? critChanceAttr.getValue() : 0.0;
+                isGroundedCrit = attacker.isOnGround() && attacker.getRandom().nextFloat() < critChance;
+
         }
 
         boolean isCrit = isVanillaCrit || isGroundedCrit;
@@ -152,6 +226,7 @@ public abstract class LivingEntityMixin {
         }
 
         LivingEntity target = (LivingEntity)(Object) this;
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
 
         if (OnHitEffectHandler.isInMultistrikeContext()) {
             CRIT_DAMAGE_TRACKER.remove();
@@ -176,6 +251,7 @@ public abstract class LivingEntityMixin {
             IS_CRIT_FLAG.remove();
             return;
         }
+
         if (source.getAttacker() instanceof SpellProjectile spell) {
             if (spell.getCommandTags().contains("real_spell_projectile") || spell.getCommandTags().contains("multistrike_spell")) {
                 CRIT_DAMAGE_TRACKER.remove();
@@ -213,11 +289,15 @@ public abstract class LivingEntityMixin {
         float finalDamage = CRIT_DAMAGE_TRACKER.get() != null ? CRIT_DAMAGE_TRACKER.get() : amount;
         boolean isCrit = IS_CRIT_FLAG.get() != null && IS_CRIT_FLAG.get();
 
-        ThornsHandler.tryReflectThorns(target, attacker, amount);
+        if (config.isThornsEnabled()) {
+            ThornsHandler.tryReflectThorns(target, attacker, amount);
+        }
 
-        CritEvents.CRIT.invoker().onCrit(new CritEvents.Context(
-                target, attacker, source, finalDamage, isCrit
-        ));
+        if (config.isCritEnabled()) {
+            CritEvents.CRIT.invoker().onCrit(new CritEvents.Context(
+                    target, attacker, source, finalDamage, isCrit
+            ));
+        }
 
         CRIT_DAMAGE_TRACKER.remove();
         IS_CRIT_FLAG.remove();
@@ -226,13 +306,15 @@ public abstract class LivingEntityMixin {
         ItemStack weaponUsed = player != null ? player.getMainHandStack().copy() : ItemStack.EMPTY;
 
         boolean stormHit = false;
-        if (source.getSource() instanceof PersistentProjectileEntity pp2 && ProjectileStormHandler.isStormTag(pp2)) {
-            stormHit = true;
-        } else if (source.getSource() instanceof SpellProjectile sp2 && ProjectileStormHandler.isStormTag(sp2)) {
-            stormHit = true;
+        if (config.isProjectileStormEnabled()) {
+            if (source.getSource() instanceof PersistentProjectileEntity pp2 && ProjectileStormHandler.isStormTag(pp2)) {
+                stormHit = true;
+            } else if (source.getSource() instanceof SpellProjectile sp2 && ProjectileStormHandler.isStormTag(sp2)) {
+                stormHit = true;
+            }
         }
 
-        if (!stormHit) {
+        if (!stormHit && config.isMultistrikeEnabled()) {
             EntityAttributeInstance multistrikeChanceAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
             double multistrikeChance = multistrikeChanceAttr != null ? multistrikeChanceAttr.getValue() : 0.0;
 
@@ -252,11 +334,13 @@ public abstract class LivingEntityMixin {
                 if (!hasNearbyRealSpellProjectile) {
                     if (source.getSource() != null) {
                         float msBase = finalDamage;
+
                         if (source.getSource() instanceof net.minecraft.entity.projectile.TridentEntity) {
                             EntityAttributeInstance triAttr = attacker.getAttributeInstance(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
                             float triMul = triAttr != null ? (float) triAttr.getValue() : 1.0f;
                             if (triMul != 0.0f) msBase = finalDamage / triMul;
                         }
+
                         EntityAttributeInstance dmgAttr0 = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
                         float dmgMul0 = dmgAttr0 != null ? (float) dmgAttr0.getValue() : 1.0f;
                         if (dmgMul0 != 0.0f) msBase = msBase / dmgMul0;
@@ -269,65 +353,75 @@ public abstract class LivingEntityMixin {
             }
         }
 
-        EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
-        double frostChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;
-        if (frostChance > 0.0 && attacker.getRandom().nextDouble() < frostChance) {
-            FrostNovaHandler.triggerFrostNova(attacker);
-        }
-
-        EntityAttributeInstance lightningChanceAttr = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_CHANCE);
-        double lightningChance = lightningChanceAttr != null ? lightningChanceAttr.getValue() : 0.0;
-        if (lightningChance > 0.0) {
-            double roll = attacker.getRandom().nextDouble();
-            if (roll < lightningChance) {
-                ChainLightningHandler.spawnChainLightning(attacker, target);
+        if (config.isFrostNovaEnabled()) {
+            EntityAttributeInstance frostNovaAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_CHANCE);
+            double frostChance = frostNovaAttr != null ? frostNovaAttr.getValue() : 0.0;
+            if (frostChance > 0.0 && attacker.getRandom().nextDouble() < frostChance) {
+                FrostNovaHandler.triggerFrostNova(attacker);
             }
         }
 
-        EntityAttributeInstance fireTornadoAttr = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_CHANCE);
-        double fireTornadoChance = fireTornadoAttr != null ? fireTornadoAttr.getValue() : 0.0;
-        if (fireTornadoChance > 0.0 && attacker.getRandom().nextDouble() < fireTornadoChance) {
-            FireTornadoHandler.spawnFireTornado(attacker, target);
-        }
-
-        EntityAttributeInstance petInRaAttr = attacker.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
-        double petInheritanceRatio = petInRaAttr != null ? petInRaAttr.getValue() : 0.0;
-
-        EntityAttributeInstance soulLinkAttr = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_CHANCE);
-        double soulLinkChance = soulLinkAttr != null ? soulLinkAttr.getValue() : 0.0;
-        if (soulLinkChance > 0.0 && attacker.getRandom().nextDouble() < soulLinkChance) {
-            SoulLinkHandler.triggerSoulLink(attacker, target);
-        }
-
-        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
-            if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
-            SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage, linkData.group(), linkData.soulPower());
-        });
-
-        SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
-            if (attacker.getRandom().nextDouble() < soulLinkChance) {
-                SoulLinkHandler.tryExtendLink(attacker, target);
+        if (config.isChainLightningEnabled()) {
+            EntityAttributeInstance lightningChanceAttr = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_CHANCE);
+            double lightningChance = lightningChanceAttr != null ? lightningChanceAttr.getValue() : 0.0;
+            if (lightningChance > 0.0) {
+                double roll = attacker.getRandom().nextDouble();
+                if (roll < lightningChance) {
+                    ChainLightningHandler.spawnChainLightning(attacker, target);
+                }
             }
-        });
-
-        EntityAttributeInstance arcaneChanceAttr = attacker.getAttributeInstance(KevsLibrary.ARCANE_RUPTURE_CHANCE);
-        double arcaneChance = arcaneChanceAttr != null ? arcaneChanceAttr.getValue() : 0.0;
-        if (arcaneChance > 0.0 && attacker.getRandom().nextDouble() < arcaneChance && !source.getName().equals("arcane_shard")) {
-            ArcaneRuptureHandler.trigger(attacker, target);
         }
 
-        if (!IN_CLEAVE_CONTEXT.get() && source.getSource() == attacker) {
+        if (config.isFireTornadoEnabled()) {
+            EntityAttributeInstance fireTornadoAttr = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_CHANCE);
+            double fireTornadoChance = fireTornadoAttr != null ? fireTornadoAttr.getValue() : 0.0;
+            if (fireTornadoChance > 0.0 && attacker.getRandom().nextDouble() < fireTornadoChance) {
+                FireTornadoHandler.spawnFireTornado(attacker, target);
+            }
+        }
+
+        if (config.isSoulLinkEnabled()) {
+            EntityAttributeInstance soulLinkAttr = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_CHANCE);
+            double soulLinkChance = soulLinkAttr != null ? soulLinkAttr.getValue() : 0.0;
+
+            if (soulLinkChance > 0.0 && attacker.getRandom().nextDouble() < soulLinkChance) {
+                SoulLinkHandler.triggerSoulLink(attacker, target);
+            }
+
+            SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
+                SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage, linkData.group(), linkData.soulPower());
+            });
+
+            SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
+                if (attacker.getRandom().nextDouble() < soulLinkChance) {
+                    SoulLinkHandler.tryExtendLink(attacker, target);
+                }
+            });
+        }
+
+        if (config.isArcaneRuptureEnabled()) {
+            EntityAttributeInstance arcaneChanceAttr = attacker.getAttributeInstance(KevsLibrary.ARCANE_RUPTURE_CHANCE);
+            double arcaneChance = arcaneChanceAttr != null ? arcaneChanceAttr.getValue() : 0.0;
+            if (arcaneChance > 0.0 && attacker.getRandom().nextDouble() < arcaneChance && !source.getName().equals("arcane_shard")) {
+                ArcaneRuptureHandler.trigger(attacker, target);
+            }
+        }
+
+        if (config.isCleaveEnabled() && !IN_CLEAVE_CONTEXT.get() && source.getSource() == attacker) {
             IN_CLEAVE_CONTEXT.set(true);
             CleaveHandler.triggerCleave(attacker, finalDamage);
             IN_CLEAVE_CONTEXT.set(false);
         }
 
-        if (PiercingHandler.isPiercingActive(attacker)) {
-            PiercingHandler.consumePiercing(attacker);
-            float pierceDamage = finalDamage * 0.75f;
-            PiercingHandler.applyLineDamage(attacker, pierceDamage, 6.0f, 1.0f);
-        } else {
-            PiercingHandler.tryActivatePiercing(attacker);
+        if (config.isPiercingEnabled()) {
+            if (PiercingHandler.isPiercingActive(attacker)) {
+                PiercingHandler.consumePiercing(attacker);
+                float pierceDamage = finalDamage * 0.75f;
+                PiercingHandler.applyLineDamage(attacker, pierceDamage, 6.0f, 1.0f);
+            } else {
+                PiercingHandler.tryActivatePiercing(attacker);
+            }
         }
     }
 }

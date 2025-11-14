@@ -6,6 +6,7 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Vec3d;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.ProjectileStormHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,14 +18,19 @@ public abstract class ProjectileEntityMixin {
 
     @Inject(method = "onBlockHit", at = @At("HEAD"), cancellable = true)
     private void kevslib$stormRemoveOnBlockHit(BlockHitResult hit, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isProjectileStormEnabled()) return;
+
         ProjectileEntity self = (ProjectileEntity)(Object)this;
         if (self instanceof PersistentProjectileEntity ppe && ProjectileStormHandler.isStormTag(ppe)) {
             ppe.discard();
             ci.cancel();
         }
     }
+
     @Inject(method = "onEntityHit", at = @At("TAIL"))
     private void kevslib$stormOnEntityHit(EntityHitResult hit, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isProjectileStormEnabled()) return;
+
         ProjectileEntity self = (ProjectileEntity)(Object)this;
         if (!(self instanceof PersistentProjectileEntity ppe)) return;
         if (!(self.getWorld().isClient())) {
@@ -36,8 +42,11 @@ public abstract class ProjectileEntityMixin {
             }
         }
     }
+
     @Inject(method = "onBlockHit", at = @At("TAIL"))
     private void kevslib$stormOnBlockHit(BlockHitResult hit, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isProjectileStormEnabled()) return;
+
         ProjectileEntity self = (ProjectileEntity)(Object)this;
         if (!(self instanceof PersistentProjectileEntity ppe)) return;
         if (!(self.getWorld().isClient())) {

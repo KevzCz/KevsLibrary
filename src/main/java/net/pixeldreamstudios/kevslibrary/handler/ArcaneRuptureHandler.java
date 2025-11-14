@@ -127,7 +127,7 @@ public class ArcaneRuptureHandler {
 
         for (int i = 0; i < SPIKE_COUNT; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
-            double pitch = (rand.nextDouble() * Math.PI / 2) + Math.toRadians(10); // pitch 10°–100°
+            double pitch = (rand.nextDouble() * Math.PI / 2) + Math.toRadians(10);
             Vec3d dir = new Vec3d(Math.cos(angle) * Math.cos(pitch), Math.sin(pitch), Math.sin(angle) * Math.cos(pitch)).normalize();
             int segments = 10;
             double segmentLength = 0.5;

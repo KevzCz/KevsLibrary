@@ -11,6 +11,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.TameableBridge;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
@@ -29,13 +30,16 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
 
     @Unique
     private NbtCompound kevslib$petInheritanceData = new NbtCompound();
+
+    @Unique
+    private static final TrackedData<Optional<UUID>> KEVSLIB_OWNER =
+            DataTracker.registerData(MobEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
+
     @Override
     public void kevslib$setInheritanceData(NbtCompound tag) {
         kevslib$petInheritanceData = tag;
     }
-    @Unique
-    private static final TrackedData<Optional<UUID>> KEVSLIB_OWNER =
-            DataTracker.registerData(MobEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
+
     @Override
     public NbtCompound kevslib$getInheritanceData() {
         return kevslib$petInheritanceData;
@@ -53,10 +57,12 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
 
     @Override
     public void kevslib$setOwnerUuid(UUID uuid) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         MobEntity mob = (MobEntity)(Object)this;
         mob.getDataTracker().set(KEVSLIB_OWNER, Optional.ofNullable(uuid));
 
-        if (uuid != null && mob.getWorld() instanceof ServerWorld sw) {
+        if (uuid != null && mob.getWorld() instanceof ServerWorld sw && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = sw.getPlayerByUuid(uuid);
             if (owner != null) {
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
@@ -77,9 +83,10 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         return kevslib$getOwnerUuid() != null;
     }
 
-
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void kevslib$readNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         UUID parsed = null;
 
         if (nbt.contains("Owner", NbtElement.INT_ARRAY_TYPE)) {
@@ -107,7 +114,7 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         }
 
         MobEntity mob = (MobEntity)(Object)this;
-        if (kevslib$isTamed() && mob.getWorld() instanceof ServerWorld sw) {
+        if (kevslib$isTamed() && mob.getWorld() instanceof ServerWorld sw && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = sw.getPlayerByUuid(kevslib$getOwnerUuid());
             if (owner != null) {
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
@@ -120,9 +127,10 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         }
     }
 
-
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         UUID ownerUuid = kevslib$getOwnerUuid();
         if (kevslib$isTamed() && ownerUuid != null) {
             nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
@@ -132,5 +140,4 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
             nbt.put("petinheritance", kevslib$petInheritanceData);
         }
     }
-
 }

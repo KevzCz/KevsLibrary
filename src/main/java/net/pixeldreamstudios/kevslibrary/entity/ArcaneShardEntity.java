@@ -36,7 +36,7 @@ public class ArcaneShardEntity extends PersistentProjectileEntity implements Fly
     public static ArcaneShardEntity create(World world, LivingEntity owner, Vec3d direction, float baseRuptureDamage) {
         ArcaneShardEntity shard = new ArcaneShardEntity(KevsLibrary.ARCANE_SHARD, world);
         shard.setOwner(owner);
-        shard.setDamage(baseRuptureDamage * 0.5f); // 50% of arcane rupture damage
+        shard.setDamage(baseRuptureDamage * 0.5f);
         shard.setVelocity(direction.normalize().multiply(0.5));
         return shard;
     }
@@ -82,7 +82,7 @@ public class ArcaneShardEntity extends PersistentProjectileEntity implements Fly
     protected void onEntityHit(EntityHitResult result) {
         if (!(getOwner() instanceof LivingEntity attacker)) return;
         if (!(result.getEntity() instanceof LivingEntity target)) return;
-        if (target instanceof PlayerEntity) return; // Ignore hitting players
+        if (target instanceof PlayerEntity) return;
 
         target.timeUntilRegen = 0;
         target.hurtTime = 0;

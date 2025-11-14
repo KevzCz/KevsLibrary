@@ -4,6 +4,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.BarrageHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,13 +18,18 @@ public abstract class BowItemMixin {
     @Inject(method = "onStoppedUsing", at = @At("HEAD"))
     private void kevslib$captureBowProjectile(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
         if (world.isClient()) return;
+        if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
+
         if (user instanceof net.minecraft.entity.player.PlayerEntity p) {
             KEVSLIB_LAST_BOW_PROJECTILE.set(p.getProjectileType(stack).copy());
         }
     }
+
     @Inject(method = "onStoppedUsing", at = @At("TAIL"))
     private void kevslib$barrageOnBowRelease(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
         if (world.isClient()) return;
+        if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
+
         int used = ((BowItem)(Object)this).getMaxUseTime(stack, user) - remainingUseTicks;
         float pull  = BowItem.getPullProgress(used);
         float speed = BarrageHandler.bowSpeedFromPull(pull);
@@ -38,6 +44,4 @@ public abstract class BowItemMixin {
 
         BarrageHandler.tryBarrage(user, stack, projectileTemplate, speed, 1.0f);
     }
-
-
 }

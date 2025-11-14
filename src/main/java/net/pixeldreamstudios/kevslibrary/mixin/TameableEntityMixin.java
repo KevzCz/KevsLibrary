@@ -11,6 +11,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
 import net.pixeldreamstudios.kevslibrary.util.UuidsHelper;
@@ -35,10 +36,15 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
 
     @Inject(method = "setOwner", at = @At("TAIL"))
     private void onSetOwner(PlayerEntity player, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         TameableEntity tameable = (TameableEntity) (Object) this;
         if (!tameable.isTamed()) {
             return;
         }
+
+        if (KevsLibrary.PET_INHERITANCE_RATIO == null) return;
+
         EntityAttributeInstance ratioInst = player.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
         if (ratioInst == null) {
             return;
@@ -59,12 +65,16 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void readInheritanceData(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         if (nbt.contains("petinheritance")) {
             kevslib$petInheritanceData = nbt.getCompound("petinheritance");
         }
 
         TameableEntity tameable = (TameableEntity)(Object)this;
-        if (tameable.isTamed() && tameable.getOwnerUuid() != null && this.getWorld() instanceof ServerWorld serverWorld) {
+        if (tameable.isTamed() && tameable.getOwnerUuid() != null &&
+                this.getWorld() instanceof ServerWorld serverWorld &&
+                KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(tameable.getOwnerUuid());
             if (owner != null) {
                 this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
@@ -79,6 +89,8 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         UUID ownerUuid = kevslib$getOwnerUuid();
         if (kevslib$isTamed() && ownerUuid != null) {
             nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
@@ -115,5 +127,4 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
     public NbtCompound kevslib$getInheritanceData() {
         return this.kevslib$petInheritanceData;
     }
-
 }

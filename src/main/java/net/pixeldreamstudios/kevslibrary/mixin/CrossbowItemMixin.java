@@ -7,6 +7,7 @@ import net.minecraft.item.CrossbowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.BarrageHandler;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +35,8 @@ public abstract class CrossbowItemMixin {
                                                    @Nullable LivingEntity target,
                                                    CallbackInfo ci) {
         if (world.isClient()) return;
+        if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
+
         ChargedProjectilesComponent charged = stack.get(DataComponentTypes.CHARGED_PROJECTILES);
         if (charged != null && !charged.isEmpty()) {
             List<ItemStack> list = charged.getProjectiles();
@@ -56,6 +59,8 @@ public abstract class CrossbowItemMixin {
                                                 @Nullable LivingEntity target,
                                                 CallbackInfo ci) {
         if (world.isClient()) return;
+        if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
+
         ItemStack projectileTemplate = KEVSLIB_LAST_CROSSBOW_PROJECTILE.get();
         KEVSLIB_LAST_CROSSBOW_PROJECTILE.remove();
 

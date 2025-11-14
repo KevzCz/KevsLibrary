@@ -6,9 +6,9 @@ import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
 import net.pixeldreamstudios.kevslibrary.handler.ProjectileStormHandler;
-
 import net.spell_engine.api.spell.Spell;
 import net.spell_engine.internals.SpellHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +32,8 @@ public class SpellHelperMixin {
             SpellHelper.ImpactContext context,
             CallbackInfoReturnable<Boolean> cir
     ) {
+        if (!KevsLibraryConfig.getInstance().isMultistrikeEnabled()) return;
+
         if (!(target instanceof LivingEntity targetLiving)) return;
 
         if (projectile.getCommandTags().contains("multistrike_spell")) {

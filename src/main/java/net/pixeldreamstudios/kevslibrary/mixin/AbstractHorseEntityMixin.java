@@ -7,6 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
 import net.pixeldreamstudios.kevslibrary.util.UuidsHelper;
@@ -27,6 +28,8 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void onReadNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         if (nbt.contains("petinheritance")) {
             kevslib$petInheritanceData = nbt.getCompound("petinheritance");
         }
@@ -34,7 +37,7 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
         AbstractHorseEntity horse = (AbstractHorseEntity)(Object)this;
         if (horse.isTame() && horse.getOwnerUuid() != null && horse.getWorld() instanceof ServerWorld serverWorld) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(horse.getOwnerUuid());
-            if (owner != null) {
+            if (owner != null && KevsLibrary.PET_INHERITANCE_RATIO != null) {
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                         owner,
                         horse,
@@ -47,6 +50,8 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void kevslib$writeNbt(NbtCompound nbt, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
         UUID ownerUuid = kevslib$getOwnerUuid();
         if (kevslib$isTamed() && ownerUuid != null) {
             nbt.putIntArray("Owner", UuidsHelper.toIntArray(ownerUuid));
@@ -57,10 +62,11 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
         }
     }
 
-
     @Inject(method = "bondWithPlayer", at = @At("TAIL"))
     private void onBondWithPlayer(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValue()) {
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+
+        if (cir.getReturnValue() && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             AbstractHorseEntity horse = (AbstractHorseEntity)(Object)this;
             kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                     player,
@@ -70,6 +76,7 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
             );
         }
     }
+
     @Unique
     @Override
     public boolean kevslib$isTamed() {
@@ -96,5 +103,4 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
     public NbtCompound kevslib$getInheritanceData() {
         return this.kevslib$petInheritanceData;
     }
-
 }

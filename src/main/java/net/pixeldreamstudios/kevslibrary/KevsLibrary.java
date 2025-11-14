@@ -14,134 +14,163 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.entity.ArcaneShardEntity;
 import net.pixeldreamstudios.kevslibrary.entity.CleaveSlashEntity;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.entity.MultistrikeArrowEntity;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
-import net.pixeldreamstudios.kevslibrary.registry.RegistryHelper;
+import net.pixeldreamstudios.kevslibrary.registry.ConfiguredAttributeRegistry;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.pixeldreamstudios.kevslibrary.util.RPGUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KevsLibrary implements ModInitializer {
 	public static final String MOD_ID = "kevslibrary";
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static final RegistryEntry<EntityAttribute> CRIT_CHANCE =
-			RegistryHelper.registerAttribute("crit_chance", new ClampedEntityAttribute("attribute.name.generic.crit_chance", 0.0, 0.0, 1.0).setTracked(true));
+			ConfiguredAttributeRegistry.registerAttribute("crit_chance", new ClampedEntityAttribute("attribute.name.generic.crit_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> CRIT_DAMAGE =
-			RegistryHelper.registerAttribute("crit_damage", new ClampedEntityAttribute("attribute.name.generic.crit_damage", 1.5, 1.0, 100.0).setTracked(true));
+			ConfiguredAttributeRegistry.registerAttribute("crit_damage", new ClampedEntityAttribute("attribute.name.generic.crit_damage", 1.5, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_CHANCE =
-			RegistryHelper.registerAttribute("multistrike_chance",
+			ConfiguredAttributeRegistry.registerAttribute("multistrike_chance",
 					new ClampedEntityAttribute("attribute.name.generic.multistrike_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_COUNT =
-			RegistryHelper.registerAttribute("multistrike_count",
+			ConfiguredAttributeRegistry.registerAttribute("multistrike_count",
 					new ClampedEntityAttribute("attribute.name.generic.multistrike_count", 1.0, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_DAMAGE =
-			RegistryHelper.registerAttribute("multistrike_damage",
+			ConfiguredAttributeRegistry.registerAttribute("multistrike_damage",
 					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 1.0, 0.1, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> DAMAGE =
-			RegistryHelper.registerAttribute("damage",
+			ConfiguredAttributeRegistry.registerAttribute("damage",
 					new ClampedEntityAttribute("attribute.name.generic.damage_multiplier", 1.0, 1, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_CHANCE =
-			RegistryHelper.registerAttribute("chain_lightning_chance",
+			ConfiguredAttributeRegistry.registerAttribute("chain_lightning_chance",
 					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_chance", 0, 0, 1).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_COUNT =
-			RegistryHelper.registerAttribute("chain_lightning_count",
+			ConfiguredAttributeRegistry.registerAttribute("chain_lightning_count",
 					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_count", 3.0, 1.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> CHAIN_LIGHTNING_OVERLOAD_CHANCE =
-			RegistryHelper.registerAttribute("chain_lightning_overload_chance",
+			ConfiguredAttributeRegistry.registerAttribute("chain_lightning_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.chain_lightning_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> FIRE_TORNADO_CHANCE =
-			RegistryHelper.registerAttribute("fire_tornado_chance",
+			ConfiguredAttributeRegistry.registerAttribute("fire_tornado_chance",
 					new ClampedEntityAttribute("attribute.name.generic.fire_tornado_chance", 0, 0, 1).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> FIRE_TORNADO_OVERLOAD_CHANCE =
-			RegistryHelper.registerAttribute("fire_tornado_overload_chance",
+			ConfiguredAttributeRegistry.registerAttribute("fire_tornado_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.fire_tornado_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_CHANCE =
-			RegistryHelper.registerAttribute("frost_nova_chance",
+			ConfiguredAttributeRegistry.registerAttribute("frost_nova_chance",
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_chance", 0, 0, 1).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_COUNT =
-			RegistryHelper.registerAttribute("frost_nova_count",
+			ConfiguredAttributeRegistry.registerAttribute("frost_nova_count",
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_count", 1, 1, 100).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> FROST_NOVA_OVERLOAD_CHANCE =
-			RegistryHelper.registerAttribute("frost_nova_overload_chance",
+			ConfiguredAttributeRegistry.registerAttribute("frost_nova_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.frost_nova_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> PET_INHERITANCE_RATIO =
-			RegistryHelper.registerAttribute("pet_inheritance_ratio",
+			ConfiguredAttributeRegistry.registerAttribute("pet_inheritance_ratio",
 					new ClampedEntityAttribute("attribute.name.generic.pet_inheritance_ratio", 0.0, 0.0, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> PET_DAMAGE_BONUS =
-			RegistryHelper.registerAttribute("pet_damage_bonus",
+			ConfiguredAttributeRegistry.registerAttribute("pet_damage_bonus",
 					new ClampedEntityAttribute("attribute.name.generic.pet_damage_bonus", 0.0, 0.0, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_CHANCE =
-			RegistryHelper.registerAttribute("soul_link_chance",
+			ConfiguredAttributeRegistry.registerAttribute("soul_link_chance",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> SOUL_LINK_DAMAGE =
-			RegistryHelper.registerAttribute("soul_link_damage",
+			ConfiguredAttributeRegistry.registerAttribute("soul_link_damage",
 					new ClampedEntityAttribute("attribute.name.generic.soul_link_damage", 1, 1, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_CHANCE =
-			RegistryHelper.registerAttribute("arcane_rupture_chance",
+			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_chance",
 					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_DAMAGE =
-			RegistryHelper.registerAttribute("arcane_rupture_damage",
+			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_damage",
 					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_damage", 5.0, 0.0, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_OVERLOAD_CHANCE =
-			RegistryHelper.registerAttribute("arcane_rupture_overload_chance",
+			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_overload_chance",
 					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_overload_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> TRIDENT_DAMAGE_MULTIPLIER =
-			RegistryHelper.registerAttribute("trident_damage_multiplier",
+			ConfiguredAttributeRegistry.registerAttribute("trident_damage_multiplier",
 					new ClampedEntityAttribute("attribute.name.generic.trident_damage_multiplier", 1.0, 0.0, 100.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION_FLAT =
-			RegistryHelper.registerAttribute("armor_penetration_flat",
+			ConfiguredAttributeRegistry.registerAttribute("armor_penetration_flat",
 					new ClampedEntityAttribute("attribute.name.generic.armor_penetration_flat", 0.0, 0.0, 100.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION =
-			RegistryHelper.registerAttribute("armor_penetration",
+			ConfiguredAttributeRegistry.registerAttribute("armor_penetration",
 					new ClampedEntityAttribute("attribute.name.generic.armor_penetration", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> THORNS_CHANCE =
-			RegistryHelper.registerAttribute("thorns_chance",
+			ConfiguredAttributeRegistry.registerAttribute("thorns_chance",
 					new ClampedEntityAttribute("attribute.name.generic.thorns_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> THORNS_AMP =
-			RegistryHelper.registerAttribute("thorns_amp",
+			ConfiguredAttributeRegistry.registerAttribute("thorns_amp",
 					new ClampedEntityAttribute("attribute.name.generic.thorns_amp", 0.3, 0.0, 2.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> THORNS_TRUE_DAMAGE_CHANCE =
-			RegistryHelper.registerAttribute("thorns_true_damage_chance",
+			ConfiguredAttributeRegistry.registerAttribute("thorns_true_damage_chance",
 					new ClampedEntityAttribute("attribute.name.generic.thorns_true_damage_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> CLEAVE_CHANCE =
-			RegistryHelper.registerAttribute("cleave_chance",
+			ConfiguredAttributeRegistry.registerAttribute("cleave_chance",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> CLEAVE_DAMAGE_MULTIPLIER =
-			RegistryHelper.registerAttribute("cleave_damage_multiplier",
+			ConfiguredAttributeRegistry.registerAttribute("cleave_damage_multiplier",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_damage_multiplier", 1.0, 0.0, 10.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> CLEAVE_RANGE =
-			RegistryHelper.registerAttribute("cleave_range",
+			ConfiguredAttributeRegistry.registerAttribute("cleave_range",
 					new ClampedEntityAttribute("attribute.name.generic.cleave_range", 4.0, 1.0, 8.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> PIERCING_CHANCE =
-			RegistryHelper.registerAttribute("pierce_chance",
+			ConfiguredAttributeRegistry.registerAttribute("pierce_chance",
 					new ClampedEntityAttribute("attribute.name.generic.pierce_chance", 0.0, 0.0, 1.0).setTracked(true));
+
 	public static final RegistryEntry<EntityAttribute> BARRAGE_CHANCE =
-			RegistryHelper.registerAttribute("barrage_chance",
+			ConfiguredAttributeRegistry.registerAttribute("barrage_chance",
 					new ClampedEntityAttribute("attribute.name.generic.barrage_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_CHANCE =
-			RegistryHelper.registerAttribute("projectile_storm_chance",
+			ConfiguredAttributeRegistry.registerAttribute("projectile_storm_chance",
 					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_chance", 0.0, 0.0, 1.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_RANGE =
-			RegistryHelper.registerAttribute("projectile_storm_range",
+			ConfiguredAttributeRegistry.registerAttribute("projectile_storm_range",
 					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_range", 2.5, 1.0, 32.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> PROJECTILE_STORM_DURATION =
-			RegistryHelper.registerAttribute("projectile_storm_duration",
+			ConfiguredAttributeRegistry.registerAttribute("projectile_storm_duration",
 					new ClampedEntityAttribute("attribute.name.generic.projectile_storm_duration", 60.0, 10.0, 400.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> HUNGER_CONSUMPTION =
+			ConfiguredAttributeRegistry.registerAttribute("hunger_consumption",
+					new ClampedEntityAttribute("attribute.name.generic.hunger_consumption", 1.0, 0.0, 100.0).setTracked(true));
 
 	public static final EntityType<CleaveSlashEntity> CLEAVE_SLASH = Registry.register(
 			Registries.ENTITY_TYPE,
@@ -188,13 +217,16 @@ public class KevsLibrary implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
+		KevsLibraryConfig.getInstance();
+		LOGGER.info("KevsLibrary config loaded");
+
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerWorld world : server.getWorlds()) {
 				try {
 					MultistrikeHandler.tick(world);
 				} catch (Exception e) {
-					System.err.println("[KevsLibrary] MultistrikeHandler failed: " + e.getMessage());
-					e.printStackTrace();
+					LOGGER.error("[KevsLibrary] MultistrikeHandler failed: " + e.getMessage(), e);
 				}
 			}
 		});
@@ -204,6 +236,6 @@ public class KevsLibrary implements ModInitializer {
 			RPGUtil.register(dispatcher);
 		});
 
+		LOGGER.info("KevsLibrary initialized successfully");
 	}
-
 }

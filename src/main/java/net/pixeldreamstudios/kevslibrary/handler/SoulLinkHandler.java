@@ -99,7 +99,7 @@ public class SoulLinkHandler {
             float original = originalDamage;
             soulPower = (float) SpellPower.getSpellPower(SpellSchools.SOUL, attacker).baseValue();
 
-// Customize this to match how steep you want the scaling
+
             float base = 0.1f;
             float maxLinear = 0.5f;
             float postLinearCap = 0.7f;
@@ -108,7 +108,7 @@ public class SoulLinkHandler {
                 multiplier = base + (soulPower / 50.0f) * (maxLinear - base);
             } else {
                 float extraPower = soulPower - 50.0f;
-                float diminishing = (float)(1 - Math.exp(-extraPower * 0.05f)); // adjust the 0.05f to change falloff
+                float diminishing = (float)(1 - Math.exp(-extraPower * 0.05f));
                 multiplier = maxLinear + diminishing * (postLinearCap - maxLinear);
             }
 

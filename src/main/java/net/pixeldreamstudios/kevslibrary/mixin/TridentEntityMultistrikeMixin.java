@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.TridentEntity;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -18,6 +19,10 @@ public abstract class TridentEntityMultistrikeMixin {
             )
     )
     private boolean kevslibrary$redirectTridentDamage(Entity target, DamageSource originalSource, float originalAmount) {
+        if (!KevsLibraryConfig.getInstance().isMultistrikeEnabled()) {
+            return target.damage(originalSource, originalAmount);
+        }
+
         TridentEntity self = (TridentEntity)(Object)this;
         if (self.getCommandTags().contains("multistrike_arrow")) {
             Entity owner = self.getOwner();

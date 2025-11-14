@@ -95,8 +95,6 @@
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
             float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
 
-            // NOTE: baseDamage is the post-hit damage (already includes KevsLibrary.DAMAGE, crits, etc.).
-            // For non-trident projectiles we also apply the existing 0.6f taper you had.
             float finalDamage = baseDamage * multiplier * 0.6f;
 
             Vec3d forward = attacker.getRotationVec(1.0f).normalize();
@@ -120,7 +118,6 @@
                     fromRight = i % 2 == 0;
                 }
 
-                // Spell projectiles: scale SpellEngine context only (as before).
                 if (sourceProjectile instanceof SpellProjectile spellProj) {
                     float msMultiplier = multiplier;
 
@@ -160,7 +157,6 @@
                     continue;
                 }
 
-                // Arrow / Trident re-fires
                 if (sourceProjectile instanceof PersistentProjectileEntity projectile) {
                     EntityType<?> type = projectile.getType();
                     Entity newArrowEntity = type.create(world);
@@ -168,9 +164,6 @@
 
                     arrow.setOwner(attacker);
 
-                    // IMPORTANT:
-                    // - Trident multistrike uses baseDamage * md (no extra 0.6f taper), WITHOUT reapplying trident or DAMAGE multipliers.
-                    // - Other projectiles use the tapered finalDamage above.
                     float dmgToSet = (projectile instanceof TridentEntity)
                             ? baseDamage * multiplier
                             : finalDamage;
@@ -196,7 +189,7 @@
                             .computeIfAbsent(attacker.getUuid(), k -> new ArrayList<>())
                             .add(new HoveringArrow(arrow, attacker, target, angleOffset, delay, fromRight));
                 } else {
-                    // fallback to melee-style bomb if source isn't a projectile
+
                     MultistrikeHandler.triggerMultistrike(attacker, target, baseDamage, weaponUsed);
                     break;
                 }
@@ -488,11 +481,6 @@
             }
         }
 
-
-            private int getStrikeCountFromAttributes(LivingEntity source) {
-                EntityAttributeInstance countAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_COUNT);
-                return countAttr != null ? (int) countAttr.getValue() : 1;
-            }
             private static boolean isValidMultistrikeTarget(LivingEntity attacker, LivingEntity target) {
                 return target.isAlive()
                         && !target.equals(attacker)

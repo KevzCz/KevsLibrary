@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.spell_engine.api.spell.Spell;
 import net.spell_engine.entity.SpellProjectile;
 import net.spell_engine.internals.SpellHelper;
@@ -33,6 +34,10 @@ public class SpellHelper_ProjectileTagMixin {
             int sequenceIndex,
             CallbackInfo ci
     ) {
+
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
+        if (!config.isMultistrikeEnabled() && !config.isProjectileStormEnabled()) return;
+
         world.getEntitiesByClass(SpellProjectile.class,
                         caster.getBoundingBox().expand(2.5),
                         proj -> proj.getOwner() == caster && proj.age < 5)

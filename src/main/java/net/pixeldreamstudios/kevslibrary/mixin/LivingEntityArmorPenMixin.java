@@ -7,6 +7,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,6 +23,7 @@ public abstract class LivingEntityArmorPenMixin {
     )
     private void kevslibrary$applyArmorToDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
 
         if (!source.isIn(DamageTypeTags.BYPASSES_ARMOR)) {
             self.damageArmor(source, amount);
@@ -29,15 +31,14 @@ public abstract class LivingEntityArmorPenMixin {
             float armor = self.getArmor();
             float toughness = (float) self.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
 
-            // --- Armor Penetration ---
-            if (source.getAttacker() instanceof LivingEntity attacker) {
+            if (config.isArmorPenetrationEnabled() && source.getAttacker() instanceof LivingEntity attacker) {
                 double flatPen = 0.0;
                 double percentPen = 0.0;
 
                 EntityAttributeInstance flatAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION_FLAT);
-                EntityAttributeInstance percentAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION);
-
                 if (flatAttr != null) flatPen = flatAttr.getValue();
+
+                EntityAttributeInstance percentAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION);
                 if (percentAttr != null) percentPen = percentAttr.getValue();
 
                 if (percentPen < 0.0) percentPen = 0.0;
@@ -55,5 +56,3 @@ public abstract class LivingEntityArmorPenMixin {
         cir.setReturnValue(amount);
     }
 }
-
-// This mixin modifies the armor calculation in LivingEntity to apply armor penetration effects.

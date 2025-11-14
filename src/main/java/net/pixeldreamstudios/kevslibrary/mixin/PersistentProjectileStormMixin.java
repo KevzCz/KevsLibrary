@@ -1,9 +1,9 @@
-// src/main/java/.../mixin/PersistentProjectileSelfGuardMixin.java
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.util.hit.EntityHitResult;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.ProjectileStormHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,6 +15,8 @@ public abstract class PersistentProjectileStormMixin {
 
     @Inject(method = "onEntityHit", at = @At("HEAD"), cancellable = true)
     private void kevslib$stormNoSelfHit(EntityHitResult hit, CallbackInfo ci) {
+        if (!KevsLibraryConfig.getInstance().isProjectileStormEnabled()) return;
+
         PersistentProjectileEntity self = (PersistentProjectileEntity) (Object) this;
         if (!ProjectileStormHandler.isStormTag(self)) return;
 
