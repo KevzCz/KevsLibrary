@@ -113,7 +113,7 @@ public class KevsLibraryConfig {
     public KevsLibraryConfig() {
         attributes.put("crit_chance", true);
         attributes.put("crit_damage", true);
-        attributes.put("multistrike_chance", false);
+        attributes.put("multistrike_chance", true);
         attributes.put("multistrike_count", true);
         attributes.put("multistrike_damage", true);
         attributes.put("damage", true);
