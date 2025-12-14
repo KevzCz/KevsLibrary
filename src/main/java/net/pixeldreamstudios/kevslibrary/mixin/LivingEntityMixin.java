@@ -1,5 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -31,11 +32,12 @@ public abstract class LivingEntityMixin {
     private static final ThreadLocal<Float> CRIT_DAMAGE_TRACKER = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> IS_CRIT_FLAG = new ThreadLocal<>();
 
-    @Inject(method = "isInvulnerableTo", at = @At("HEAD"), cancellable = true)
-    private void bypassMultistrike(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "isInvulnerableTo", at = @At("RETURN"))
+    private boolean bypassMultistrike(boolean original, DamageSource source) {
         if (source.getName().equals("multistrike") || source.getName().equals("multistrike_ranged")) {
-            cir.setReturnValue(false);
+            return false;
         }
+        return original;
     }
 
     @Inject(method = "createLivingAttributes", at = @At("RETURN"))

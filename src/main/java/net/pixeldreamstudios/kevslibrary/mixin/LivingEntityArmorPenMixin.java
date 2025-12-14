@@ -1,58 +1,50 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.DamageUtil;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.registry.tag.DamageTypeTags;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityArmorPenMixin {
 
-    @Inject(
+    @WrapOperation(
             method = "applyArmorToDamage",
-            at = @At("HEAD"),
-            cancellable = true
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/DamageUtil;getDamageLeft(Lnet/minecraft/entity/LivingEntity;FLnet/minecraft/entity/damage/DamageSource;FF)F")
     )
-    private void kevslibrary$applyArmorToDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
-        LivingEntity self = (LivingEntity) (Object) this;
+    private float kevslibrary$applyArmorPenetration(
+            LivingEntity entity,
+            float damage,
+            DamageSource source,
+            float armor,
+            float toughness,
+            Operation<Float> original
+    ) {
         KevsLibraryConfig config = KevsLibraryConfig.getInstance();
 
-        if (!source.isIn(DamageTypeTags.BYPASSES_ARMOR)) {
-            self.damageArmor(source, amount);
+        if (config.isArmorPenetrationEnabled() && source.getAttacker() instanceof LivingEntity attacker) {
+            double flatPen = 0.0;
+            double percentPen = 0.0;
 
-            float armor = self.getArmor();
-            float toughness = (float) self.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
+            EntityAttributeInstance flatAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION_FLAT);
+            if (flatAttr != null) flatPen = flatAttr.getValue();
 
-            if (config.isArmorPenetrationEnabled() && source.getAttacker() instanceof LivingEntity attacker) {
-                double flatPen = 0.0;
-                double percentPen = 0.0;
+            EntityAttributeInstance percentAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION);
+            if (percentAttr != null) percentPen = percentAttr.getValue();
 
-                EntityAttributeInstance flatAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION_FLAT);
-                if (flatAttr != null) flatPen = flatAttr.getValue();
+            percentPen = Math.max(0.0, Math.min(1.0, percentPen));
 
-                EntityAttributeInstance percentAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION);
-                if (percentAttr != null) percentPen = percentAttr.getValue();
+            float effectiveArmor = Math.max(armor - (float) flatPen, 0f);
+            effectiveArmor *= (1.0f - (float) percentPen);
 
-                if (percentPen < 0.0) percentPen = 0.0;
-                if (percentPen > 1.0) percentPen = 1.0;
-
-                float effectiveArmor = Math.max(armor - (float) flatPen, 0f);
-                effectiveArmor *= (1.0f - (float) percentPen);
-
-                armor = effectiveArmor;
-            }
-
-            amount = DamageUtil.getDamageLeft(self, amount, source, armor, toughness);
+            armor = effectiveArmor;
         }
 
-        cir.setReturnValue(amount);
+        return original.call(entity, damage, source, armor, toughness);
     }
 }
