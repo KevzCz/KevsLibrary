@@ -19,6 +19,8 @@ public class KevsLibraryConfig {
 
     public Map<String, Boolean> systems = new HashMap<>();
 
+    public PetInheritanceConfig pet_inheritance = new PetInheritanceConfig();
+
     private static final Map<String, List<String>> SYSTEM_ATTRIBUTES = new HashMap<>();
 
     static {
@@ -188,7 +190,7 @@ public class KevsLibraryConfig {
                 boolean needsSave = false;
 
                 for (Map.Entry<String, Boolean> entry : defaults.attributes.entrySet()) {
-                    if (!config.attributes.containsKey(entry.getKey())) {
+                    if (! config.attributes.containsKey(entry.getKey())) {
                         config.attributes.put(entry.getKey(), entry.getValue());
                         needsSave = true;
                     }
@@ -198,6 +200,37 @@ public class KevsLibraryConfig {
                     if (!config.systems.containsKey(entry.getKey())) {
                         config.systems.put(entry.getKey(), entry.getValue());
                         needsSave = true;
+                    }
+                }
+
+                if (config.pet_inheritance == null) {
+                    config.pet_inheritance = new PetInheritanceConfig();
+                    needsSave = true;
+                } else {
+                    if (config.pet_inheritance.ratio_attribute == null) {
+                        config.pet_inheritance.ratio_attribute = new PetInheritanceConfig.RatioAttributeConfig();
+                        needsSave = true;
+                    } else {
+                        for (Map.Entry<String, PetInheritanceConfig.AttributeInheritanceSettings> entry :
+                                defaults.pet_inheritance.ratio_attribute.inheritable_attributes.entrySet()) {
+                            if (! config.pet_inheritance.ratio_attribute.inheritable_attributes.containsKey(entry.getKey())) {
+                                config.pet_inheritance.ratio_attribute.inheritable_attributes.put(entry.getKey(), entry.getValue());
+                                needsSave = true;
+                            }
+                        }
+                    }
+
+                    if (config.pet_inheritance.damage_bonus_attribute == null) {
+                        config.pet_inheritance.damage_bonus_attribute = new PetInheritanceConfig.DamageBonusAttributeConfig();
+                        needsSave = true;
+                    } else {
+                        for (Map.Entry<String, PetInheritanceConfig.AttributeInheritanceSettings> entry :
+                                defaults.pet_inheritance.damage_bonus_attribute.affected_attributes.entrySet()) {
+                            if (!config.pet_inheritance.damage_bonus_attribute.affected_attributes.containsKey(entry.getKey())) {
+                                config.pet_inheritance.damage_bonus_attribute.affected_attributes.put(entry.getKey(), entry.getValue());
+                                needsSave = true;
+                            }
+                        }
                     }
                 }
 
@@ -232,7 +265,6 @@ public class KevsLibraryConfig {
             return false;
         }
 
-
         for (Map.Entry<String, List<String>> entry : SYSTEM_ATTRIBUTES.entrySet()) {
             if (entry.getValue().contains(attributeName)) {
                 String systemName = entry.getKey();
@@ -245,7 +277,6 @@ public class KevsLibraryConfig {
 
         return true;
     }
-
 
     public boolean isSystemEnabled(String systemName) {
 
@@ -316,7 +347,7 @@ public class KevsLibraryConfig {
     }
 
     public boolean isPetInheritanceEnabled() {
-        return isSystemEnabled("pet_inheritance");
+        return isSystemEnabled("pet_inheritance") && pet_inheritance.enabled;
     }
 
     public boolean isArmorPenetrationEnabled() {

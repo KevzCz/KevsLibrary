@@ -8,40 +8,24 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
+import net.pixeldreamstudios.kevslibrary.config.PetInheritanceConfig;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class AttributeInheritanceUtil {
 
-    public static Set<RegistryEntry<EntityAttribute>> getInheritableAttributes() {
-        Set<RegistryEntry<EntityAttribute>> set = new HashSet<>();
+    public static NbtCompound apply(PlayerEntity owner, LivingEntity pet, NbtCompound previousData, double globalRatio) {
+        KevsLibraryConfig config = KevsLibraryConfig.getInstance();
+        PetInheritanceConfig petConfig = config.pet_inheritance;
 
-        set.add(EntityAttributes.GENERIC_MAX_HEALTH);
-        set.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        set.add(KevsLibrary.PET_DAMAGE_BONUS);
-        set.add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
-        set.add(EntityAttributes.GENERIC_ARMOR);
-        set.add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (! petConfig.enabled || !petConfig.ratio_attribute.enabled) {
+            return new NbtCompound();
+        }
 
-        addIfPresent(set, "fire");
-        addIfPresent(set, "frost");
-        addIfPresent(set, "arcane");
-        addIfPresent(set, "air");
-        addIfPresent(set, "earth");
-        addIfPresent(set, "water");
-        addIfPresent(set, "lightning");
-        addIfPresent(set, "soul");
-        addIfPresent(set, "healing");
-        return set;
-    }
-
-    private static void addIfPresent(Set<RegistryEntry<EntityAttribute>> set, String type) {
-        Registries.ATTRIBUTE.getEntry(Identifier.of("spell_power", type)).ifPresent(set::add);
-    }
-
-    public static NbtCompound apply(PlayerEntity owner, LivingEntity pet, NbtCompound previousData, double ratio) {
-        boolean isReapplying = previousData != null && !previousData.isEmpty();
+        boolean isReapplying = previousData != null && ! previousData.isEmpty();
         NbtCompound baseAttrTag = isReapplying && previousData.contains("petBaseAttributes")
                 ? previousData.getCompound("petBaseAttributes")
                 : new NbtCompound();
@@ -49,54 +33,87 @@ public class AttributeInheritanceUtil {
         NbtCompound newInheritance = new NbtCompound();
         NbtCompound newBaseAttrTag = new NbtCompound();
 
-        for (RegistryEntry<EntityAttribute> attribute : getInheritableAttributes()) {
-            String key = attribute.getKey().map(id -> id.getValue().toString()).orElse(null);
-            if (key == null) continue;
+        for (Map.Entry<String, PetInheritanceConfig.AttributeInheritanceSettings> entry :
+                petConfig.ratio_attribute.inheritable_attributes.entrySet()) {
 
+            String attributeId = entry.getKey();
+            PetInheritanceConfig.AttributeInheritanceSettings settings = entry.getValue();
+
+            if (! settings.enabled) continue;
+
+            Optional<RegistryEntry.Reference<EntityAttribute>> attrOpt =
+                    Registries.ATTRIBUTE.getEntry(Identifier.tryParse(attributeId));
+
+            if (attrOpt.isEmpty()) continue;
+
+            RegistryEntry<EntityAttribute> attribute = attrOpt.get();
             EntityAttributeInstance ownerAttr = owner.getAttributeInstance(attribute);
             EntityAttributeInstance petAttr = pet.getAttributeInstance(attribute);
+
             if (ownerAttr == null || petAttr == null) continue;
 
             double baseValue;
-            if (isReapplying && baseAttrTag.contains(key)) {
-                baseValue = baseAttrTag.getDouble(key);
+            if (isReapplying && baseAttrTag.contains(attributeId)) {
+                baseValue = baseAttrTag.getDouble(attributeId);
             } else {
                 baseValue = petAttr.getBaseValue();
-                newBaseAttrTag.putDouble(key, baseValue);
+                newBaseAttrTag.putDouble(attributeId, baseValue);
             }
 
-            double bonus;
+            double bonus = ownerAttr.getValue() * globalRatio * settings.ratio;
 
-            if (key.equals("minecraft:generic.attack_damage")) {
-                bonus = ownerAttr.getValue() * ratio;
+            if (attributeId.equals("minecraft:generic.attack_damage") &&
+                    petConfig.damage_bonus_attribute.enabled) {
 
-                EntityAttributeInstance extraBonusAttr = owner.getAttributeInstance(KevsLibrary.PET_DAMAGE_BONUS);
-                if (extraBonusAttr != null) {
-                    bonus += extraBonusAttr.getValue();
-                }
-
-            } else if (key.equals("kevslibrary:pet_damage_bonus")) {
-                continue;
-            } else {
-                bonus = ownerAttr.getValue() * ratio;
+                Map<String, Double> damageBonus = calculateDamageBonuses(owner, petConfig);
+                bonus += damageBonus.getOrDefault(attributeId, 0.0);
             }
 
+            bonus = settings.clamp(bonus);
 
-            if (attribute.value().equals(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
-                bonus = Math.min(bonus, 0.2);
-            }
             petAttr.setBaseValue(baseValue + bonus);
-            newInheritance.putDouble(key, bonus);
+            newInheritance.putDouble(attributeId, bonus);
 
-            if (attribute.value().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
+            if (attributeId.equals("minecraft:generic.max_health")) {
                 pet.setHealth((float) pet.getAttributeValue(attribute));
             }
         }
 
-        if (!newBaseAttrTag.isEmpty()) {
+        if (! newBaseAttrTag.isEmpty()) {
             newInheritance.put("petBaseAttributes", newBaseAttrTag);
         }
         newInheritance.putBoolean("petAttributesInherited", true);
         return newInheritance;
+    }
+
+    private static Map<String, Double> calculateDamageBonuses(PlayerEntity owner, PetInheritanceConfig petConfig) {
+        Map<String, Double> bonuses = new HashMap<>();
+
+        if (! petConfig.damage_bonus_attribute.enabled) {
+            return bonuses;
+        }
+
+        EntityAttributeInstance petDamageBonusAttr = owner.getAttributeInstance(KevsLibrary.PET_DAMAGE_BONUS);
+        if (petDamageBonusAttr == null) {
+            return bonuses;
+        }
+
+        double petDamageBonusValue = petDamageBonusAttr.getValue();
+
+        for (Map.Entry<String, PetInheritanceConfig.AttributeInheritanceSettings> entry :
+                petConfig.damage_bonus_attribute.affected_attributes.entrySet()) {
+
+            String attributeId = entry.getKey();
+            PetInheritanceConfig.AttributeInheritanceSettings settings = entry.getValue();
+
+            if (!settings.enabled) continue;
+
+            double bonus = petDamageBonusValue * settings.ratio;
+            bonus = settings.clamp(bonus);
+
+            bonuses.put(attributeId, bonus);
+        }
+
+        return bonuses;
     }
 }

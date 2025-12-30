@@ -18,7 +18,8 @@
 		"ProjectileEntityMixin",
 		"PersistentProjectileStormMixin",
 		"SpellProjectileStormMixin",
-		"HungerManagerMixin"
+		"HungerManagerMixin",
+		"AnimalEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
