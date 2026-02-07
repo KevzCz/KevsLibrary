@@ -3,9 +3,9 @@ package net.pixeldreamstudios.kevslibrary.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,14 +28,13 @@ public abstract class LivingEntityArmorPenMixin {
         KevsLibraryConfig config = KevsLibraryConfig.getInstance();
 
         if (config.isArmorPenetrationEnabled() && source.getAttacker() instanceof LivingEntity attacker) {
-            double flatPen = 0.0;
-            double percentPen = 0.0;
+            AttributeContext context = new AttributeContext(attacker);
 
-            EntityAttributeInstance flatAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION_FLAT);
-            if (flatAttr != null) flatPen = flatAttr.getValue();
+            double flatPenValue = context.getAttributeValue(KevsLibrary.ARMOR_PENETRATION_FLAT);
+            double flatPen = flatPenValue - 100.0;
 
-            EntityAttributeInstance percentAttr = attacker.getAttributeInstance(KevsLibrary.ARMOR_PENETRATION);
-            if (percentAttr != null) percentPen = percentAttr.getValue();
+            double percentPenValue = context.getAttributeValue(KevsLibrary.ARMOR_PENETRATION);
+            double percentPen = (percentPenValue - 100.0) / 100.0;
 
             percentPen = Math.max(0.0, Math.min(1.0, percentPen));
 

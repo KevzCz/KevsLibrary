@@ -2,10 +2,10 @@ package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.handler.MultistrikeHandler;
 import net.pixeldreamstudios.kevslibrary.handler.ProjectileStormHandler;
@@ -44,10 +44,8 @@ public class SpellHelperMixin {
             return;
         }
 
-        EntityAttributeInstance attrInstance =
-                caster.getAttributeInstance(KevsLibrary.MULTISTRIKE_CHANCE);
-        double multistrikeChance =
-                attrInstance != null ? attrInstance.getValue() : 0.0;
+        AttributeContext attributeContext = new AttributeContext(caster);
+        double multistrikeChance = attributeContext.getAttributeAsPercentage(KevsLibrary.MULTISTRIKE_CHANCE);
 
         if (caster.getRandom().nextDouble() <= multistrikeChance) {
             MultistrikeHandler.spawnHoveringProjectiles(

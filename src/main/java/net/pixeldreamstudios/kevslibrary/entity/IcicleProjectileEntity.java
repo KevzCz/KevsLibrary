@@ -19,6 +19,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsDamageTypes;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
@@ -50,6 +52,7 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
         if (!(result.getEntity() instanceof LivingEntity target)) return;
         if (!(getWorld() instanceof ServerWorld world)) return;
 
+        AttributeContext context = new AttributeContext(attacker);
         SpellPower.Result resultData = SpellPower.getSpellPower(SpellSchools.FROST, attacker);
         SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FROST);
 
@@ -57,12 +60,7 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
         boolean isCrit = attacker.getRandom().nextDouble() < (resultData.criticalChance() + vuln.criticalChanceBonus());
         float critApplied = isCrit ? base * (float) (resultData.criticalDamage() + vuln.criticalDamageBonus()) : base;
 
-        float finalDamage = critApplied;
-
-        var dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-        if (dmgAttr != null) {
-            finalDamage *= (float) dmgAttr.getValue();
-        }
+        float finalDamage = DamageScaling.applyGlobalDamageScaling(context, critApplied);
 
         DamageSource source = this.getDamageSources().create(KevsDamageTypes.ICICLE, attacker);
         boolean hit = target.damage(source, finalDamage);
@@ -111,7 +109,7 @@ public class IcicleProjectileEntity extends PersistentProjectileEntity implement
 
     @Override
     public void onPlayerCollision(PlayerEntity player) {
-          }
+    }
 
     @Override
     public void tick() {

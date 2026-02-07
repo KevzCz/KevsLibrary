@@ -4,7 +4,6 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
@@ -17,21 +16,45 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 
-public final class BarrageHandler {
-    private BarrageHandler() {}
+public class BarrageHandler extends EffectHandler {
+
+    private static final BarrageHandler INSTANCE = new BarrageHandler();
     private static final int EXTRA_SHOTS = 2;
     private static final int TICKS_BETWEEN_SHOTS = 3;
 
-    public static void tryBarrage(LivingEntity shooter, ItemStack weaponStack, ItemStack projectileTemplate,
-                                  float baseSpeed, float baseDivergence) {
+    private BarrageHandler() {
+        super(
+                KevsLibrary.BARRAGE_CHANCE,
+                null,
+                AttributeScaling.builder()
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static BarrageHandler getInstance() {
+        return INSTANCE;
+    }
+
+    public void tryBarrage(LivingEntity shooter, ItemStack weaponStack, ItemStack projectileTemplate,
+                           float baseSpeed, float baseDivergence) {
         if (!(shooter.getWorld() instanceof ServerWorld world)) return;
 
-        EntityAttributeInstance chanceAttr = shooter.getAttributeInstance(KevsLibrary.BARRAGE_CHANCE);
-        double chance = chanceAttr != null ? chanceAttr.getValue() : 0.0;
+        tryTrigger(shooter, shooter, world, 0f, weaponStack, projectileTemplate, baseSpeed, baseDivergence);
+    }
+
+    public void tryTrigger(LivingEntity attacker, LivingEntity target, ServerWorld world, float baseDamage,
+                           ItemStack weaponStack, ItemStack projectileTemplate, float baseSpeed, float baseDivergence) {
+
+        double chance = new net.pixeldreamstudios.kevslibrary.attribute.AttributeContext(attacker)
+                .getAttributeAsPercentage(chanceAttribute);
+
         if (chance <= 0.0) return;
-        if (world.getRandom().nextDouble() > chance) return;
+        if (attacker.getRandom().nextDouble() > chance) return;
 
         if (projectileTemplate == null || projectileTemplate.isEmpty()) {
             projectileTemplate = new ItemStack(Items.ARROW);
@@ -40,12 +63,21 @@ public final class BarrageHandler {
         for (int i = 0; i < EXTRA_SHOTS; i++) {
             final int delay = (i + 1) * TICKS_BETWEEN_SHOTS;
             final ItemStack projCopy = projectileTemplate.copy();
-            DelayedExecutor.runLater(() -> spawnFromTemplate(world, shooter, weaponStack, projCopy, baseSpeed, baseDivergence), delay);
+            DelayedExecutor.runLater(() ->
+                    spawnFromTemplate(world, attacker, weaponStack, projCopy, baseSpeed, baseDivergence), delay);
         }
     }
 
-    private static void spawnFromTemplate(ServerWorld world, LivingEntity shooter, ItemStack weaponStack,
-                                          ItemStack projectileStack, float speed, float divergence) {
+    @Override
+    protected void execute(EffectContext context) {
+    }
+
+    @Override
+    protected void executeOverload(EffectContext context) {
+    }
+
+    private void spawnFromTemplate(ServerWorld world, LivingEntity shooter, ItemStack weaponStack,
+                                   ItemStack projectileStack, float speed, float divergence) {
         if (!shooter.isAlive()) return;
 
         if (projectileStack.isOf(Items.FIREWORK_ROCKET)) {
@@ -83,7 +115,7 @@ public final class BarrageHandler {
         }
     }
 
-    private static int getLevelOn(LivingEntity ctx, RegistryKey<Enchantment> key, ItemStack stack) {
+    private int getLevelOn(LivingEntity ctx, RegistryKey<Enchantment> key, ItemStack stack) {
         return ctx.getRegistryManager()
                 .get(RegistryKeys.ENCHANTMENT)
                 .getEntry(key)

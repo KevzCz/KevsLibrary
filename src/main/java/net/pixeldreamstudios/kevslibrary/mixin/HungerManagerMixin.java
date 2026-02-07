@@ -1,9 +1,9 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -34,12 +34,10 @@ public class HungerManagerMixin {
         }
 
         if (kevslibrary$player != null) {
-            EntityAttributeInstance hungerAttr = kevslibrary$player.getAttributeInstance(KevsLibrary.HUNGER_CONSUMPTION);
-
-            if (hungerAttr != null) {
-                double multiplier = hungerAttr.getValue();
-                return exhaustion * (float) multiplier;
-            }
+            AttributeContext context = new AttributeContext(kevslibrary$player);
+            double hungerValue = context.getAttributeValue(KevsLibrary.HUNGER_CONSUMPTION);
+            float multiplier = (float) ((hungerValue - 100.0) / 100.0 + 1.0);
+            return exhaustion * multiplier;
         }
 
         return exhaustion;

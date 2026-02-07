@@ -31,7 +31,7 @@ public abstract class BowItemMixin {
         if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
 
         int used = ((BowItem)(Object)this).getMaxUseTime(stack, user) - remainingUseTicks;
-        float pull  = BowItem.getPullProgress(used);
+        float pull = BowItem.getPullProgress(used);
         float speed = BarrageHandler.bowSpeedFromPull(pull);
         if (speed <= 0.1f) {
             KEVSLIB_LAST_BOW_PROJECTILE.remove();
@@ -42,6 +42,6 @@ public abstract class BowItemMixin {
         KEVSLIB_LAST_BOW_PROJECTILE.remove();
         if (projectileTemplate == null) projectileTemplate = ItemStack.EMPTY;
 
-        BarrageHandler.tryBarrage(user, stack, projectileTemplate, speed, 1.0f);
+        BarrageHandler.getInstance().tryBarrage(user, stack, projectileTemplate, speed, 1.0f);
     }
 }

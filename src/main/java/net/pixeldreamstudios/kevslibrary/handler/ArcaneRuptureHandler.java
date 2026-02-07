@@ -1,12 +1,9 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -14,6 +11,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.math.Box;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.entity.ArcaneShardEntity;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
@@ -21,17 +22,46 @@ import net.spell_power.api.SpellSchools;
 
 import java.util.*;
 
-public class ArcaneRuptureHandler {
+public class ArcaneRuptureHandler extends EffectHandler {
+
+    private static final ArcaneRuptureHandler INSTANCE = new ArcaneRuptureHandler();
 
     private static final int SWIRL_DURATION_TICKS = 60;
     private static final int SPIKE_COUNT = 30;
     private static final double SWIRL_RADIUS = 1.5;
-
     private static final long COOLDOWN_MS = 500;
-    private static final WeakHashMap<LivingEntity, Long> cooldowns = new WeakHashMap<>();
 
-    public static void trigger(LivingEntity attacker, LivingEntity center) {
-        if (!(attacker.getWorld() instanceof ServerWorld world)) return;
+    private final WeakHashMap<LivingEntity, Long> cooldowns = new WeakHashMap<>();
+
+    private ArcaneRuptureHandler() {
+        super(
+                KevsLibrary.ARCANE_RUPTURE_CHANCE,
+                KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE,
+                AttributeScaling.builder()
+                        .addScaling(KevsLibrary.ARCANE_RUPTURE_DAMAGE, 0.01)
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static ArcaneRuptureHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext context) {
+        triggerRupture(context, false);
+    }
+
+    @Override
+    protected void executeOverload(EffectContext context) {
+        triggerRupture(context, true);
+    }
+
+    private void triggerRupture(EffectContext effectContext, boolean isOverload) {
+        LivingEntity attacker = effectContext.getAttacker();
+        LivingEntity center = effectContext.getTarget();
+        ServerWorld world = effectContext.getWorld();
 
         long now = System.currentTimeMillis();
         long lastUsed = cooldowns.getOrDefault(attacker, 0L);
@@ -85,7 +115,7 @@ public class ArcaneRuptureHandler {
             world.playSound(null, center.getX(), center.getY(), center.getZ(),
                     SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, SoundCategory.PLAYERS, 1.0f, 1.4f);
 
-            float finalDamage = computeScaledDamage(attacker, center, true);
+            float finalDamage = computeScaledDamage(effectContext, true);
 
             for (LivingEntity target : targets) {
                 target.timeUntilRegen = 0;
@@ -98,21 +128,16 @@ public class ArcaneRuptureHandler {
             }
 
             Vec3d burstCenter = center.getPos().add(0, 1.0, 0);
-            spawnSpikes(world, burstCenter, attacker);
+            spawnSpikes(world, burstCenter, effectContext, isOverload);
 
         }, SWIRL_DURATION_TICKS);
     }
 
-    private static void spawnSpikes(ServerWorld world, Vec3d pos, LivingEntity attacker) {
+    private void spawnSpikes(ServerWorld world, Vec3d pos, EffectContext effectContext, boolean isOverload) {
         Random rand = world.getRandom();
+        LivingEntity attacker = effectContext.getAttacker();
 
-        SpellPower.Result spellResult = SpellPower.getSpellPower(SpellSchools.ARCANE, attacker);
-        float base = 5.0f + (float) spellResult.baseValue();
-        float arcaneScale = getAttr(attacker, KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1.0f);
-        float globalScale = getAttr(attacker, KevsLibrary.DAMAGE, 1.0f);
-        boolean isCrit = attacker.getRandom().nextDouble() < spellResult.criticalChance();
-        float finalDamage = isCrit ? base * arcaneScale * globalScale * (float) spellResult.criticalDamage()
-                : base * arcaneScale * globalScale;
+        float finalDamage = computeScaledDamage(effectContext, true);
 
         for (int r = 0; r < 40; r++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
@@ -161,14 +186,12 @@ public class ArcaneRuptureHandler {
             world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1, target.getZ(), 6, 0.2, 0.2, 0.2, 0.02);
         }
 
-
-        double overloadChance = getAttr(attacker, KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0.0f);
-        if (attacker.getRandom().nextDouble() < overloadChance) {
+        if (isOverload) {
             spawnArcaneShardOverload(world, pos, attacker, finalDamage);
         }
     }
 
-    private static void spawnArcaneShardOverload(ServerWorld world, Vec3d center, LivingEntity attacker, float baseDamage) {
+    private void spawnArcaneShardOverload(ServerWorld world, Vec3d center, LivingEntity attacker, float baseDamage) {
         Random rand = world.getRandom();
         float launchSpeed = 0.6f;
 
@@ -182,14 +205,10 @@ public class ArcaneRuptureHandler {
                     Math.sin(angle) * Math.cos(pitch)
             ).normalize();
 
-
             ArcaneShardEntity shard = ArcaneShardEntity.create(world, attacker, dir, baseDamage);
             shard.setNoGravity(false);
             shard.setPosition(center);
-
-
             shard.setVelocity(dir.multiply(launchSpeed));
-
             world.spawnEntity(shard);
         }
 
@@ -198,8 +217,7 @@ public class ArcaneRuptureHandler {
                 SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, SoundCategory.PLAYERS, 0.8f, 1.3f);
     }
 
-
-    private static boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
+    private boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
         return entity.isAlive()
                 && !entity.equals(attacker)
                 && !entity.isTeammate(attacker)
@@ -207,19 +225,18 @@ public class ArcaneRuptureHandler {
                 && (!(entity instanceof TameableEntity tameable) || !tameable.isTamed());
     }
 
-    private static float getAttr(LivingEntity entity, RegistryEntry<EntityAttribute> attr, float fallback) {
-        EntityAttributeInstance instance = entity.getAttributeInstance(attr);
-        return instance != null ? (float) instance.getValue() : fallback;
-    }
+    private float computeScaledDamage(EffectContext effectContext, boolean applyCrit) {
+        LivingEntity attacker = effectContext.getAttacker();
+        AttributeContext context = effectContext.getAttackerContext();
 
-    private static float computeScaledDamage(LivingEntity attacker, LivingEntity target, boolean applyCrit) {
         SpellPower.Result spellResult = SpellPower.getSpellPower(SpellSchools.ARCANE, attacker);
-        SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.ARCANE);
 
         float base = 5.0f + (float) spellResult.baseValue();
-        float arcaneScale = getAttr(attacker, KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1.0f);
-        float globalScale = getAttr(attacker, KevsLibrary.DAMAGE, 1.0f);
-        float scaled = base * arcaneScale * globalScale;
+
+        double damageValue = context.getAttributeValue(KevsLibrary.ARCANE_RUPTURE_DAMAGE);
+        float arcaneScale = (float) ((damageValue - 100.0) / 100.0 + 1.0);
+
+        float scaled = DamageScaling.applyGlobalDamageScaling(context, base * arcaneScale);
 
         if (applyCrit && attacker.getRandom().nextDouble() < spellResult.criticalChance()) {
             return scaled * (float) spellResult.criticalDamage();

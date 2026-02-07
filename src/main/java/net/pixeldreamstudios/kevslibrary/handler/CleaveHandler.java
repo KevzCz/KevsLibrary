@@ -2,25 +2,47 @@ package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.entity.CleaveSlashEntity;
 
 import java.util.List;
 
-public class CleaveHandler {
+public class CleaveHandler extends EffectHandler {
 
-    public static void triggerCleave(LivingEntity attacker, float baseDamageDealt) {
-        World world = attacker.getWorld();
-        if (!(world instanceof ServerWorld serverWorld)) return;
+    private static final CleaveHandler INSTANCE = new CleaveHandler();
 
-        double cleaveChance = attacker.getAttributeValue(KevsLibrary.CLEAVE_CHANCE);
-        if (attacker.getRandom().nextDouble() > cleaveChance) return;
+    private CleaveHandler() {
+        super(
+                KevsLibrary.CLEAVE_CHANCE,
+                null,
+                AttributeScaling.builder()
+                        .addScaling(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 0.01)
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
 
-        double range = attacker.getAttributeValue(KevsLibrary.CLEAVE_RANGE);
-        double multiplier = attacker.getAttributeValue(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER);
+    public static CleaveHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext effectContext) {
+        triggerCleave(effectContext);
+    }
+
+    private void triggerCleave(EffectContext effectContext) {
+        LivingEntity attacker = effectContext.getAttacker();
+        ServerWorld world = effectContext.getWorld();
+        AttributeContext context = effectContext.getAttackerContext();
+
+        double rangeValue = context.getAttributeValue(KevsLibrary.CLEAVE_RANGE);
+        double range = rangeValue;
 
         Vec3d forward = attacker.getRotationVec(1.0F).normalize().multiply(1.5);
         double yOffset = 0.6;
@@ -41,7 +63,7 @@ public class CleaveHandler {
 
         world.spawnEntity(slash);
 
-        List<LivingEntity> hitTargets = serverWorld.getEntitiesByClass(
+        List<LivingEntity> hitTargets = world.getEntitiesByClass(
                 LivingEntity.class,
                 attacker.getBoundingBox().expand(range),
                 target -> {
@@ -56,7 +78,11 @@ public class CleaveHandler {
                 }
         );
 
-        float cleaveDamage = baseDamageDealt * (float) multiplier;
+        double multiplierValue = context.getAttributeValue(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER);
+        float multiplier = (float) ((multiplierValue - 100.0) / 100.0 + 1.0);
+
+        float baseDamage = effectContext.getBaseDamage();
+        float cleaveDamage = DamageScaling.applyGlobalDamageScaling(context, baseDamage * multiplier);
 
         for (LivingEntity target : hitTargets) {
             if (attacker instanceof net.minecraft.entity.player.PlayerEntity player) {
@@ -65,9 +91,5 @@ public class CleaveHandler {
                 target.damage(attacker.getDamageSources().mobAttack(attacker), cleaveDamage);
             }
         }
-
-
     }
-
-
 }

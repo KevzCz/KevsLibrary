@@ -1,12 +1,12 @@
 package net.pixeldreamstudios.kevslibrary.util;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -14,8 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
-
-import java.util.Collection;
 
 public class RPGUtil
 {
@@ -70,7 +68,7 @@ public class RPGUtil
                                                                                         double oldVal = instance.getBaseValue();
                                                                                         double baseVal = baseAttrs.getDouble(key);
                                                                                         instance.setBaseValue(baseVal);
-                                                                                        }
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -143,6 +141,162 @@ public class RPGUtil
                                                                                             return 1;
                                                                                         })
                                                                         )
+                                                        )
+                                        )
+                        )
+
+                        .then(
+                                CommandManager.literal("blockinteraction")
+                                        .then(
+                                                CommandManager.argument("player", EntityArgumentType.player())
+                                                        .then(
+                                                                CommandManager.literal("add")
+                                                                        .then(
+                                                                                CommandManager.argument("type", StringArgumentType.word())
+                                                                                        .suggests((ctx, builder) -> {
+                                                                                            builder.suggest("left_click");
+                                                                                            builder.suggest("right_click");
+                                                                                            builder.suggest("placement");
+                                                                                            builder.suggest("entity_interact");
+                                                                                            builder.suggest("consume");
+                                                                                            builder.suggest("all");
+                                                                                            return builder.buildFuture();
+                                                                                        })
+                                                                                        .executes(ctx -> {
+                                                                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(ctx, "player");
+                                                                                            String type = StringArgumentType.getString(ctx, "type");
+                                                                                            ItemStack heldItem = player.getMainHandStack();
+
+                                                                                            if (heldItem.isEmpty()) {
+                                                                                                ctx.getSource().sendError(Text.literal("Player must be holding an item"));
+                                                                                                return 0;
+                                                                                            }
+
+                                                                                            NbtCompound customData = heldItem.getOrDefault(
+                                                                                                    net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                                                                                                    net.minecraft.component.type.NbtComponent.DEFAULT
+                                                                                            ).copyNbt();
+
+                                                                                            NbtCompound blocked = customData.getCompound("KevsLibraryBlockedInteractions");
+                                                                                            if (!customData.contains("KevsLibraryBlockedInteractions")) {
+                                                                                                customData.put("KevsLibraryBlockedInteractions", blocked);
+                                                                                            }
+
+                                                                                            if (type.equals("all")) {
+                                                                                                blocked.putBoolean("left_click", true);
+                                                                                                blocked.putBoolean("right_click", true);
+                                                                                                blocked.putBoolean("placement", true);
+                                                                                                blocked.putBoolean("entity_interact", true);
+                                                                                                blocked.putBoolean("consume", true);
+                                                                                                ctx.getSource().sendFeedback(() ->
+                                                                                                        Text.literal("Blocked all interactions for item"), false);
+                                                                                            } else {
+                                                                                                blocked.putBoolean(type, true);
+                                                                                                ctx.getSource().sendFeedback(() ->
+                                                                                                        Text.literal("Blocked " + type + " for item"), false);
+                                                                                            }
+
+                                                                                            heldItem.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                                                                                                    net.minecraft.component.type.NbtComponent.of(customData));
+
+                                                                                            return 1;
+                                                                                        })
+                                                                        )
+                                                        )
+                                                        .then(
+                                                                CommandManager.literal("remove")
+                                                                        .then(
+                                                                                CommandManager.argument("type", StringArgumentType.word())
+                                                                                        .suggests((ctx, builder) -> {
+                                                                                            builder.suggest("left_click");
+                                                                                            builder.suggest("right_click");
+                                                                                            builder.suggest("placement");
+                                                                                            builder.suggest("entity_interact");
+                                                                                            builder.suggest("consume");
+                                                                                            builder.suggest("all");
+                                                                                            return builder.buildFuture();
+                                                                                        })
+                                                                                        .executes(ctx -> {
+                                                                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(ctx, "player");
+                                                                                            String type = StringArgumentType.getString(ctx, "type");
+                                                                                            ItemStack heldItem = player.getMainHandStack();
+
+                                                                                            if (heldItem.isEmpty()) {
+                                                                                                ctx.getSource().sendError(Text.literal("Player must be holding an item"));
+                                                                                                return 0;
+                                                                                            }
+
+                                                                                            NbtCompound customData = heldItem.getOrDefault(
+                                                                                                    net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                                                                                                    net.minecraft.component.type.NbtComponent.DEFAULT
+                                                                                            ).copyNbt();
+
+                                                                                            if (!customData.contains("KevsLibraryBlockedInteractions")) {
+                                                                                                ctx.getSource().sendError(Text.literal("Item has no blocked interactions"));
+                                                                                                return 0;
+                                                                                            }
+
+                                                                                            NbtCompound blocked = customData.getCompound("KevsLibraryBlockedInteractions");
+
+                                                                                            if (type.equals("all")) {
+                                                                                                customData.remove("KevsLibraryBlockedInteractions");
+                                                                                                ctx.getSource().sendFeedback(() ->
+                                                                                                        Text.literal("Removed all blocked interactions from item"), false);
+                                                                                            } else {
+                                                                                                blocked.putBoolean(type, false);
+                                                                                                ctx.getSource().sendFeedback(() ->
+                                                                                                        Text.literal("Removed " + type + " block from item"), false);
+                                                                                            }
+
+                                                                                            heldItem.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                                                                                                    net.minecraft.component.type.NbtComponent.of(customData));
+
+                                                                                            return 1;
+                                                                                        })
+                                                                        )
+                                                        )
+                                                        .then(
+                                                                CommandManager.literal("list")
+                                                                        .executes(ctx -> {
+                                                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(ctx, "player");
+                                                                            ItemStack heldItem = player.getMainHandStack();
+
+                                                                            if (heldItem.isEmpty()) {
+                                                                                ctx.getSource().sendError(Text.literal("Player must be holding an item"));
+                                                                                return 0;
+                                                                            }
+
+                                                                            NbtCompound customData = heldItem.getOrDefault(
+                                                                                    net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                                                                                    net.minecraft.component.type.NbtComponent.DEFAULT
+                                                                            ).copyNbt();
+
+                                                                            if (!customData.contains("KevsLibraryBlockedInteractions")) {
+                                                                                ctx.getSource().sendFeedback(() ->
+                                                                                        Text.literal("Item has no blocked interactions"), false);
+                                                                                return 1;
+                                                                            }
+
+                                                                            NbtCompound blocked = customData.getCompound("KevsLibraryBlockedInteractions");
+                                                                            StringBuilder message = new StringBuilder("Blocked interactions: ");
+                                                                            boolean hasAny = false;
+
+                                                                            for (String key : blocked.getKeys()) {
+                                                                                if (blocked.getBoolean(key)) {
+                                                                                    if (hasAny) message.append(", ");
+                                                                                    message.append(key);
+                                                                                    hasAny = true;
+                                                                                }
+                                                                            }
+
+                                                                            if (!hasAny) {
+                                                                                message.append("none");
+                                                                            }
+
+                                                                            String finalMessage = message.toString();
+                                                                            ctx.getSource().sendFeedback(() -> Text.literal(finalMessage), false);
+                                                                            return 1;
+                                                                        })
                                                         )
                                         )
                         )

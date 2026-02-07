@@ -1,7 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -10,20 +9,60 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
 import java.util.*;
 
-public class SoulLinkHandler {
+public class SoulLinkHandler extends EffectHandler {
+
+    private static final SoulLinkHandler INSTANCE = new SoulLinkHandler();
+
     private static final int BASE_LINK_DURATION_TICKS = 200;
     private static final int MAX_LINKS = 4;
     private static final double LINK_RADIUS = 8.0;
     private static final int PULL_INTERVAL_TICKS = 10;
-    private static final Set<UUID> linkedEntities = new HashSet<>();
+
+    private final Set<UUID> linkedEntities = new HashSet<>();
+
+    private SoulLinkHandler() {
+        super(
+                KevsLibrary.SOUL_LINK_CHANCE,
+                null,
+                AttributeScaling.builder()
+                        .addScaling(KevsLibrary.SOUL_LINK_DAMAGE, 0.01)
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static SoulLinkHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext context) {
+        triggerSoulLink(context.getAttacker(), context.getTarget());
+    }
 
     public static void triggerSoulLink(LivingEntity attacker, LivingEntity primaryTarget) {
+        INSTANCE.trigger(attacker, primaryTarget);
+    }
+
+    public static void tryExtendLink(LivingEntity attacker, LivingEntity fromEntity) {
+        INSTANCE.extend(attacker, fromEntity);
+    }
+
+    public static void handleLinkedDamage(LivingEntity attacker, LivingEntity damaged, float originalDamage, List<LivingEntity> linked, float soulPower) {
+        INSTANCE.applyLinkedDamage(attacker, damaged, originalDamage, linked, soulPower);
+    }
+
+    private void trigger(LivingEntity attacker, LivingEntity primaryTarget) {
         ServerWorld world = (ServerWorld) attacker.getWorld();
         if (SoulLinkTracker.getGroup(primaryTarget).isPresent()) return;
 
@@ -56,7 +95,7 @@ public class SoulLinkHandler {
         SoulLinkTracker.linkGroup(linked, attacker, soulPower, group);
     }
 
-    public static void tryExtendLink(LivingEntity attacker, LivingEntity fromEntity) {
+    private void extend(LivingEntity attacker, LivingEntity fromEntity) {
         var opt = SoulLinkTracker.getGroup(fromEntity);
         if (opt.isEmpty()) return;
 
@@ -89,26 +128,27 @@ public class SoulLinkHandler {
                 SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.PLAYERS, 0.6f, 1.0f);
     }
 
-    public static void handleLinkedDamage(LivingEntity attacker, LivingEntity damaged, float originalDamage, List<LivingEntity> linked, float soulPower) {
+    private void applyLinkedDamage(LivingEntity attacker, LivingEntity damaged, float originalDamage, List<LivingEntity> linked, float soulPower) {
         Set<LivingEntity> alreadyHit = new HashSet<>();
+        AttributeContext context = new AttributeContext(attacker);
 
         for (LivingEntity entity : linked) {
             if (!entity.isAlive()) continue;
-            EntityAttributeInstance soulLinkDamage = attacker.getAttributeInstance(KevsLibrary.SOUL_LINK_DAMAGE);
+
             SpellPower.Result soul = SpellPower.getSpellPower(SpellSchools.SOUL, attacker);
             float original = originalDamage;
-            soulPower = (float) SpellPower.getSpellPower(SpellSchools.SOUL, attacker).baseValue();
-
+            soulPower = (float) soul.baseValue();
 
             float base = 0.1f;
             float maxLinear = 0.5f;
             float postLinearCap = 0.7f;
             float multiplier;
+
             if (soulPower <= 50.0f) {
                 multiplier = base + (soulPower / 50.0f) * (maxLinear - base);
             } else {
                 float extraPower = soulPower - 50.0f;
-                float diminishing = (float)(1 - Math.exp(-extraPower * 0.05f));
+                float diminishing = (float) (1 - Math.exp(-extraPower * 0.05f));
                 multiplier = maxLinear + diminishing * (postLinearCap - maxLinear);
             }
 
@@ -116,8 +156,7 @@ public class SoulLinkHandler {
             boolean isCrit = attacker.getRandom().nextFloat() < soul.criticalChance();
             if (isCrit) spreadDamage *= soul.criticalDamage();
 
-            EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-            if (dmgAttr != null) spreadDamage *= dmgAttr.getValue();
+            spreadDamage = DamageScaling.applyGlobalDamageScaling(context, spreadDamage);
 
             if (alreadyHit.contains(entity)) continue;
             alreadyHit.add(entity);
@@ -128,7 +167,7 @@ public class SoulLinkHandler {
         }
     }
 
-    private static void playLinkParticles(ServerWorld world, Vec3d center) {
+    private void playLinkParticles(ServerWorld world, Vec3d center) {
         for (int i = 0; i < 24; i++) {
             double angle = (Math.PI * 2 / 24) * i;
             double radius = 2.0;
@@ -139,7 +178,7 @@ public class SoulLinkHandler {
         }
     }
 
-    private static boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
+    private boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
         return entity.isAlive()
                 && !entity.equals(attacker)
                 && !entity.isTeammate(attacker)
@@ -147,7 +186,7 @@ public class SoulLinkHandler {
                 && (!(entity instanceof TameableEntity tameable) || !tameable.isTamed());
     }
 
-    public static class LinkedGroup {
+    public class LinkedGroup {
         private final List<LivingEntity> members;
         private final LivingEntity attacker;
         private final float soulPower;

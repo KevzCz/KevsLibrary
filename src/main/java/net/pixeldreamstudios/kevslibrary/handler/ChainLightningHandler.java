@@ -1,7 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -10,32 +9,55 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.spell_power.api.SpellPower;
-import net.spell_power.api.SpellSchool;
 import net.spell_power.api.SpellSchools;
 
 import java.util.*;
 
-public class ChainLightningHandler {
+public class ChainLightningHandler extends EffectHandler {
 
+    private static final ChainLightningHandler INSTANCE = new ChainLightningHandler();
     private static final double MAX_DISTANCE = 8.0;
 
-    public static void spawnChainLightning(LivingEntity attacker, LivingEntity initialTarget) {
-        if (!(attacker.getWorld() instanceof ServerWorld world)) return;
+    private ChainLightningHandler() {
+        super(
+                KevsLibrary.CHAIN_LIGHTNING_CHANCE,
+                KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE,
+                AttributeScaling.builder()
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
 
-        int bounceCount = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_COUNT) != null
-                ? (int) attacker.getAttributeValue(KevsLibrary.CHAIN_LIGHTNING_COUNT)
-                : 3;
+    public static ChainLightningHandler getInstance() {
+        return INSTANCE;
+    }
 
-        double overloadChance = attacker.getAttributeInstance(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE) != null
-                ? attacker.getAttributeValue(KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE)
-                : 0.0;
+    @Override
+    protected void execute(EffectContext context) {
+        spawnChainLightning(context, false);
+    }
+
+    @Override
+    protected void executeOverload(EffectContext context) {
+        spawnChainLightning(context, true);
+    }
+
+    private void spawnChainLightning(EffectContext effectContext, boolean isOverload) {
+        LivingEntity attacker = effectContext.getAttacker();
+        LivingEntity initialTarget = effectContext.getTarget();
+        ServerWorld world = effectContext.getWorld();
+        AttributeContext context = effectContext.getAttackerContext();
+
+        double countValue = context.getAttributeValue(KevsLibrary.CHAIN_LIGHTNING_COUNT);
+        int bounceCount = (int) countValue;
 
         SpellPower.Result spellResult = SpellPower.getSpellPower(SpellSchools.LIGHTNING, attacker);
-        EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-        float bonus = dmgAttr != null ? (float) dmgAttr.getValue() : 1.0f;
-
-        float baseDamage = 3.0f;
+        float baseDamage = 3.0f + (float) spellResult.baseValue();
 
         Set<LivingEntity> visited = new HashSet<>();
         visited.add(attacker);
@@ -45,20 +67,16 @@ public class ChainLightningHandler {
         world.playSound(null, initialTarget.getX(), initialTarget.getY(), initialTarget.getZ(),
                 SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 0.2f, 0.2f);
 
-        SpellPower.Vulnerability vuln = SpellPower.getVulnerability(initialTarget, SpellSchools.LIGHTNING);
-        SpellPower.Result.Value value = spellResult.random(vuln);
-
-        float raw = baseDamage + (float) spellResult.baseValue();
         boolean isCrit = attacker.getRandom().nextDouble() < spellResult.criticalChance();
-        float critApplied = isCrit ? raw * (float) spellResult.criticalDamage() : raw;
-        float damage = critApplied * bonus;
+        float critApplied = isCrit ? baseDamage * (float) spellResult.criticalDamage() : baseDamage;
+        float damage = DamageScaling.applyGlobalDamageScaling(context, critApplied);
 
         initialTarget.damage(attacker.getDamageSources().magic(), damage);
         if (isCrit) {
             world.spawnParticles(ParticleTypes.CRIT, initialTarget.getX(), initialTarget.getY() + 1.0, initialTarget.getZ(), 5, 0.2, 0.2, 0.2, 0.01);
         }
 
-        if (attacker.getRandom().nextDouble() < overloadChance) {
+        if (isOverload) {
             spawnOverloadVisuals(world, initialTarget.getPos());
             triggerOverloadDoT(attacker, initialTarget, damage * 0.2f, bounceCount);
         }
@@ -85,31 +103,29 @@ public class ChainLightningHandler {
             world.playSound(null, next.getX(), next.getY(), next.getZ(),
                     SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 0.2f, 0.2f);
 
-            SpellPower.Vulnerability nextVuln = SpellPower.getVulnerability(next, SpellSchools.LIGHTNING);
-            SpellPower.Result.Value nextValue = spellResult.random(nextVuln);
-
-            float nextRaw = baseDamage + (float) spellResult.baseValue();
             boolean nextCrit = attacker.getRandom().nextDouble() < spellResult.criticalChance();
-            float nextCritApplied = nextCrit ? nextRaw * (float) spellResult.criticalDamage() : nextRaw;
-            float nextDamage = nextCritApplied * bonus;
+            float nextCritApplied = nextCrit ? baseDamage * (float) spellResult.criticalDamage() : baseDamage;
+            float nextDamage = DamageScaling.applyGlobalDamageScaling(context, nextCritApplied);
 
             next.damage(attacker.getDamageSources().magic(), nextDamage);
-            if (nextCrit) {SoulLinkTracker.getGroup(next).ifPresent(linkData -> {
+
+            SoulLinkTracker.getGroup(next).ifPresent(linkData -> {
                 if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
                 SoulLinkHandler.handleLinkedDamage(linkData.attacker(), next, nextDamage, linkData.group(), linkData.soulPower());
             });
 
+            if (nextCrit) {
                 world.spawnParticles(ParticleTypes.CRIT, next.getX(), next.getY() + 1.0, next.getZ(), 5, 0.2, 0.2, 0.2, 0.01);
             }
 
-            if (attacker.getRandom().nextDouble() < overloadChance) {
+            if (isOverload) {
                 spawnOverloadVisuals(world, next.getPos());
                 triggerOverloadDoT(attacker, next, nextDamage * 0.2f, bounceCount);
             }
         }
     }
 
-    private static boolean isValidBounceTarget(LivingEntity entity, LivingEntity attacker, Set<LivingEntity> visited) {
+    private boolean isValidBounceTarget(LivingEntity entity, LivingEntity attacker, Set<LivingEntity> visited) {
         if (!entity.isAlive()) return false;
         if (entity.equals(attacker)) return false;
         if (visited.contains(entity)) return false;
@@ -120,7 +136,7 @@ public class ChainLightningHandler {
         return true;
     }
 
-    private static void spawnArcParticles(ServerWorld world, LivingEntity from, LivingEntity to) {
+    private void spawnArcParticles(ServerWorld world, LivingEntity from, LivingEntity to) {
         Vec3d start = from.getPos().add(0, from.getHeight() * 0.6, 0);
         Vec3d end = to.getPos().add(0, to.getHeight() * 0.6, 0);
         Vec3d diff = end.subtract(start);
@@ -133,14 +149,14 @@ public class ChainLightningHandler {
         }
     }
 
-    private static void spawnOverloadVisuals(ServerWorld world, Vec3d pos) {
+    private void spawnOverloadVisuals(ServerWorld world, Vec3d pos) {
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 0.6f, 1.8f);
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y + 1, pos.z, 10, 0.3, 0.3, 0.3, 0.01);
         world.spawnParticles(ParticleTypes.ENCHANT, pos.x, pos.y + 0.5, pos.z, 8, 0.3, 0.3, 0.3, 0.01);
     }
 
-    private static void triggerOverloadDoT(LivingEntity attacker, LivingEntity target, float tickDamage, int ticks) {
+    private void triggerOverloadDoT(LivingEntity attacker, LivingEntity target, float tickDamage, int ticks) {
         if (!(attacker.getWorld() instanceof ServerWorld world)) return;
 
         new Thread(() -> {

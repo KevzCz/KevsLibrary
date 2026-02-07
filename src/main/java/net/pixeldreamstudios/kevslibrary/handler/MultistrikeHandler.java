@@ -25,7 +25,6 @@
     public class MultistrikeHandler {
         private static final Set<UUID> handledProjectiles = Collections.newSetFromMap(new WeakHashMap<>());
         private static final Map<UUID, List<HoveringSpellProjectile>> hoveringSpellProjectiles = new HashMap<>();
-
         public static boolean tryMarkProjectile(UUID uuid) {
             return handledProjectiles.add(uuid);
         }

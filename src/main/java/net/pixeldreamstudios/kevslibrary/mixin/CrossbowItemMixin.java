@@ -65,6 +65,6 @@ public abstract class CrossbowItemMixin {
         KEVSLIB_LAST_CROSSBOW_PROJECTILE.remove();
 
         float baseSpeed = speed > 0.0f ? speed : BarrageHandler.crossbowBaseSpeed();
-        BarrageHandler.tryBarrage(shooter, stack, projectileTemplate, baseSpeed, divergence);
+        BarrageHandler.getInstance().tryBarrage(shooter, stack, projectileTemplate, baseSpeed, divergence);
     }
 }

@@ -6,17 +6,60 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 
 import java.util.*;
 
-public class PiercingHandler {
-    private static final Map<UUID, Long> activePiercers = new HashMap<>();
-    private static final Map<UUID, Long> cooldownUntil = new HashMap<>();
+public class PiercingHandler extends EffectHandler {
+
+    private static final PiercingHandler INSTANCE = new PiercingHandler();
+
     private static final long DURATION_MILLIS = 3000;
     private static final long COOLDOWN_MILLIS = 250;
 
+    private final Map<UUID, Long> activePiercers = new HashMap<>();
+    private final Map<UUID, Long> cooldownUntil = new HashMap<>();
+
+    private PiercingHandler() {
+        super(
+                KevsLibrary.PIERCING_CHANCE,
+                null,
+                AttributeScaling.builder()
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static PiercingHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext context) {
+    }
+
     public static void tryActivatePiercing(LivingEntity attacker) {
-        double chance = attacker.getAttributeValue(KevsLibrary.PIERCING_CHANCE);
+        INSTANCE.tryActivate(attacker);
+    }
+
+    public static boolean isPiercingActive(LivingEntity attacker) {
+        return INSTANCE.isActive(attacker);
+    }
+
+    public static void consumePiercing(LivingEntity attacker) {
+        INSTANCE.consume(attacker);
+    }
+
+    public static void applyLineDamage(LivingEntity attacker, float baseDamage, float range, float width) {
+        INSTANCE.applyDamage(attacker, baseDamage, range, width);
+    }
+
+    private void tryActivate(LivingEntity attacker) {
+        AttributeContext context = new AttributeContext(attacker);
+        double chance = context.getAttributeAsPercentage(chanceAttribute);
+
         if (attacker.getRandom().nextDouble() < chance) {
             activePiercers.put(attacker.getUuid(), System.currentTimeMillis());
             if (attacker.getWorld() instanceof ServerWorld serverWorld) {
@@ -27,7 +70,7 @@ public class PiercingHandler {
         }
     }
 
-    public static boolean isPiercingActive(LivingEntity attacker) {
+    private boolean isActive(LivingEntity attacker) {
         Long time = activePiercers.get(attacker.getUuid());
         if (time == null) return false;
         boolean expired = (System.currentTimeMillis() - time) > DURATION_MILLIS;
@@ -35,23 +78,21 @@ public class PiercingHandler {
         return !expired;
     }
 
-    public static void consumePiercing(LivingEntity attacker) {
+    private void consume(LivingEntity attacker) {
         activePiercers.remove(attacker.getUuid());
     }
 
-    public static void applyLineDamage(LivingEntity attacker, float baseDamage, float range, float width) {
+    private void applyDamage(LivingEntity attacker, float baseDamage, float range, float width) {
         if (!(attacker.getWorld() instanceof ServerWorld serverWorld)) return;
 
         UUID uuid = attacker.getUuid();
         long now = System.currentTimeMillis();
 
-
         if (cooldownUntil.containsKey(uuid) && now < cooldownUntil.get(uuid)) return;
-
 
         cooldownUntil.put(uuid, now + COOLDOWN_MILLIS);
 
-        consumePiercing(attacker);
+        consume(attacker);
 
         Vec3d origin = attacker.getPos().add(0, attacker.getStandingEyeHeight(), 0);
         Vec3d forward = attacker.getRotationVec(1.0F).normalize();
@@ -81,9 +122,7 @@ public class PiercingHandler {
             double progress = (double) i / steps;
             Vec3d point = loweredOrigin.lerp(loweredEnd, progress);
 
-
             serverWorld.spawnParticles(ParticleTypes.END_ROD, point.x, point.y, point.z, 1, 0, 0, 0, 0);
-
 
             double angle = progress * Math.PI * 16;
             double offsetX = Math.cos(angle) * spiralRadius;
@@ -92,12 +131,10 @@ public class PiercingHandler {
 
             serverWorld.spawnParticles(ParticleTypes.ELECTRIC_SPARK, spiral.x, spiral.y, spiral.z, 1, 0, 0, 0, 0);
 
-
             if (i % 4 == 0) {
                 serverWorld.spawnParticles(ParticleTypes.SMOKE, point.x, point.y, point.z, 1, 0.01, 0.01, 0.01, 0.01);
             }
         }
-
 
         serverWorld.spawnParticles(ParticleTypes.SONIC_BOOM, loweredEnd.x, loweredEnd.y, loweredEnd.z, 1, 0, 0, 0, 0);
         serverWorld.spawnParticles(ParticleTypes.CRIT, loweredEnd.x, loweredEnd.y, loweredEnd.z, 8, 0.2, 0.1, 0.2, 0.1);

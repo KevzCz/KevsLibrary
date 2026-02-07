@@ -1,7 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -10,6 +9,10 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.entity.IcicleProjectileEntity;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
@@ -17,31 +20,57 @@ import net.spell_power.api.SpellSchools;
 
 import java.util.*;
 
-public class FrostNovaHandler {
+public class FrostNovaHandler extends EffectHandler {
+
+    private static final FrostNovaHandler INSTANCE = new FrostNovaHandler();
+
     private static final double RADIUS = 5.0;
     private static final float BASE_DAMAGE = 3.0f;
     private static final int SLOW_DURATION = 60;
     private static final int COOLDOWN_TICKS = 40;
-    private static final Map<UUID, Long> LAST_NOVA = new HashMap<>();
 
-    public static void triggerFrostNova(LivingEntity attacker) {
-        if (!(attacker.getWorld() instanceof ServerWorld world)) return;
+    private final Map<UUID, Long> lastNova = new HashMap<>();
+
+    private FrostNovaHandler() {
+        super(
+                KevsLibrary.FROST_NOVA_CHANCE,
+                KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE,
+                AttributeScaling.builder()
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static FrostNovaHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext context) {
+        triggerFrostNova(context, false);
+    }
+
+    @Override
+    protected void executeOverload(EffectContext context) {
+        triggerFrostNova(context, true);
+    }
+
+    private void triggerFrostNova(EffectContext effectContext, boolean hasOverload) {
+        LivingEntity attacker = effectContext.getAttacker();
+        ServerWorld world = effectContext.getWorld();
+        AttributeContext context = effectContext.getAttackerContext();
 
         UUID attackerId = attacker.getUuid();
         long currentTime = world.getTime();
 
-        if (currentTime - LAST_NOVA.getOrDefault(attackerId, 0L) < COOLDOWN_TICKS) return;
-        LAST_NOVA.put(attackerId, currentTime);
+        if (currentTime - lastNova.getOrDefault(attackerId, 0L) < COOLDOWN_TICKS) return;
+        lastNova.put(attackerId, currentTime);
 
-        int novaCount = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_COUNT) != null
-                ? (int) attacker.getAttributeValue(KevsLibrary.FROST_NOVA_COUNT)
-                : 1;
-
-        EntityAttributeInstance overloadAttr = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE);
-        double overloadChance = overloadAttr != null ? overloadAttr.getValue() : 0.0;
+        double novaCountValue = context.getAttributeValue(KevsLibrary.FROST_NOVA_COUNT);
+        int novaCount = (int) novaCountValue;
 
         int overloadedWave = -1;
-        if (attacker.getRandom().nextDouble() < overloadChance) {
+        if (hasOverload) {
             overloadedWave = attacker.getRandom().nextInt(novaCount);
         }
 
@@ -57,24 +86,18 @@ public class FrostNovaHandler {
             );
 
             DelayedExecutor.runLater(() -> {
-                doFrostNova(attacker, waveIndex, overloaded, targetsSnapshot);
+                doFrostNova(attacker, waveIndex, overloaded, targetsSnapshot, world);
             }, delay);
         }
     }
 
-    private static void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded, List<LivingEntity> targets) {
-        if (!(attacker.getWorld() instanceof ServerWorld world)) return;
-
+    private void doFrostNova(LivingEntity attacker, int waveIndex, boolean overloaded, List<LivingEntity> targets, ServerWorld world) {
+        AttributeContext context = new AttributeContext(attacker);
         SpellPower.Result result = SpellPower.getSpellPower(SpellSchools.FROST, attacker);
-        SpellPower.Result.Value rawResult = result.nonCritical();
 
         float base = BASE_DAMAGE + (float) result.baseValue();
         float critChance = (float) result.criticalChance();
         float critMultiplier = (float) result.criticalDamage();
-
-        float dmgMult = 1.0f;
-        EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-        if (dmgAttr != null) dmgMult = (float) dmgAttr.getValue();
 
         if (overloaded) {
             world.spawnParticles(ParticleTypes.ITEM_SNOWBALL, attacker.getX(), attacker.getY() + 1.0, attacker.getZ(),
@@ -122,10 +145,11 @@ public class FrostNovaHandler {
             boolean isCrit = attacker.getRandom().nextDouble() < (critChance + vuln.criticalChanceBonus());
             float critApplied = isCrit ? raw * (critMultiplier + vuln.criticalDamageBonus()) : raw;
 
-            float finalDamage = critApplied * dmgMult;
+            float finalDamage = DamageScaling.applyGlobalDamageScaling(context, critApplied);
             if (overloaded) finalDamage *= 1.5f;
 
             target.damage(attacker.getDamageSources().magic(), finalDamage);
+
             float finalDamage1 = finalDamage;
             SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
                 if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
@@ -156,11 +180,12 @@ public class FrostNovaHandler {
         }
     }
 
-    private static void spawnIcicleBurst(ServerWorld world, LivingEntity attacker, LivingEntity origin, float icicleDamage) {
+    private void spawnIcicleBurst(ServerWorld world, LivingEntity attacker, LivingEntity origin, float icicleDamage) {
         Vec3d basePos = origin.getPos();
-        int count = attacker.getAttributeInstance(KevsLibrary.FROST_NOVA_COUNT) != null
-                ? (int) attacker.getAttributeValue(KevsLibrary.FROST_NOVA_COUNT) * 2
-                : 2;
+        AttributeContext context = new AttributeContext(attacker);
+
+        double countValue = context.getAttributeValue(KevsLibrary.FROST_NOVA_COUNT);
+        int count = (int) (countValue * 2);
 
         for (int i = 0; i < count; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 1.2;
@@ -185,7 +210,7 @@ public class FrostNovaHandler {
                 20, 0.4, 0.2, 0.4, 0.01);
     }
 
-    private static boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
+    private boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
         if (!entity.isAlive()) return false;
         if (entity.equals(attacker)) return false;
         if (entity.isTeammate(attacker)) return false;

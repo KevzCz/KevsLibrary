@@ -1,45 +1,73 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.DamageScaling;
+import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
-import net.spell_power.api.SpellSchool;
 import net.spell_power.api.SpellSchools;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-public class FireTornadoHandler {
+public class FireTornadoHandler extends EffectHandler {
+
+    private static final FireTornadoHandler INSTANCE = new FireTornadoHandler();
+
     private static final int BASE_TICKS = 60;
     private static final double BASE_RADIUS = 4.0;
     private static final float BASE_DAMAGE = 3.0f;
     private static final int FIRE_DURATION = 3 * 20;
-    private static final Map<UUID, Long> LAST_TORNADO_CAST = new HashMap<>();
     private static final int COOLDOWN_TICKS = 20;
 
-    public static void spawnFireTornado(LivingEntity attacker, LivingEntity centerEntity) {
-        ServerWorld world = (ServerWorld) centerEntity.getWorld();
+    private final Map<UUID, Long> lastTornadoCast = new HashMap<>();
+
+    private FireTornadoHandler() {
+        super(
+                KevsLibrary.FIRE_TORNADO_CHANCE,
+                KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE,
+                AttributeScaling.builder()
+                        .baseRatio(1.0)
+                        .build()
+        );
+    }
+
+    public static FireTornadoHandler getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    protected void execute(EffectContext context) {
+        spawnFireTornado(context, false);
+    }
+
+    @Override
+    protected void executeOverload(EffectContext context) {
+        spawnFireTornado(context, true);
+    }
+
+    private void spawnFireTornado(EffectContext effectContext, boolean isOverloaded) {
+        LivingEntity attacker = effectContext.getAttacker();
+        LivingEntity centerEntity = effectContext.getTarget();
+        ServerWorld world = effectContext.getWorld();
         Vec3d center = centerEntity.getPos();
+
         UUID attackerId = attacker.getUuid();
         long currentTime = world.getTime();
 
-        if (currentTime - LAST_TORNADO_CAST.getOrDefault(attackerId, 0L) < COOLDOWN_TICKS) return;
-        LAST_TORNADO_CAST.put(attackerId, currentTime);
-
-        boolean isOverloaded;
-        double overloadChance = attacker.getAttributeInstance(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE) != null
-                ? attacker.getAttributeValue(KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE)
-                : 0.0;
-
-        isOverloaded = attacker.getRandom().nextDouble() < overloadChance;
+        if (currentTime - lastTornadoCast.getOrDefault(attackerId, 0L) < COOLDOWN_TICKS) return;
+        lastTornadoCast.put(attackerId, currentTime);
 
         if (isOverloaded) {
             world.playSound(null, center.x, center.y, center.z,
@@ -69,20 +97,18 @@ public class FireTornadoHandler {
                         e -> isValidTarget(e, attacker)
                 );
 
+                AttributeContext context = effectContext.getAttackerContext();
+
                 for (LivingEntity target : affected) {
                     SpellPower.Result result = SpellPower.getSpellPower(SpellSchools.FIRE, attacker);
                     SpellPower.Vulnerability vuln = SpellPower.getVulnerability(target, SpellSchools.FIRE);
-                    SpellPower.Result.Value rawResult = result.nonCritical();
 
                     float base = BASE_DAMAGE + (float) result.baseValue() * (1.0f + vuln.powerBaseMultiplier());
                     boolean isCrit = attacker.getRandom().nextDouble() < (result.criticalChance() + vuln.criticalChanceBonus());
                     float critMultiplier = isCrit ? (float) (result.criticalDamage() + vuln.criticalDamageBonus()) : 1.0f;
                     float critApplied = base * critMultiplier;
 
-                    EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.DAMAGE);
-                    float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 1.0f;
-
-                    float damage = critApplied * multiplier;
+                    float damage = DamageScaling.applyGlobalDamageScaling(context, critApplied);
                     if (isOverloaded) damage *= 2.0f;
 
                     Vec3d targetPos = target.getPos();
@@ -123,11 +149,13 @@ public class FireTornadoHandler {
 
                         target.setOnFireFor(FIRE_DURATION / 20);
                         target.damage(attacker.getDamageSources().inFire(), damage);
+
                         float finalDamage = damage;
                         SoulLinkTracker.getGroup(target).ifPresent(linkData -> {
                             if (!attacker.getUuid().equals(linkData.attacker().getUuid())) return;
                             SoulLinkHandler.handleLinkedDamage(linkData.attacker(), target, finalDamage, linkData.group(), linkData.soulPower());
                         });
+
                         if (isCrit) {
                             world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1, target.getZ(), 6, 0.2, 0.2, 0.2, 0.02);
                             world.spawnParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.2, target.getZ(), 4, 0.2, 0.2, 0.2, 0.01);
@@ -159,7 +187,7 @@ public class FireTornadoHandler {
         }
     }
 
-    private static boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
+    private boolean isValidTarget(LivingEntity entity, LivingEntity attacker) {
         if (!entity.isAlive()) return false;
         if (entity.equals(attacker)) return false;
         if (entity.isTeammate(attacker)) return false;

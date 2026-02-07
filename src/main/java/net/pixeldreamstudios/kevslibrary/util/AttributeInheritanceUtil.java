@@ -8,6 +8,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.config.PetInheritanceConfig;
 
@@ -21,11 +22,11 @@ public class AttributeInheritanceUtil {
         KevsLibraryConfig config = KevsLibraryConfig.getInstance();
         PetInheritanceConfig petConfig = config.pet_inheritance;
 
-        if (! petConfig.enabled || !petConfig.ratio_attribute.enabled) {
+        if (!petConfig.enabled || !petConfig.ratio_attribute.enabled) {
             return new NbtCompound();
         }
 
-        boolean isReapplying = previousData != null && ! previousData.isEmpty();
+        boolean isReapplying = previousData != null && !previousData.isEmpty();
         NbtCompound baseAttrTag = isReapplying && previousData.contains("petBaseAttributes")
                 ? previousData.getCompound("petBaseAttributes")
                 : new NbtCompound();
@@ -39,7 +40,7 @@ public class AttributeInheritanceUtil {
             String attributeId = entry.getKey();
             PetInheritanceConfig.AttributeInheritanceSettings settings = entry.getValue();
 
-            if (! settings.enabled) continue;
+            if (!settings.enabled) continue;
 
             Optional<RegistryEntry.Reference<EntityAttribute>> attrOpt =
                     Registries.ATTRIBUTE.getEntry(Identifier.tryParse(attributeId));
@@ -60,7 +61,9 @@ public class AttributeInheritanceUtil {
                 newBaseAttrTag.putDouble(attributeId, baseValue);
             }
 
-            double bonus = ownerAttr.getValue() * globalRatio * settings.ratio;
+            double ownerValue = ownerAttr.getValue();
+            double actualOwnerValue = settings.convertFromBase(ownerValue);
+            double bonus = actualOwnerValue * globalRatio * settings.ratio;
 
             if (attributeId.equals("minecraft:generic.attack_damage") &&
                     petConfig.damage_bonus_attribute.enabled) {
@@ -79,7 +82,7 @@ public class AttributeInheritanceUtil {
             }
         }
 
-        if (! newBaseAttrTag.isEmpty()) {
+        if (!newBaseAttrTag.isEmpty()) {
             newInheritance.put("petBaseAttributes", newBaseAttrTag);
         }
         newInheritance.putBoolean("petAttributesInherited", true);
@@ -89,16 +92,12 @@ public class AttributeInheritanceUtil {
     private static Map<String, Double> calculateDamageBonuses(PlayerEntity owner, PetInheritanceConfig petConfig) {
         Map<String, Double> bonuses = new HashMap<>();
 
-        if (! petConfig.damage_bonus_attribute.enabled) {
+        if (!petConfig.damage_bonus_attribute.enabled) {
             return bonuses;
         }
 
-        EntityAttributeInstance petDamageBonusAttr = owner.getAttributeInstance(KevsLibrary.PET_DAMAGE_BONUS);
-        if (petDamageBonusAttr == null) {
-            return bonuses;
-        }
-
-        double petDamageBonusValue = petDamageBonusAttr.getValue();
+        AttributeContext context = new AttributeContext(owner);
+        double petDamageBonusValue = context.getAttributeValue(KevsLibrary.PET_DAMAGE_BONUS);
 
         for (Map.Entry<String, PetInheritanceConfig.AttributeInheritanceSettings> entry :
                 petConfig.damage_bonus_attribute.affected_attributes.entrySet()) {
@@ -108,7 +107,8 @@ public class AttributeInheritanceUtil {
 
             if (!settings.enabled) continue;
 
-            double bonus = petDamageBonusValue * settings.ratio;
+            double actualBonusValue = settings.convertFromBase(petDamageBonusValue);
+            double bonus = actualBonusValue * settings.ratio;
             bonus = settings.clamp(bonus);
 
             bonuses.put(attributeId, bonus);

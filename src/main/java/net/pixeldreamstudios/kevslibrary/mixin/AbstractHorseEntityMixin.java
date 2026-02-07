@@ -7,6 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
@@ -38,11 +39,15 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
         if (horse.isTame() && horse.getOwnerUuid() != null && horse.getWorld() instanceof ServerWorld serverWorld) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(horse.getOwnerUuid());
             if (owner != null && KevsLibrary.PET_INHERITANCE_RATIO != null) {
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                         owner,
                         horse,
                         kevslib$petInheritanceData,
-                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                        ratio
                 );
             }
         }
@@ -68,11 +73,15 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
 
         if (cir.getReturnValue() && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             AbstractHorseEntity horse = (AbstractHorseEntity)(Object)this;
+            AttributeContext context = new AttributeContext(player);
+            double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+            double ratio = (ratioValue - 100.0) / 100.0;
+
             kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                     player,
                     horse,
                     kevslib$petInheritanceData,
-                    player.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                    ratio
             );
         }
     }

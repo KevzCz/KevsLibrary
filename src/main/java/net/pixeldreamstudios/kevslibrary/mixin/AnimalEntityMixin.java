@@ -5,6 +5,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
@@ -22,7 +23,7 @@ public abstract class AnimalEntityMixin {
     @Inject(method = "breed(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/passive/AnimalEntity;Lnet/minecraft/entity/passive/PassiveEntity;)V",
             at = @At("TAIL"))
     private void onBreed(ServerWorld world, AnimalEntity other, @Nullable PassiveEntity baby, CallbackInfo ci) {
-        if (! KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
+        if (!KevsLibraryConfig.getInstance().isPetInheritanceEnabled()) return;
         if (baby == null) return;
 
         AnimalEntity parent1 = (AnimalEntity)(Object)this;
@@ -49,7 +50,10 @@ public abstract class AnimalEntityMixin {
 
             var owner = world.getPlayerByUuid(ownerUuid);
             if (owner != null && KevsLibrary.PET_INHERITANCE_RATIO != null) {
-                double ratio = owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 if (ratio > 0 && baby instanceof UniversalTameable universalBaby) {
                     var inheritanceData = AttributeInheritanceUtil.apply(
                             owner,
@@ -65,7 +69,10 @@ public abstract class AnimalEntityMixin {
 
             var owner = world.getPlayerByUuid(ownerUuid);
             if (owner != null && KevsLibrary.PET_INHERITANCE_RATIO != null) {
-                double ratio = owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 if (ratio > 0) {
                     var inheritanceData = AttributeInheritanceUtil.apply(
                             owner,

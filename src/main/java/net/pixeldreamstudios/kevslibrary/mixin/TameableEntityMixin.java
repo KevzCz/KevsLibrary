@@ -1,7 +1,6 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.mob.SkeletonHorseEntity;
 import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -11,6 +10,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 import net.pixeldreamstudios.kevslibrary.util.AttributeInheritanceUtil;
@@ -45,12 +45,10 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
 
         if (KevsLibrary.PET_INHERITANCE_RATIO == null) return;
 
-        EntityAttributeInstance ratioInst = player.getAttributeInstance(KevsLibrary.PET_INHERITANCE_RATIO);
-        if (ratioInst == null) {
-            return;
-        }
+        AttributeContext context = new AttributeContext(player);
+        double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+        double ratio = (ratioValue - 100.0) / 100.0;
 
-        double ratio = ratioInst.getValue();
         if (ratio == 0.0) {
             return;
         }
@@ -77,11 +75,15 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
                 KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = serverWorld.getPlayerByUuid(tameable.getOwnerUuid());
             if (owner != null) {
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 this.kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                         owner,
                         tameable,
                         this.kevslib$petInheritanceData,
-                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                        ratio
                 );
             }
         }

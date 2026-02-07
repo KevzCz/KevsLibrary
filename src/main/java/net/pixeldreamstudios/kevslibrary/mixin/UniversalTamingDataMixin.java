@@ -11,6 +11,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import net.pixeldreamstudios.kevslibrary.taming.TameableBridge;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
@@ -65,11 +66,15 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         if (uuid != null && mob.getWorld() instanceof ServerWorld sw && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = sw.getPlayerByUuid(uuid);
             if (owner != null) {
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                         owner,
                         mob,
                         kevslib$petInheritanceData,
-                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                        ratio
                 );
             }
         }
@@ -117,11 +122,15 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         if (kevslib$isTamed() && mob.getWorld() instanceof ServerWorld sw && KevsLibrary.PET_INHERITANCE_RATIO != null) {
             PlayerEntity owner = sw.getPlayerByUuid(kevslib$getOwnerUuid());
             if (owner != null) {
+                AttributeContext context = new AttributeContext(owner);
+                double ratioValue = context.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
+                double ratio = (ratioValue - 100.0) / 100.0;
+
                 kevslib$petInheritanceData = AttributeInheritanceUtil.apply(
                         owner,
                         mob,
                         kevslib$petInheritanceData,
-                        owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO)
+                        ratio
                 );
             }
         }
