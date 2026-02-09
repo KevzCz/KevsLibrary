@@ -92,7 +92,7 @@
             int count = countAttr != null ? (int) countAttr.getValue() : 1;
 
             EntityAttributeInstance dmgAttr = attacker.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
-            float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
+            float multiplier = dmgAttr != null ? (float) ((dmgAttr.getValue() - 100.0) / 100.0 + 1.0) : 0.5f;
 
             float finalDamage = baseDamage * multiplier * 0.6f;
 
@@ -440,7 +440,7 @@
                 if (!isValidMultistrikeTarget(source, target)) return true;
                 float avgDamage = totalDamage / triggerCount;
                 EntityAttributeInstance dmgAttr = source.getAttributeInstance(KevsLibrary.MULTISTRIKE_DAMAGE);
-                float multiplier = dmgAttr != null ? (float) dmgAttr.getValue() : 0.5f;
+                float multiplier = dmgAttr != null ? (float) (dmgAttr.getValue() / 100.0) : 1.0f;
                 float damage = avgDamage * multiplier;
 
                 DamageSource source = world.getDamageSources().create(KevsDamageTypes.MULTISTRIKE, this.source);

@@ -31,7 +31,7 @@ public abstract class LivingEntityArmorPenMixin {
             AttributeContext context = new AttributeContext(attacker);
 
             double flatPenValue = context.getAttributeValue(KevsLibrary.ARMOR_PENETRATION_FLAT);
-            double flatPen = flatPenValue - 100.0;
+            double flatPen = flatPenValue;
 
             double percentPenValue = context.getAttributeValue(KevsLibrary.ARMOR_PENETRATION);
             double percentPen = (percentPenValue - 100.0) / 100.0;

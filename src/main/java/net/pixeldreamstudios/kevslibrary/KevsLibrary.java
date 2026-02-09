@@ -46,7 +46,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> MULTISTRIKE_DAMAGE =
 			ConfiguredAttributeRegistry.registerAttribute("multistrike_damage",
-					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 150.0, 0.0, 10000.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.multistrike_damage", 100.0, 0.0, 10000.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> DAMAGE =
 			ConfiguredAttributeRegistry.registerAttribute("damage",
@@ -102,7 +102,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_CHANCE =
 			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_chance",
-					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 100.0, 0.0, 200.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 105.0, 0.0, 200.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_DAMAGE =
 			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_damage",
@@ -118,7 +118,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION_FLAT =
 			ConfiguredAttributeRegistry.registerAttribute("armor_penetration_flat",
-					new ClampedEntityAttribute("attribute.name.generic.armor_penetration_flat", 100.0, 0.0, 10000.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.armor_penetration_flat", 0, 0.0, 10000.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARMOR_PENETRATION =
 			ConfiguredAttributeRegistry.registerAttribute("armor_penetration",
@@ -130,7 +130,7 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> THORNS_AMP =
 			ConfiguredAttributeRegistry.registerAttribute("thorns_amp",
-					new ClampedEntityAttribute("attribute.name.generic.thorns_amp", 130.0, 0.0, 10000.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.thorns_amp", 30.0, 0.0, 10000.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> THORNS_TRUE_DAMAGE_CHANCE =
 			ConfiguredAttributeRegistry.registerAttribute("thorns_true_damage_chance",

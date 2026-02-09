@@ -62,7 +62,7 @@ public class ThornsHandler extends EffectHandler {
         float armorScale = Math.min(armor / 30.0f, 0.8f);
 
         double ampValue = context.getAttributeValue(KevsLibrary.THORNS_AMP);
-        float amp = (float) ((ampValue - 100.0) / 100.0);
+        float amp = (float) (ampValue / 100.0);
 
         float totalMultiplier = armorScale + amp;
         float reflectedDamage = incomingDamage * totalMultiplier;

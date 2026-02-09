@@ -33,7 +33,7 @@ public abstract class PlayerMixin {
             builder.add(KevsLibrary.MULTISTRIKE_COUNT, 2.0);
 
         if (config.isAttributeEnabled("multistrike_damage") && KevsLibrary.MULTISTRIKE_DAMAGE != null)
-            builder.add(KevsLibrary.MULTISTRIKE_DAMAGE, 150.0);
+            builder.add(KevsLibrary.MULTISTRIKE_DAMAGE, 100.0);
 
         if (config.isAttributeEnabled("damage") && KevsLibrary.DAMAGE != null)
             builder.add(KevsLibrary.DAMAGE, 100.0);
@@ -90,13 +90,13 @@ public abstract class PlayerMixin {
             builder.add(KevsLibrary.ARMOR_PENETRATION, 100.0);
 
         if (config.isAttributeEnabled("armor_penetration_flat") && KevsLibrary.ARMOR_PENETRATION_FLAT != null)
-            builder.add(KevsLibrary.ARMOR_PENETRATION_FLAT, 100.0);
+            builder.add(KevsLibrary.ARMOR_PENETRATION_FLAT, 0);
 
         if (config.isAttributeEnabled("thorns_chance") && KevsLibrary.THORNS_CHANCE != null)
             builder.add(KevsLibrary.THORNS_CHANCE, 100.0);
 
         if (config.isAttributeEnabled("thorns_amp") && KevsLibrary.THORNS_AMP != null)
-            builder.add(KevsLibrary.THORNS_AMP, 130.0);
+            builder.add(KevsLibrary.THORNS_AMP, 30.0);
 
         if (config.isAttributeEnabled("thorns_true_damage_chance") && KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE != null)
             builder.add(KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 100.0);
@@ -105,7 +105,7 @@ public abstract class PlayerMixin {
             builder.add(KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 100.0);
 
         if (config.isAttributeEnabled("cleave_range") && KevsLibrary.CLEAVE_RANGE != null)
-            builder.add(KevsLibrary.CLEAVE_RANGE, 104.0);
+            builder.add(KevsLibrary.CLEAVE_RANGE, 4.0);
 
         if (config.isAttributeEnabled("cleave_chance") && KevsLibrary.CLEAVE_CHANCE != null)
             builder.add(KevsLibrary.CLEAVE_CHANCE, 100.0);
@@ -120,7 +120,7 @@ public abstract class PlayerMixin {
             builder.add(KevsLibrary.PROJECTILE_STORM_CHANCE, 100.0);
 
         if (config.isAttributeEnabled("projectile_storm_range") && KevsLibrary.PROJECTILE_STORM_RANGE != null)
-            builder.add(KevsLibrary.PROJECTILE_STORM_RANGE, 102.5);
+            builder.add(KevsLibrary.PROJECTILE_STORM_RANGE, 2.5);
 
         if (config.isAttributeEnabled("projectile_storm_duration") && KevsLibrary.PROJECTILE_STORM_DURATION != null)
             builder.add(KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
@@ -138,7 +138,7 @@ public abstract class PlayerMixin {
             migrateAttribute(player, KevsLibrary.CRIT_DAMAGE, 1.5, 150.0);
             migrateAttribute(player, KevsLibrary.MULTISTRIKE_CHANCE, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.MULTISTRIKE_COUNT, 2.0, 2.0);
-            migrateAttribute(player, KevsLibrary.MULTISTRIKE_DAMAGE, 0.5, 150.0);
+            migrateAttribute(player, KevsLibrary.MULTISTRIKE_DAMAGE, 0.5, 100.0);
             migrateAttribute(player, KevsLibrary.DAMAGE, 1.0, 100.0);
             migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0, 3.0);
@@ -156,10 +156,10 @@ public abstract class PlayerMixin {
             migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1.0, 105.0);
             migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0, 100.0);
-            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0, 100.0);
+            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0, 0);
             migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.THORNS_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.THORNS_AMP, 0.3, 130.0);
+            migrateAttribute(player, KevsLibrary.THORNS_AMP, 0.3, 30.0);
             migrateAttribute(player, KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.CLEAVE_CHANCE, 0.0, 100.0);
             migrateAttribute(player, KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0, 100.0);
