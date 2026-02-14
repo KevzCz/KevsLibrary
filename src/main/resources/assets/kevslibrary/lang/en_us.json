@@ -27,6 +27,8 @@
   "attribute.name.generic.cleave_chance": "Cleave Chance",
   "attribute.name.generic.piercing_chance": "Piercing Chance",
 
+  "description.attribute.name.generic.armor_penetration": "Percentage of target's armor ignored.",
+  "description.attribute.name.generic.armor_penetration_flat": "Flat amount of armor ignored.",
   "description.attribute.name.generic.thorns_chance": "Chance to return a portion of damage to attackers.",
   "description.attribute.name.generic.thorns_amp": "Multiplier for the amount of thorns damage returned.",
   "description.attribute.name.generic.thorns_true_damage_chance": "Chance for thorns damage to ignore armor.",
@@ -60,11 +62,17 @@
 
   "attribute.name.generic.soul_link_chance": "Soul Link Chance",
   "attribute.name.generic.soul_link_damage": "Soul Link Damage",
-  
+
   "attribute.name.generic.pierce_chance": "Pierce Chance",
 
   "attribute.name.generic.arcane_rupture_chance": "Arcane Rupture Chance",
   "attribute.name.generic.arcane_rupture_damage": "Arcane Rupture Damage",
   "attribute.name.generic.arcane_rupture_overload_chance": "Arcane Rupture Overload Chance",
-  "attribute.name.generic.trident_damage_multiplier": "Trident Damage Multiplier"
+  "attribute.name.generic.trident_damage_multiplier": "Trident Damage Multiplier",
+
+  "attribute.name.generic.barrage_chance": "Barrage Chance",
+  "attribute.name.generic.projectile_storm_chance": "Projectile Storm Chance",
+  "attribute.name.generic.projectile_storm_range": "Projectile Storm Range",
+  "attribute.name.generic.projectile_storm_duration": "Projectile Storm Duration",
+  "attribute.name.generic.hunger_consumption": "Hunger Consumption"
 }
