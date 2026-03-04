@@ -84,7 +84,7 @@ public abstract class PlayerMixin {
             builder.add(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 100.0);
 
         if (config.isAttributeEnabled("pet_damage_bonus") && KevsLibrary.PET_DAMAGE_BONUS != null)
-            builder.add(KevsLibrary.PET_DAMAGE_BONUS, 100.0);
+            builder.add(KevsLibrary.PET_DAMAGE_BONUS, 0.0);
 
         if (config.isAttributeEnabled("armor_penetration") && KevsLibrary.ARMOR_PENETRATION != null)
             builder.add(KevsLibrary.ARMOR_PENETRATION, 100.0);
@@ -133,63 +133,58 @@ public abstract class PlayerMixin {
     private void migrateOldAttributes(NbtCompound nbt, CallbackInfo ci) {
         PlayerEntity player = (PlayerEntity) (Object) this;
 
-        if (!nbt.contains("KevsLibraryMigrated")) {
-            migrateAttribute(player, KevsLibrary.CRIT_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CRIT_DAMAGE, 1.5, 150.0);
-            migrateAttribute(player, KevsLibrary.MULTISTRIKE_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.MULTISTRIKE_COUNT, 2.0, 2.0);
-            migrateAttribute(player, KevsLibrary.MULTISTRIKE_DAMAGE, 0.5, 100.0);
-            migrateAttribute(player, KevsLibrary.DAMAGE, 1.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0, 3.0);
-            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.FIRE_TORNADO_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.FROST_NOVA_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.FROST_NOVA_COUNT, 1.0, 3.0);
-            migrateAttribute(player, KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.PET_INHERITANCE_RATIO, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.PET_DAMAGE_BONUS, 0.0, 0);
-            migrateAttribute(player, KevsLibrary.SOUL_LINK_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.SOUL_LINK_DAMAGE, 1.0, 100.0);
-            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_DAMAGE, 1.0, 105.0);
-            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 1.0, 100.0);
-            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0, 0);
-            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.THORNS_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.THORNS_AMP, 0.3, 30.0);
-            migrateAttribute(player, KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CLEAVE_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 1.0, 100.0);
-            migrateAttribute(player, KevsLibrary.CLEAVE_RANGE, 4.0, 4.0);
-            migrateAttribute(player, KevsLibrary.PIERCING_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.BARRAGE_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_CHANCE, 0.0, 100.0);
-            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_RANGE, 2.5, 2.5);
-            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_DURATION, 60.0, 60.0);
-            migrateAttribute(player, KevsLibrary.HUNGER_CONSUMPTION, 1.0, 100.0);
+        if (!nbt.contains("KevsLibraryMigratedV2")) {
+            migrateAttribute(player, KevsLibrary.CRIT_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.CRIT_DAMAGE, 150.0);
+            migrateAttribute(player, KevsLibrary.MULTISTRIKE_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.MULTISTRIKE_COUNT, 2.0);
+            migrateAttribute(player, KevsLibrary.MULTISTRIKE_DAMAGE, 100.0);
+            migrateAttribute(player, KevsLibrary.DAMAGE, 100.0);
+            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_COUNT, 3.0);
+            migrateAttribute(player, KevsLibrary.CHAIN_LIGHTNING_OVERLOAD_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.FIRE_TORNADO_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.FIRE_TORNADO_OVERLOAD_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.FROST_NOVA_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.FROST_NOVA_COUNT, 3.0);
+            migrateAttribute(player, KevsLibrary.FROST_NOVA_OVERLOAD_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.PET_INHERITANCE_RATIO, 100.0);
+            migrateAttribute(player, KevsLibrary.PET_DAMAGE_BONUS, 0.0);
+            migrateAttribute(player, KevsLibrary.SOUL_LINK_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.SOUL_LINK_DAMAGE, 100.0);
+            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_DAMAGE, 105.0);
+            migrateAttribute(player, KevsLibrary.ARCANE_RUPTURE_OVERLOAD_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER, 100.0);
+            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION_FLAT, 0.0);
+            migrateAttribute(player, KevsLibrary.ARMOR_PENETRATION, 100.0);
+            migrateAttribute(player, KevsLibrary.THORNS_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.THORNS_AMP, 30.0);
+            migrateAttribute(player, KevsLibrary.THORNS_TRUE_DAMAGE_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.CLEAVE_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.CLEAVE_DAMAGE_MULTIPLIER, 100.0);
+            migrateAttribute(player, KevsLibrary.CLEAVE_RANGE, 4.0);
+            migrateAttribute(player, KevsLibrary.PIERCING_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.BARRAGE_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_CHANCE, 100.0);
+            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_RANGE, 2.5);
+            migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
+            migrateAttribute(player, KevsLibrary.HUNGER_CONSUMPTION, 100.0);
         }
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void markAsMigrated(NbtCompound nbt, CallbackInfo ci) {
-        nbt.putBoolean("KevsLibraryMigrated", true);
+        nbt.putBoolean("KevsLibraryMigratedV2", true);
     }
 
     private void migrateAttribute(PlayerEntity player,
                                   net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attribute,
-                                  double oldDefault,
                                   double newDefault) {
         if (attribute == null) return;
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);
         if (instance != null) {
-            double currentBase = instance.getBaseValue();
-
-            if (Math.abs(currentBase - oldDefault) < 0.001) {
-                instance.setBaseValue(newDefault);
-            }
+            instance.setBaseValue(newDefault);
         }
     }
 }

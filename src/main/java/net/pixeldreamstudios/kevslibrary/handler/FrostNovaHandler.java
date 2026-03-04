@@ -18,7 +18,12 @@ import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class FrostNovaHandler extends EffectHandler {
 

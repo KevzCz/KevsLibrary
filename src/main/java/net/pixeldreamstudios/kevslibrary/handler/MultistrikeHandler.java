@@ -20,7 +20,13 @@
     import net.pixeldreamstudios.kevslibrary.KevsLibrary;
     import net.spell_engine.entity.SpellProjectile;
 
-    import java.util.*;
+    import java.util.Collections;
+    import java.util.HashMap;
+    import java.util.List;
+    import java.util.Map;
+    import java.util.Set;
+    import java.util.UUID;
+    import java.util.WeakHashMap;
 
     public class MultistrikeHandler {
         private static final Set<UUID> handledProjectiles = Collections.newSetFromMap(new WeakHashMap<>());

@@ -10,7 +10,11 @@ import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
 import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class PiercingHandler extends EffectHandler {
 

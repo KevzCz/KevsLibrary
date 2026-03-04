@@ -8,7 +8,9 @@ import net.minecraft.util.Identifier;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ConfiguredAttributeRegistry {
     private static final Map<String, RegistryEntry<EntityAttribute>> REGISTERED_ATTRIBUTES = new HashMap<>();

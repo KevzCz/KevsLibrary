@@ -16,7 +16,10 @@ import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ChainLightningHandler extends EffectHandler {
 

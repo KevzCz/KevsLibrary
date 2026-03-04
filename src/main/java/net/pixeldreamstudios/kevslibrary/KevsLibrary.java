@@ -102,11 +102,11 @@ public class KevsLibrary implements ModInitializer {
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_CHANCE =
 			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_chance",
-					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 105.0, 0.0, 200.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_chance", 100.0, 0.0, 200.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_DAMAGE =
 			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_damage",
-					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_damage", 100.0, 0.0, 10000.0).setTracked(true));
+					new ClampedEntityAttribute("attribute.name.generic.arcane_rupture_damage", 105.0, 0.0, 10000.0).setTracked(true));
 
 	public static final RegistryEntry<EntityAttribute> ARCANE_RUPTURE_OVERLOAD_CHANCE =
 			ConfiguredAttributeRegistry.registerAttribute("arcane_rupture_overload_chance",

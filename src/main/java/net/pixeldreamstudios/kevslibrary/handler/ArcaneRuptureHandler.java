@@ -20,7 +20,9 @@ import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
 
 public class ArcaneRuptureHandler extends EffectHandler {
 
