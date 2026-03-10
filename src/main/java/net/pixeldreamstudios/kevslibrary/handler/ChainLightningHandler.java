@@ -16,9 +16,10 @@ import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 public class ChainLightningHandler extends EffectHandler {
@@ -135,8 +136,7 @@ public class ChainLightningHandler extends EffectHandler {
         if (entity.isTeammate(attacker)) return false;
         if (!(entity instanceof PlayerEntity) && entity.getType().getSpawnGroup().isPeaceful()) return false;
         if (entity.getType().getSpawnGroup().isPeaceful()) return false;
-        if (entity instanceof TameableEntity tameable && tameable.isTamed()) return false;
-        return true;
+        return !(entity instanceof TameableEntity tameable) || !tameable.isTamed();
     }
 
     private void spawnArcParticles(ServerWorld world, LivingEntity from, LivingEntity to) {

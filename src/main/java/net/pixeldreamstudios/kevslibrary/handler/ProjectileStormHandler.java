@@ -1,8 +1,11 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.projectile.TridentEntity;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
@@ -69,7 +72,7 @@ public class ProjectileStormHandler extends EffectHandler {
         double durationValue = context.getAttributeValue(KevsLibrary.PROJECTILE_STORM_DURATION);
         int duration = (int) durationValue;
 
-        if (projectile instanceof net.minecraft.entity.projectile.TridentEntity) return;
+        if (projectile instanceof TridentEntity) return;
 
         double originalSpeed = projectile.getVelocity().length();
         float originalFinal = (float) (originalSpeed * projectile.getDamage());
@@ -84,7 +87,7 @@ public class ProjectileStormHandler extends EffectHandler {
         persistCircle(world, impactCenter, spawnY, radius, teleTicks + duration);
 
         startRain(world, owner, impactCenter, spawnY, radius, duration, (w, x, y, z) -> {
-            Entity copy = net.minecraft.entity.EntityType.ARROW.create(w);
+            Entity copy = EntityType.ARROW.create(w);
             if (!(copy instanceof PersistentProjectileEntity ppe)) return;
 
             ppe.setOwner(owner);
@@ -103,7 +106,7 @@ public class ProjectileStormHandler extends EffectHandler {
             w.spawnEntity(ppe);
         });
 
-        if (!(projectile instanceof net.minecraft.entity.projectile.TridentEntity) && world.getRandom().nextBoolean()) {
+        if (!(projectile instanceof TridentEntity) && world.getRandom().nextBoolean()) {
             projectile.discard();
         }
     }
@@ -221,7 +224,7 @@ public class ProjectileStormHandler extends EffectHandler {
         }
     }
 
-    private void ring(ServerWorld world, double cx, double y, double cz, float radius, int points, net.minecraft.particle.ParticleEffect type) {
+    private void ring(ServerWorld world, double cx, double y, double cz, float radius, int points, ParticleEffect type) {
         for (int i = 0; i < points; i++) {
             double a = (i / (double) points) * Math.PI * 2.0;
             double x = cx + Math.cos(a) * radius;

@@ -24,6 +24,8 @@ public class KevsLibraryConfig {
 
     public PetInheritanceConfig pet_inheritance = new PetInheritanceConfig();
 
+    public WeaponSwitchingConfig weapon_switching_config = new WeaponSwitchingConfig();
+
     private static final Map<String, List<String>> SYSTEM_ATTRIBUTES = new HashMap<>();
 
     static {
@@ -73,11 +75,11 @@ public class KevsLibraryConfig {
                 "cleave_range"
         ));
 
-        SYSTEM_ATTRIBUTES.put("piercing", Arrays.asList(
+        SYSTEM_ATTRIBUTES.put("piercing", List.of(
                 "pierce_chance"
         ));
 
-        SYSTEM_ATTRIBUTES.put("barrage", Arrays.asList(
+        SYSTEM_ATTRIBUTES.put("barrage", List.of(
                 "barrage_chance"
         ));
 
@@ -97,11 +99,11 @@ public class KevsLibraryConfig {
                 "crit_damage"
         ));
 
-        SYSTEM_ATTRIBUTES.put("damage", Arrays.asList(
+        SYSTEM_ATTRIBUTES.put("damage", List.of(
                 "damage"
         ));
 
-        SYSTEM_ATTRIBUTES.put("trident", Arrays.asList(
+        SYSTEM_ATTRIBUTES.put("trident", List.of(
                 "trident_damage_multiplier"
         ));
 
@@ -110,9 +112,19 @@ public class KevsLibraryConfig {
                 "armor_penetration_flat"
         ));
 
-        SYSTEM_ATTRIBUTES.put("hunger", Arrays.asList(
+        SYSTEM_ATTRIBUTES.put("hunger", List.of(
                 "hunger_consumption"
         ));
+
+        SYSTEM_ATTRIBUTES.put("weapon_switching", Arrays.asList(
+                "draw_time",
+                "first_hit_damage_multiplier"
+        ));
+    }
+
+    public static class WeaponSwitchingConfig {
+        public long first_hit_window_ms = 5000;
+        public long first_hit_cooldown_ms = 5000;
     }
 
     public KevsLibraryConfig() {
@@ -152,6 +164,8 @@ public class KevsLibraryConfig {
         attributes.put("projectile_storm_range", true);
         attributes.put("projectile_storm_duration", true);
         attributes.put("hunger_consumption", true);
+        attributes.put("draw_time", true);
+        attributes.put("first_hit_damage_multiplier", true);
 
         systems.put("multistrike", true);
         systems.put("chain_lightning", true);
@@ -170,6 +184,7 @@ public class KevsLibraryConfig {
         systems.put("trident", true);
         systems.put("armor_penetration", true);
         systems.put("hunger", true);
+        systems.put("weapon_switching", true);
     }
 
     public static KevsLibraryConfig getInstance() {
@@ -235,6 +250,11 @@ public class KevsLibraryConfig {
                             }
                         }
                     }
+                }
+
+                if (config.weapon_switching_config == null) {
+                    config.weapon_switching_config = new WeaponSwitchingConfig();
+                    needsSave = true;
                 }
 
                 if (needsSave) {
@@ -368,6 +388,11 @@ public class KevsLibraryConfig {
     public boolean isHungerEnabled() {
         return isSystemEnabled("hunger");
     }
+
+    public boolean isWeaponSwitchingEnabled() {
+        return isSystemEnabled("weapon_switching");
+    }
+
     public List<String> getSystemAttributes(String systemName) {
         return SYSTEM_ATTRIBUTES.get(systemName);
     }

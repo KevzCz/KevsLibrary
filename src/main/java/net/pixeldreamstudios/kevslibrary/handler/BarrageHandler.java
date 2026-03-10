@@ -16,6 +16,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
+import net.pixeldreamstudios.kevslibrary.attribute.AttributeContext;
 import net.pixeldreamstudios.kevslibrary.attribute.AttributeScaling;
 import net.pixeldreamstudios.kevslibrary.attribute.EffectHandler;
 import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
@@ -50,7 +51,7 @@ public class BarrageHandler extends EffectHandler {
     public void tryTrigger(LivingEntity attacker, LivingEntity target, ServerWorld world, float baseDamage,
                            ItemStack weaponStack, ItemStack projectileTemplate, float baseSpeed, float baseDivergence) {
 
-        double chance = new net.pixeldreamstudios.kevslibrary.attribute.AttributeContext(attacker)
+        double chance = new AttributeContext(attacker)
                 .getAttributeAsPercentage(chanceAttribute);
 
         if (chance <= 0.0) return;

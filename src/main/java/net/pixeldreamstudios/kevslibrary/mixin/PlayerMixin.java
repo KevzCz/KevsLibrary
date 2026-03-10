@@ -1,9 +1,11 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.config.KevsLibraryConfig;
 import org.spongepowered.asm.mixin.Mixin;
@@ -127,6 +129,12 @@ public abstract class PlayerMixin {
 
         if (config.isAttributeEnabled("hunger_consumption") && KevsLibrary.HUNGER_CONSUMPTION != null)
             builder.add(KevsLibrary.HUNGER_CONSUMPTION, 100.0);
+
+        if (config.isAttributeEnabled("draw_time") && KevsLibrary.DRAW_TIME != null)
+            builder.add(KevsLibrary.DRAW_TIME, 100.0);
+
+        if (config.isAttributeEnabled("first_hit_damage_multiplier") && KevsLibrary.FIRST_HIT_DAMAGE_MULTIPLIER != null)
+            builder.add(KevsLibrary.FIRST_HIT_DAMAGE_MULTIPLIER, 100.0);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
@@ -170,6 +178,8 @@ public abstract class PlayerMixin {
             migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_RANGE, 2.5);
             migrateAttribute(player, KevsLibrary.PROJECTILE_STORM_DURATION, 60.0);
             migrateAttribute(player, KevsLibrary.HUNGER_CONSUMPTION, 100.0);
+            migrateAttribute(player, KevsLibrary.DRAW_TIME, 100.0);
+            migrateAttribute(player, KevsLibrary.FIRST_HIT_DAMAGE_MULTIPLIER, 100.0);
         }
     }
 
@@ -179,7 +189,7 @@ public abstract class PlayerMixin {
     }
 
     private void migrateAttribute(PlayerEntity player,
-                                  net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attribute,
+                                  RegistryEntry<EntityAttribute> attribute,
                                   double newDefault) {
         if (attribute == null) return;
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);

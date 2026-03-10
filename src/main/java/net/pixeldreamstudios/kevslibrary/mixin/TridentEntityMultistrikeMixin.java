@@ -30,7 +30,7 @@ public abstract class TridentEntityMultistrikeMixin {
         if (self.getCommandTags().contains("multistrike_arrow")) {
             Entity owner = self.getOwner();
             DamageSource ms = self.getDamageSources().trident(self, owner);
-            float msAmount = (float)((PersistentProjectileEntity)self).getDamage();
+            float msAmount = (float) self.getDamage();
             int prevRegen = target.timeUntilRegen;
             target.timeUntilRegen = 0;
             boolean hit = original.call(target, ms, msAmount);

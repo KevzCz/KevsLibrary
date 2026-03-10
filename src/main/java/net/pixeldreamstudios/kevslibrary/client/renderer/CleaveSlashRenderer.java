@@ -9,6 +9,7 @@ import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.RotationAxis;
 import net.pixeldreamstudios.kevslibrary.entity.CleaveSlashEntity;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -43,8 +44,8 @@ public class CleaveSlashRenderer extends EntityRenderer<CleaveSlashEntity> {
             matrices.push();
 
             matrices.translate(0.0, yOffset, 0.0);
-            matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotationDegrees(-entity.getYaw()));
-            matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_X.rotationDegrees(90 + pitch));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-entity.getYaw()));
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90 + pitch));
             matrices.scale(width, height, 1.0f);
 
             Matrix4f mat = matrices.peek().getPositionMatrix();

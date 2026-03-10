@@ -6,10 +6,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import net.pixeldreamstudios.kevslibrary.KevsLibrary;
 import net.pixeldreamstudios.kevslibrary.taming.UniversalTameable;
 
 public class RPGUtil
@@ -56,9 +59,9 @@ public class RPGUtil
                                                                         NbtCompound baseAttrs = prev.getCompound("petBaseAttributes");
 
                                                                         for (String key : baseAttrs.getKeys()) {
-                                                                            var attrId = net.minecraft.util.Identifier.tryParse(key);
+                                                                            var attrId = Identifier.tryParse(key);
                                                                             if (attrId != null) {
-                                                                                var reg = net.minecraft.registry.Registries.ATTRIBUTE.getEntry(attrId);
+                                                                                var reg = Registries.ATTRIBUTE.getEntry(attrId);
                                                                                 if (reg.isPresent()) {
                                                                                     var instance = mob.getAttributeInstance(reg.get());
                                                                                     if (instance != null) {
@@ -70,7 +73,7 @@ public class RPGUtil
                                                                             }
                                                                         }
                                                                     }
-                                                                    double ratioValue = owner.getAttributeValue(net.pixeldreamstudios.kevslibrary.KevsLibrary.PET_INHERITANCE_RATIO);
+                                                                    double ratioValue = owner.getAttributeValue(KevsLibrary.PET_INHERITANCE_RATIO);
                                                                     double ratio = (ratioValue - 100.0) / 100.0;
                                                                     var inherited = AttributeInheritanceUtil.apply(owner, mob, new NbtCompound(), ratio);
 

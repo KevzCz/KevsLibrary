@@ -1,6 +1,7 @@
 package net.pixeldreamstudios.kevslibrary.mixin;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -20,7 +21,7 @@ public abstract class BowItemMixin {
         if (world.isClient()) return;
         if (!KevsLibraryConfig.getInstance().isBarrageEnabled()) return;
 
-        if (user instanceof net.minecraft.entity.player.PlayerEntity p) {
+        if (user instanceof PlayerEntity p) {
             KEVSLIB_LAST_BOW_PROJECTILE.set(p.getProjectileType(stack).copy());
         }
     }

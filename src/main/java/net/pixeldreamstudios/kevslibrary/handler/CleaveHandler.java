@@ -1,6 +1,7 @@
 package net.pixeldreamstudios.kevslibrary.handler;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import net.pixeldreamstudios.kevslibrary.KevsLibrary;
@@ -85,7 +86,7 @@ public class CleaveHandler extends EffectHandler {
         float cleaveDamage = DamageScaling.applyGlobalDamageScaling(context, baseDamage * multiplier);
 
         for (LivingEntity target : hitTargets) {
-            if (attacker instanceof net.minecraft.entity.player.PlayerEntity player) {
+            if (attacker instanceof PlayerEntity player) {
                 target.damage(player.getDamageSources().playerAttack(player), cleaveDamage);
             } else {
                 target.damage(attacker.getDamageSources().mobAttack(attacker), cleaveDamage);

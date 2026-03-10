@@ -114,7 +114,7 @@ public abstract class TameableEntityMixin extends AnimalEntity implements Univer
 
     @Unique
     @Override
-    public java.util.UUID kevslib$getOwnerUuid() {
+    public UUID kevslib$getOwnerUuid() {
         return ((TameableEntity)(Object)this).getOwnerUuid();
     }
 

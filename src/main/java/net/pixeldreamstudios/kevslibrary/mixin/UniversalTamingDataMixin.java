@@ -102,11 +102,11 @@ public abstract class UniversalTamingDataMixin implements UniversalTameable, Tam
         }
         else if (nbt.contains("OwnerUUID", NbtElement.STRING_TYPE)) {
             try {
-                parsed = java.util.UUID.fromString(nbt.getString("OwnerUUID"));
+                parsed = UUID.fromString(nbt.getString("OwnerUUID"));
             } catch (IllegalArgumentException ignored) { }
         } else if (nbt.contains("Owner", NbtElement.STRING_TYPE)) {
             try {
-                parsed = java.util.UUID.fromString(nbt.getString("Owner"));
+                parsed = UUID.fromString(nbt.getString("Owner"));
             } catch (IllegalArgumentException ignored) { }
         }
 

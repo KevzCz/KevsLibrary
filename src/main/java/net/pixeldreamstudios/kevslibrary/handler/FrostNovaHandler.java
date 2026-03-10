@@ -18,8 +18,6 @@ import net.pixeldreamstudios.kevslibrary.util.DelayedExecutor;
 import net.spell_power.api.SpellPower;
 import net.spell_power.api.SpellSchools;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,7 +218,6 @@ public class FrostNovaHandler extends EffectHandler {
         if (entity.equals(attacker)) return false;
         if (entity.isTeammate(attacker)) return false;
         if (!(entity instanceof PlayerEntity) && entity.getType().getSpawnGroup().isPeaceful()) return false;
-        if (entity instanceof TameableEntity tameable && tameable.isTamed()) return false;
-        return true;
+        return !(entity instanceof TameableEntity tameable) || !tameable.isTamed();
     }
 }

@@ -172,38 +172,47 @@ public class KevsLibrary implements ModInitializer {
 			ConfiguredAttributeRegistry.registerAttribute("hunger_consumption",
 					new ClampedEntityAttribute("attribute.name.generic.hunger_consumption", 100.0, 0.0, 10000.0).setTracked(true));
 
+	public static final RegistryEntry<EntityAttribute> DRAW_TIME =
+			ConfiguredAttributeRegistry.registerAttribute("draw_time",
+					new ClampedEntityAttribute("attribute.name.generic.draw_time", 100.0, 1.0, 10000.0).setTracked(true));
+
+	public static final RegistryEntry<EntityAttribute> FIRST_HIT_DAMAGE_MULTIPLIER =
+			ConfiguredAttributeRegistry.registerAttribute("first_hit_damage_multiplier",
+					new ClampedEntityAttribute("attribute.name.generic.first_hit_damage_multiplier", 100.0, 0.0, 10000.0).setTracked(true));
+	@SuppressWarnings("deprecation")
 	public static final EntityType<CleaveSlashEntity> CLEAVE_SLASH = Registry.register(
 			Registries.ENTITY_TYPE,
 			Identifier.of(MOD_ID, "cleave_slash"),
-			FabricEntityTypeBuilder.<CleaveSlashEntity>create(SpawnGroup.MISC, CleaveSlashEntity::new)
+			FabricEntityTypeBuilder.create(SpawnGroup.MISC, CleaveSlashEntity::new)
 					.dimensions(EntityDimensions.fixed(0.1f, 0.1f))
 					.trackRangeBlocks(8)
 					.trackedUpdateRate(10)
 					.build()
 	);
 
+	@SuppressWarnings("deprecation")
 	public static final EntityType<ArcaneShardEntity> ARCANE_SHARD =
 			Registry.register(
 					Registries.ENTITY_TYPE,
 					Identifier.of(MOD_ID, "arcane_shard"),
-					FabricEntityTypeBuilder.<ArcaneShardEntity>create(SpawnGroup.MISC, ArcaneShardEntity::new)
+					FabricEntityTypeBuilder.create(SpawnGroup.MISC, ArcaneShardEntity::new)
 							.dimensions(EntityDimensions.fixed(0.25f, 0.25f))
 							.trackRangeBlocks(6)
 							.trackedUpdateRate(10)
 							.build()
 			);
-
+	@SuppressWarnings("deprecation")
 	public static final EntityType<IcicleProjectileEntity> ICICLE_PROJECTILE =
 			Registry.register(
 					Registries.ENTITY_TYPE,
 					Identifier.of(MOD_ID, "icicle_projectile"),
-					FabricEntityTypeBuilder.<IcicleProjectileEntity>create(SpawnGroup.MISC, IcicleProjectileEntity::new)
+					FabricEntityTypeBuilder.create(SpawnGroup.MISC, IcicleProjectileEntity::new)
 							.dimensions(EntityDimensions.fixed(0.25f, 0.25f))
 							.trackRangeBlocks(4)
 							.trackedUpdateRate(10)
 							.build()
 			);
-
+	@SuppressWarnings("deprecation")
 	public static final EntityType<MultistrikeArrowEntity> MULTISTRIKE_ARROW =
 			Registry.register(
 					Registries.ENTITY_TYPE,

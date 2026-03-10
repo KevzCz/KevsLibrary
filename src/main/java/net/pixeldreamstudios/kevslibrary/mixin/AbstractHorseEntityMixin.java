@@ -97,7 +97,7 @@ public abstract class AbstractHorseEntityMixin implements UniversalTameable {
 
     @Unique
     @Override
-    public java.util.UUID kevslib$getOwnerUuid() {
+    public UUID kevslib$getOwnerUuid() {
         return ((AbstractHorseEntity)(Object)this).getOwnerUuid();
     }
 

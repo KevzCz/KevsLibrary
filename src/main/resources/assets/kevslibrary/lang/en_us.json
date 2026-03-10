@@ -74,5 +74,8 @@
   "attribute.name.generic.projectile_storm_chance": "Projectile Storm Chance",
   "attribute.name.generic.projectile_storm_range": "Projectile Storm Range",
   "attribute.name.generic.projectile_storm_duration": "Projectile Storm Duration",
-  "attribute.name.generic.hunger_consumption": "Hunger Consumption"
+  "attribute.name.generic.hunger_consumption": "Hunger Consumption",
+
+  "attribute.name.generic.draw_time": "Draw Time",
+  "attribute.name.generic.first_hit_damage_multiplier": "First Hit Damage Multiplier"
 }

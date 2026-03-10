@@ -7,6 +7,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
@@ -30,6 +31,7 @@ import net.pixeldreamstudios.kevslibrary.handler.ProjectileStormHandler;
 import net.pixeldreamstudios.kevslibrary.handler.SoulLinkHandler;
 import net.pixeldreamstudios.kevslibrary.handler.SoulLinkTracker;
 import net.pixeldreamstudios.kevslibrary.handler.ThornsHandler;
+import net.pixeldreamstudios.kevslibrary.handler.WeaponSwitchHandler;
 import net.spell_engine.entity.SpellProjectile;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -209,6 +211,28 @@ public abstract class LivingEntityMixin {
         double damageValue = context.getAttributeValue(KevsLibrary.DAMAGE);
         finalDamage *= (float) ((damageValue - 100.0) / 100.0 + 1.0);
 
+        if (config.isAttributeEnabled("first_hit_damage_multiplier") &&
+                KevsLibrary.FIRST_HIT_DAMAGE_MULTIPLIER != null &&
+                attacker instanceof PlayerEntity player) {
+
+            WeaponSwitchHandler handler =
+                    WeaponSwitchHandler.getInstance();
+
+            if (handler.canUseFirstHitBonus(player) || handler.isWithinSameAttackSwing(player)) {
+                double firstHitValue = context.getAttributeValue(KevsLibrary.FIRST_HIT_DAMAGE_MULTIPLIER);
+                float firstHitMultiplier = (float) ((firstHitValue - 100.0) / 100.0 + 1.0);
+
+                if (firstHitMultiplier > 1.0f) {
+                    finalDamage *= firstHitMultiplier;
+                    handler.consumeFirstHitBonus(player);
+
+                    player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                            SoundEvents.ENTITY_PLAYER_ATTACK_STRONG,
+                            SoundCategory.PLAYERS, 1.0f, 1.3f);
+                }
+            }
+        }
+
         if (isCrit) {
             double critDamageValue = context.getAttributeValue(KevsLibrary.CRIT_DAMAGE);
             float critMultiplier = (float) ((critDamageValue - 100.0) / 100.0 + 1.0);
@@ -346,7 +370,7 @@ public abstract class LivingEntityMixin {
                     if (source.getSource() != null) {
                         float msBase = finalDamage;
 
-                        if (source.getSource() instanceof net.minecraft.entity.projectile.TridentEntity) {
+                        if (source.getSource() instanceof TridentEntity) {
                             double triValue = context.getAttributeValue(KevsLibrary.TRIDENT_DAMAGE_MULTIPLIER);
                             float triMul = (float) ((triValue - 100.0) / 100.0 + 1.0);
                             if (triMul != 0.0f) msBase = finalDamage / triMul;
